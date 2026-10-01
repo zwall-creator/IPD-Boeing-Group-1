@@ -9,8 +9,6 @@
 .venv/.DS_Store
 .venv/CACHEDIR.TAG
 .venv/lib/python3.12/site-packages/__pycache__/_virtualenv.cpython-312.pyc
-.venv/lib/python3.12/site-packages/_virtualenv.pth
-.venv/lib/python3.12/site-packages/_virtualenv.py
 .venv/lib/python3.12/site-packages/pip-25.1.1.dist-info/entry_points.txt
 .venv/lib/python3.12/site-packages/pip-25.1.1.dist-info/INSTALLER
 .venv/lib/python3.12/site-packages/pip-25.1.1.dist-info/licenses/AUTHORS.txt
