@@ -1,5 +1,6 @@
 # created by virtualenv automatically
 .venv/bin
+.venv/
 .idea/inspectionProfiles/profiles_settings.xml
 .idea/inspectionProfiles/Project_Default.xml
 .idea/IPD-Boeing-Group-1.iml
@@ -719,3 +720,4 @@
 .venv/lib/python3.12/site-packages/pip/_vendor/vendor.txt
 .venv/lib/python3.12/site-packages/pip/py.typed
 .venv/pyvenv.cfg
+.idea/workspace.xml
