@@ -15,7 +15,8 @@ Table Editor → profiles to verify its profile row in database
 - Sign-up and sign-in requests go to supabase authentication, which manages passwords and sessions
 - On sign-up, a database trigger makes a profile with the user's ID and optional display name
 - Row-level security limits profile reads and updates to the signed-in owner
-- The page currently authenticates users and shows their email
+- The page currently authenticates users and shows their email; it doesn't
+  yet load/edit profile data (future potential update)
 
 ## Things to improve:
 Design, password security, profile configuration, logo/name, 
