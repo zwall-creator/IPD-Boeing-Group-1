@@ -7,6 +7,7 @@ from typing import override
 
 
 class NW_Node:
+    DEVICE_TYPES = ('PC', 'Laptop', 'Cell Phone','Router', 'Switch','Server')
 
     def __init__(self, device_type, device_ip, base_sec_level, risk_level, connections = []):
         """
@@ -14,7 +15,7 @@ class NW_Node:
         :type device_ip: list<int>
         :type base_sec_level: float
         :type risk_level: float
-        :type connections: list< tuple< NW_Node, ip:list<int>, cost:int, bandwidth:int, connection_type:str > >
+        :type connections: list< tuple< NW_Node, destination_ip:list<int>, cost:int, bandwidth:int, connection_type:str > >
 
         :param device_type: str that states what type of network-connected device is represnted by this node
         :param device_ip: a 4-element list consisting of integers between 0 and 255 (inclusive), acting as a unique identifier
@@ -27,6 +28,7 @@ class NW_Node:
         self.security_level = base_sec_level
         self.risk_level = risk_level
         self.connections = connections
+        #TODO: Add call to function to send update signal to simulation observer
 
     def __str__(self):
         """
@@ -58,6 +60,24 @@ class NW_Node:
             if self.security_level == other.security_level:
                 return True
         return False
+
+    def connect_via_ip(self, destination_ip, cost = 1, bandwidth = 1, connection_type = 'TCP'):
+        """
+        Function to create a new connection between THIS NW_Node and another node on the network. Destination target node is determined by the given IP address (destination_ip)
+        :type destination_ip: list<int>
+        :type cost: int
+        :type bandwidth: int
+        :type connection_type: str
+
+        :param destination_ip: List of four integer values (0..255, inclusive) that indicate a unique identifier for the target node
+        :param cost: cost for sending data across this connection
+        :param bandwidth: maximum number of cost units that this connection can handle
+        :param connection_type: the type of protocol used for this connection
+        :return: True if connection was successful, False otherwise
+        """
+        #TODO: Add call to function to search the network for Node with given IP address
+        #TODO: Add call to function to send update signal to simulation observer
+        raise NotImplemented
 
 
 
