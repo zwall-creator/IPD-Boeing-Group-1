@@ -43,7 +43,7 @@ docker compose ps
 
 ## Developing
 
-- **Frontend:** edit files in `src/frontend/`. Changes hot-reload in the browser, no rebuild needed.
+- **Frontend:** edit files in `src/frontend/`. Changes hot-reload in the browser, no rebuild needed http://localhost:5173/.
 - **Database:** SQL files in `src/data/init/` run automatically, in alphabetical order, the first time the database is created.
 
 ### Adding a frontend dependency
