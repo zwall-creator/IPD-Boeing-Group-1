@@ -3,6 +3,8 @@
 @team: Boeing Group 1
 @contributors: [Zak Wallace]
 """
+from typing import override
+
 
 class NW_Node:
 
@@ -25,6 +27,39 @@ class NW_Node:
         self.security_level = base_sec_level
         self.risk_level = risk_level
         self.connections = connections
+
+    def __str__(self):
+        """
+        Creates a user-readable string representation of this NW_Node
+        \n NOTE: not to be confused with get_state_str()
+        :return: a string representation of this NW_Node
+        """
+        retstr = 'device_type: {}, device_ip: {}, security_level: {}, risk_level: {}, self.connections: {}'.format(self.device_type, self.device_ip, self.security_level, self.risk_level, self.connections)
+        return retstr
+
+    def __gt__(self, other):
+        """
+        :type other: NW_Node
+        :param other: Another NW_Node instance object to compare against this one
+        :return: True if THIS NW_Node has a greater security_level than given NW_Node. Returns False otherwise.
+        """
+        if type(other) == NW_Node:
+            if self.security_level > other.security_level:
+                return True
+        return False
+
+    def __eq__(self, other):
+        """
+        :type other: NW_Node
+        :param other: Another NW_Node instance object to compare against this one
+        :return: True if THIS NW_Node has a equal security_level than given NW_Node. Returns False otherwise.
+        """
+        if type(other) == NW_Node:
+            if self.security_level == other.security_level:
+                return True
+        return False
+
+
 
 class NW_Sec_Device(NW_Node):
 
@@ -49,4 +84,14 @@ class NW_Sec_Device(NW_Node):
         NW_Node.__init__(self, device_type, device_ip, base_sec_level, risk_level, connections)
         self.sec_modifier = sec_modifier
         self.covered_devices = covered_devices
+
+    @override
+    def __str__(self):
+        """
+        Creates a user-readable string representation of this NW_Sec_Device
+        :return: a string representation of this NW_Sec_Device
+        """
+        retstr = super().__str__() + ', sec_modifier: {}, covered_devices: {}'.format(self.sec_modifier, self.covered_devices)
+        return retstr
+
 
