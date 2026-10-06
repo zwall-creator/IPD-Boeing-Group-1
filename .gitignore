@@ -1,4 +1,7 @@
 # created by virtualenv automatically
+.env
+node_modules/
+".DS_Store"
 .venv/bin
 .venv/
 .idea/inspectionProfiles/profiles_settings.xml
