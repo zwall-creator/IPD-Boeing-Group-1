@@ -1,3 +1,4 @@
+<!-- used claude Sonnet 5.5 Medium to assist in formatting the readme and to give suggestions about what would be helpful for onboarding. -->
 # IPD Dev Environment
 
 Everything runs in Docker, so you don't need Node or Postgres installed locally.
