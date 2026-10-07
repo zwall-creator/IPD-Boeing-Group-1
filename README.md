@@ -76,3 +76,11 @@ src/
 ├── frontend/      # React + Vite app
 └── simulation/    # simulation code (not containerized yet)
 ```
+
+# Qiskit Setup (run from repo root)
+
+1. Create venv: Windows `py -m venv .venv`
+2. Activate: Git Bash `source .venv/Scripts/activate`
+3. Install Qiskit Requirements `pip install -r src/computation/requirements.txt`
+4. VS Code: Ctrl/Cmd+Shift+P → Python: Select Interpreter → `.venv`
+5. Verification Script `python src/computation/verify_qiskit.py`
