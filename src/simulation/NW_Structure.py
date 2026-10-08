@@ -15,7 +15,7 @@ class NW_Node:
         :type device_ip: list<int>
         :type base_sec_level: float
         :type risk_level: float
-        :type connections: list< tuple< NW_Node, destination_ip:list<int>, cost:int, bandwidth:int, connection_type:str > >
+        :type connections: list< tuple<destination_ip:list<int>, cost:int, bandwidth:int, connection_type:str > >
 
         :param device_type: str that states what type of network-connected device is represnted by this node
         :param device_ip: a 4-element list consisting of integers between 0 and 255 (inclusive), acting as a unique identifier
@@ -102,6 +102,17 @@ class NW_Node:
                 return True
         return False
 
+    def add_connection(self, destination_ip, cost, bandwidth, connection_type):
+        #TODO: add input validation
+        self.connections.append((destination_ip, cost, bandwidth, connection_type))
+
+    def get_ip_str(self):
+        """
+        Creates a user-readable string representation of this NW_Node's IP address
+        :return: string instance with this node's IP address
+        """
+        return '{}.{}.{}.{}'.format(self.device_ip[0],self.device_ip[1],self.device_ip[2],self.device_ip[3])
+
 
 class NW_Sec_Device(NW_Node):
 
@@ -113,7 +124,7 @@ class NW_Sec_Device(NW_Node):
         :type risk_level: float
         :type sec_modifier: str
         :type covered_devices: list< tuple<NW_Node, ip:list<int>> >
-        :type connections: list< tuple< NW_Node, ip:list<int>, cost:int, bandwidth:int, connection_type:str > >
+        :type connections: list< tuple<ip:list<int>, cost:int, bandwidth:int, connection_type:str > >
 
         :param device_type: str that states what type of network-connected device is represented by this node
         :param device_ip: a 4-element list consisting of integers between 0 and 255 (inclusive), acting as a unique identifier

@@ -30,6 +30,18 @@ class Simulation_Service:
         else:
             raise TypeError('new_node must be a NW_Node object')
 
+    def search_for_node(self, node_ip):
+        """
+        Searches for the first instance of a NW_Node object in the simulation with the given IP address
+        :type node_ip: list<int>
+        :param node_ip: unique identifier to search for
+        :return: NW_Node object if present in simulation, None otherwise
+        """
+        for node in self.node_list:
+            if node.device_ip == node_ip:
+                return node
+        return None
+
     def connect_via_ip(self, source_ip, destination_ip, cost = 1, bandwidth = 1, connection_type = 'TCP'):
         """
         Function to create a new one-way connection between THIS NW_Node and another node on the network. Destination target node is determined by the given IP address (destination_ip)
@@ -45,10 +57,18 @@ class Simulation_Service:
         :param bandwidth: maximum number of cost units that this connection can handle
         :param connection_type: the type of protocol used for this connection
         :return: True if connection was successful, False otherwise
+        :raises: TypeError if source_ip and destination_ip do not exist in the simulation
         """
-        #TODO: Add call to function to search the network for Node with given IP address
-        #TODO: Add call to function to send update signal to simulation observer
-        raise NotImplemented
+        #search the network for Nodes with given IP addresses
+        src_node = self.search_for_node(source_ip)
+        dest_node = self.search_for_node(destination_ip)
+        #if a given IP address is not present in the simulation, throw IndexErrors
+        if src_node is None:
+            raise IndexError('No NW_Node found in this simulation with ip address: {}'.format(source_ip))
+        if dest_node is None:
+            raise IndexError('No NW_Node found in this simulation with ip address: {}'.format(destination_ip))
+        #create the connection between the two nodes
+        src_node.add_connection(dest_node, cost, bandwidth, connection_type)
 
     def update_sim(self):
         """
@@ -73,3 +93,11 @@ class Simulation_Service:
             state += node.get_state_str()
         state += ']'
         return state
+
+    def extract_from_state_string(self, state_string):
+        """
+        Function to extract data from a given state string and update the simulation service object with the extracted data
+        \nNOTE: this will replace the current data for this simulation, so any unsaved changes will be lost!
+        :param state_string: string instance of a simulation's state string
+        """
+        raise NotImplemented
