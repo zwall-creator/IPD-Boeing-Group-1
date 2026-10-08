@@ -23,22 +23,44 @@ class NW_Node:
         :param risk_level: a float that acts as the target value that this node's security_level should be
         :param connections: a list of tuples that contain all info regarding a connection from this node to another node on the network
         """
+        #check parameter types
+        if type(device_type) != str:
+            raise TypeError('given device type is not a string')
+        if type(device_ip) != list:
+            raise TypeError('given device ip is not a list')
+        if type(base_sec_level) != float:
+            raise TypeError('given base sec_level is not a float')
+        if type(risk_level) != float:
+            raise TypeError('given risk_level is not a float')
+        #it is okay if None is given for connections; assume empty connections list is needed
+        if connections is None:
+            connections = []
+        if type(connections) != list:
+            raise TypeError('given connections is not a list')
+
+        #check that given parameters are within proper value ranges
+        for byte in device_ip:
+            if type(byte) != int:
+                raise TypeError('given device ip {} does not contain integers'.format(device_ip))
+            if byte < 0 or byte > 255:
+                raise ValueError('given device ip {} does not contain only integers between 0 and 255 (inclusive)'.format(device_ip))
+
+        #Input validation passed, can now instantiate object fields
         self.device_type = device_type
         self.device_ip = device_ip
         self.base_sec_level = base_sec_level
         self.security_level = base_sec_level
         self.risk_level = risk_level
         self.connections = connections
+
         #TODO: Add call to function to send update signal to simulation observer
 
     def __str__(self):
         """
-        Creates a user-readable string representation of this NW_Node
-        \n NOTE: not to be confused with get_state_str()
+        Returns a string representation of this NW_Node
         :return: a string representation of this NW_Node
         """
-        retstr = 'device_type: {}, device_ip: {}, base_sec_level: {}, security_level: {}, risk_level: {}, self.connections: {}'.format(self.device_type, self.device_ip, self.base_sec_level, self.security_level, self.risk_level, self.connections)
-        return retstr
+        return self.get_state_str()
 
     def get_state_str(self):
         """
@@ -89,7 +111,8 @@ class NW_Node:
         if type(other) == NW_Node:
             if self.security_level > other.security_level:
                 return True
-        return False
+            return False
+        raise TypeError('given object is not a NW_Node instance, cannot compare')
 
     def __eq__(self, other):
         """
@@ -124,7 +147,7 @@ class NW_Sec_Device(NW_Node):
         :type risk_level: float
         :type sec_modifier: str
         :type covered_devices: list< tuple<NW_Node, ip:list<int>> >
-        :type connections: list< tuple<ip:list<int>, cost:int, bandwidth:int, connection_type:str > >
+        :type connections: list< tuple< ip:list<int>, cost:int, bandwidth:int, connection_type:str > >
 
         :param device_type: str that states what type of network-connected device is represented by this node
         :param device_ip: a 4-element list consisting of integers between 0 and 255 (inclusive), acting as a unique identifier
