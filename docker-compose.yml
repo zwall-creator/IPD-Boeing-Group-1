@@ -27,6 +27,17 @@ services:
       volumes:
         - ./src/frontend:/app
         - /app/node_modules
+  
+  computation:
+    build: ./src/computation
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./src/computation:/app
+    depends_on:
+    #wont start up until the database is healthy
+      db:
+        condition: service_healthy
 
 
 volumes:
