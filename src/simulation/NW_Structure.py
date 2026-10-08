@@ -1,5 +1,5 @@
 """
-@version: v0.7
+@version: v0.8
 @team: Boeing Group 1
 @contributors: [Zak Wallace]
 """
@@ -75,7 +75,7 @@ class NW_Node:
         connections = '['
         for i in range(len(self.connections)):
             connection = self.connections[i]
-            connections += ('({}.{}.{}.{},'#IP addr
+            connections += ('([{},{},{},{}],'#IP addr
                             '{},'#cost
                             '{},'#bandwidth
                             '{})'#connection type
@@ -89,7 +89,7 @@ class NW_Node:
                 connections += ']'
         #return the state string of this node
         return ('{},'#device type
-                '{}.{}.{}.{},'#ip address
+                '[{},{},{},{}],'#ip address
                 '{},'#base_security_level
                 '{},'#current_security_level
                 '{},'#risk_level
