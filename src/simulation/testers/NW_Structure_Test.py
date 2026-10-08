@@ -2,6 +2,7 @@ import unittest
 
 from src.simulation.NW_Structure import NW_Node, NW_Sec_Device
 
+#Template for parameters for constructor tests (does not include current security_level value)
 TEMPLATE_NODE_CONSTRUCTOR_TEST_STATES = {
         'Empty PC Node': ('PC',[0,0,0,0],0.0,0.0,[]),
         'Empty Mobile Node': ('Mobile',[0,0,0,0],0.0,0.0,[]),
@@ -9,7 +10,9 @@ TEMPLATE_NODE_CONSTRUCTOR_TEST_STATES = {
         'Invalid IP Node': ('PC',[256,256,256,256],0.0,0.0,[]),
         'Negative IP Node': ('PC',[-1,-1,-1,-1],0.0,0.0,[]),
         'None Type Node': (None,None,None,None),
+        'Single TCP Connection PC Node' : ('PC',[0,0,0,0],0.0,0.0,[([1,1,1,1],1,1,'TCP')])
 }
+#Template for parameters for constructor tests (includes current security_level values)
 TEMPLATE_NODE_TEST_STATES = {
     'Empty PC Node': ('PC', [0, 0, 0, 0], 0.0, 0.0, 0.0, []),
     'Empty Mobile Node': ('Mobile', [0, 0, 0, 0], 0.0, 0.0, 0.0, []),
@@ -17,6 +20,15 @@ TEMPLATE_NODE_TEST_STATES = {
     'Invalid IP Node': ('PC', [256, 256, 256, 256], 0.0, 0.0, 0.0, []),
     'Negative IP Node': ('PC', [-1, -1, -1, -1], 0.0, 0.0, 0.0, []),
     'None Type Node': (None, None, None, None, None),
+}
+#This template must have only valid nodes (cannot construct erroneous nodes)
+TEMPLATE_NODE_OBJECTS = {
+    'Empty PC Node': NW_Node('PC',[0,0,0,0],0.0,0.0,[]),
+    'Empty Mobile Node': NW_Node('Mobile',[0,0,0,0],0.0,0.0,[]),
+    'Empty Server Node': NW_Node('Server',[0,0,0,0],0.0,0.0,[]),
+
+
+
 }
 class NW_Structure_Test(unittest.TestCase):
 
@@ -209,7 +221,32 @@ class NW_Structure_Test(unittest.TestCase):
             self.assertEqual(type(result), expected_return_type, 'Failed type checking of returned value | got: {}, expected: {}'.format(type(result),expected_return_type)) # add assertion here
             self.assertEqual(result, expected_return_value, 'Failed value checking of returned value | got: {}, expected: {}'.format(result,expected_return_value)) # add assertion here
 
+    def test_NW_Node__gt__errors(self):
+        #a test case is a set of two tuples - inputs, expected results
+        test_cases = [
+            (('PC',[0,0,0,0],0.0,0.0,[]), None, (TypeError)),
+            (('PC',[0,0,0,0],1.0,0.0,[]), 'string instance', (TypeError)),
+            (('Mobile',[0,0,0,0],0.0,0.0,[]),0.0,(TypeError)),
+            (('Mobile',[0,0,0,0],0.0,0.0,[]),0,(TypeError)),
+        ]
+        for test_case in test_cases:
+            #test setup
+            inputs_1 = test_case[0]
+            inputs_2 = test_case[1]
+            expected_output = test_case[2]
+            device_type_1, ip_1, base_sec_level_1, risk_level_1, connections_1 = inputs_1
+            node_2 = inputs_2
+            expected_error = expected_output
+            new_node_1 = NW_Node(device_type_1, ip_1, base_sec_level_1, risk_level_1, connections_1)
+            new_node_2 = node_2
 
+
+            with self.assertRaises(expected_error) as cm:
+                # perform functions to be tested
+                result = new_node_1.__gt__(new_node_2)
+            actual_exception = cm.exception
+            self.assertEqual(type(actual_exception), expected_error,
+                             'Failed error test | expected: {}, got: {}'.format(expected_error, actual_exception))
 
 if __name__ == '__main__':
     unittest.main()
