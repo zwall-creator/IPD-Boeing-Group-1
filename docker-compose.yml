@@ -38,6 +38,12 @@ services:
     #wont start up until the database is healthy
       db:
         condition: service_healthy
+  
+  simulation:
+    build: ./src/simulation
+    volumes:
+      - ./src/simulation:/app
+    profiles: ["tools"]
 
 
 volumes:
