@@ -102,25 +102,6 @@ class NW_Node:
                 return True
         return False
 
-    def connect_via_ip(self, destination_ip, cost = 1, bandwidth = 1, connection_type = 'TCP'):
-        """
-        Function to create a new connection between THIS NW_Node and another node on the network. Destination target node is determined by the given IP address (destination_ip)
-        :type destination_ip: list<int>
-        :type cost: int
-        :type bandwidth: int
-        :type connection_type: str
-
-        :param destination_ip: List of four integer values (0..255, inclusive) that indicate a unique identifier for the target node
-        :param cost: cost for sending data across this connection
-        :param bandwidth: maximum number of cost units that this connection can handle
-        :param connection_type: the type of protocol used for this connection
-        :return: True if connection was successful, False otherwise
-        """
-        #TODO: Add call to function to search the network for Node with given IP address
-        #TODO: Add call to function to send update signal to simulation observer
-        raise NotImplemented
-
-
 
 class NW_Sec_Device(NW_Node):
 

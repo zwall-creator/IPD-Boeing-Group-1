@@ -8,6 +8,7 @@ class Simulation_Service:
     """
     Class to manage the service operations of a single simulation.
     Simulation_Service uses an Observer structure: updates occur when prompted by other classes
+
     """
     def __init__(self, sim_id, sim_state_str = '', sim_config_fpath = None):
         self.sim_id = sim_id
@@ -28,6 +29,26 @@ class Simulation_Service:
             self.node_list.append(new_node)
         else:
             raise TypeError('new_node must be a NW_Node object')
+
+    def connect_via_ip(self, source_ip, destination_ip, cost = 1, bandwidth = 1, connection_type = 'TCP'):
+        """
+        Function to create a new one-way connection between THIS NW_Node and another node on the network. Destination target node is determined by the given IP address (destination_ip)
+        :type source_ip: list<int>
+        :type destination_ip: list<int>
+        :type cost: int
+        :type bandwidth: int
+        :type connection_type: str
+
+        :param source_ip: List of four integer values (0..255) that indicate a unique identifier for the source node
+        :param destination_ip: List of four integer values (0..255, inclusive) that indicate a unique identifier for the target node
+        :param cost: cost for sending data across this connection
+        :param bandwidth: maximum number of cost units that this connection can handle
+        :param connection_type: the type of protocol used for this connection
+        :return: True if connection was successful, False otherwise
+        """
+        #TODO: Add call to function to search the network for Node with given IP address
+        #TODO: Add call to function to send update signal to simulation observer
+        raise NotImplemented
 
     def update_sim(self):
         """
