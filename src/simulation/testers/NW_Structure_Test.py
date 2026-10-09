@@ -69,6 +69,8 @@ class NW_Structure_Test(unittest.TestCase):
             (('PC',[0,-1,0,0],0.0,0.0,[]),(ValueError)),
             (('PC',[0,0,-1,0],0.0,0.0,[]),(ValueError)),
             (('PC',[0,0,0,-1],0.0,0.0,[]),(ValueError)),
+            (('PC',[0,0,0,0],0.0,0.0,()),(TypeError)),
+            (('PC',[0,0,0,0],0.0,0.0,'Not a List'),(TypeError)),
         ]
         for test_case in test_cases:
             inputs = test_case[0]

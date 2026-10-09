@@ -123,10 +123,26 @@ class NW_Node:
         if type(other) == NW_Node:
             if self.security_level == other.security_level:
                 return True
-        return False
+            return False
+        raise TypeError('given object is not a NW_Node instance, cannot compare')
 
     def add_connection(self, destination_ip, cost, bandwidth, connection_type):
-        #TODO: add input validation
+        #input validation
+        if type(destination_ip) != list:
+            raise TypeError('destination_ip should be a list')
+        if type(cost) != int:
+            raise TypeError('cost should be an integer')
+        if cost < 0:
+            raise ValueError('cost should be a positive integer')
+        if type(bandwidth) != int:
+            raise TypeError('bandwidth should be an integer')
+        if bandwidth < 0:
+            raise ValueError('bandwidth should be a positive integer')
+        if type(connection_type) != str:
+            raise TypeError('connection_type should be a string')
+        if connection_type not in ['TCP', 'UDP']:
+            raise ValueError('connection_type should be either TCP or UDP')
+
         self.connections.append((destination_ip, cost, bandwidth, connection_type))
 
     def get_ip_str(self):
@@ -145,7 +161,7 @@ class NW_Sec_Device(NW_Node):
         :type device_ip: list<int>
         :type base_sec_level: float
         :type risk_level: float
-        :type sec_modifier: str
+        :type sec_modifier: float
         :type covered_devices: list< tuple<NW_Node, ip:list<int>> >
         :type connections: list< tuple< ip:list<int>, cost:int, bandwidth:int, connection_type:str > >
 
@@ -157,6 +173,33 @@ class NW_Sec_Device(NW_Node):
         :param covered_devices: a list of tuples that contain the memory address and ip address of another node covered by this security device
         :param connections: a list of tuples that contain all info regarding a connection from this node to another node on the network
         """
+        if type(device_type) != str:
+            raise TypeError('device_type should be a string')
+        if device_type not in NW_Node.DEVICE_TYPES:
+            raise ValueError('device_type must be an approved type')
+        if type(device_ip) != list:
+            raise TypeError('device_ip should be a list')
+        for byte in device_ip:
+            if type(byte) != int:
+                raise TypeError('device_ip bytes should be integers')
+            if byte < 0 or byte > 255:
+                raise ValueError('device_ip bytes must be between 0 and 255')
+        if type(base_sec_level) != float:
+            raise TypeError('base_sec_level should be a float')
+        if type(risk_level) != float:
+            raise TypeError('risk_level should be a float')
+        if type(sec_modifier) != float:
+            raise TypeError('sec_modifier should be a float')
+        if covered_devices is None:
+            covered_devices = []
+        if type(covered_devices) != list:
+            raise TypeError('covered_devices should be a list')
+        if connections is None:
+            connections = []
+        if type(connections) != list:
+            raise TypeError('connections should be a list')
+
+
         NW_Node.__init__(self, device_type, device_ip, base_sec_level, risk_level, connections)
         self.sec_modifier = sec_modifier
         self.covered_devices = covered_devices
