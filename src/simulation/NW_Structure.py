@@ -118,7 +118,7 @@ class NW_Node:
         """
         :type other: NW_Node
         :param other: Another NW_Node instance object to compare against this one
-        :return: True if THIS NW_Node has a equal security_level than given NW_Node. Returns False otherwise.
+        :return: True if THIS NW_Node has an equal security_level than given NW_Node. Returns False otherwise.
         """
         if type(other) == NW_Node:
             if self.security_level == other.security_level:
