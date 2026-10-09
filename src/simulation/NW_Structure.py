@@ -73,18 +73,20 @@ class NW_Node:
         #TODO: Implement exchanging any NONE or NULL values for the null character
         #obtaining string representation of all connections first
         connections = '['
+        if len(self.connections) == 0:
+            connections += ']'
         for i in range(len(self.connections)):
             connection = self.connections[i]
             connections += ('([{},{},{},{}],'#IP addr
                             '{},'#cost
                             '{},'#bandwidth
                             '{})'#connection type
-                            ).format(connection[1][0], connection[1][1], connection[1][2], connection[1][3],
+                            ).format(connection[0][0], connection[0][1], connection[0][2], connection[0][3],
+                                     connection[1],
                                      connection[2],
-                                     connection[3],
-                                     connection[4])
+                                     connection[3])
             if i != len(self.connections) - 1:
-                connections += ', '
+                connections += ','
             else:
                 connections += ']'
         #return the state string of this node
