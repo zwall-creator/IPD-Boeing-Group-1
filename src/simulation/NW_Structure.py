@@ -134,8 +134,12 @@ class NW_Node:
         Searches for a connection that is using the given port number
         :type source_port: int
         :param source_port: number of the port to check for a connection assigned to
-        :return: string representation of the connection details if a connection is present
+        :return: string representation of the connection details if a connection is present, returns None if no matching connection is present
         """
+        if type(source_port) != int:
+            raise TypeError('source_port should be an integer')
+        if source_port < 0:
+            raise ValueError('source_port should be a positive integer')
         for connection in self.connections:
             if source_port == connection[4]:
                 return '([{},{},{},{}],{},{},{},{})'.format(connection[0][0], connection[0][1], connection[0][2], connection[0][3],
@@ -149,11 +153,30 @@ class NW_Node:
         :param port: number of a port to check the availability of
         :return: True if port not in use, false if currently in use
         """
+        if type(port) != int:
+            raise TypeError('port should be an integer')
+        if port < 0:
+            raise ValueError('port should be a positive integer')
         if self.search_for_connection(port) is not None:
             return False
         return True
 
     def add_connection(self, destination_ip, cost, bandwidth, connection_type, source_port):
+        """
+
+        :type destination_ip: list
+        :type cost: int
+        :type bandwidth: int
+        :type connection_type: str
+        :type source_port: int
+
+        :param destination_ip:
+        :param cost:
+        :param bandwidth:
+        :param connection_type:
+        :param source_port:
+        :return:
+        """
         #input validation
         if type(destination_ip) != list:
             raise TypeError('destination_ip should be a list')
