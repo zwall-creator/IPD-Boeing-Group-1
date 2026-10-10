@@ -1,0 +1,128 @@
+/* Colors come from the variables in index.css. */
+
+.network-canvas {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #fff;
+  color: var(--text);
+}
+
+.network-canvas__graph {
+  position: absolute;
+  inset: 0;
+}
+
+.network-canvas__graph[data-mode="add-node"],
+.network-canvas__graph[data-mode="add-edge"] {
+  cursor: crosshair;
+}
+
+/* ---- Toolbar ---- */
+
+.network-canvas__toolbar {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18), 0 1px 3px rgba(0, 0, 0, 0.12);
+  font-size: 16px;
+}
+
+.network-canvas__toolbar button {
+  padding: 9px 16px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.network-canvas__toolbar button:not([aria-pressed="true"]):hover:enabled {
+  background: #ececf0;
+}
+
+.network-canvas__toolbar button[aria-pressed="true"] {
+  background: var(--vt-maroon);
+  color: #fff;
+}
+
+.network-canvas__toolbar button:focus-visible {
+  outline: 2px solid var(--vt-orange);
+  outline-offset: 1px;
+}
+
+.network-canvas__toolbar button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.network-canvas__divider {
+  align-self: stretch;
+  width: 1px;
+  margin: 4px 4px;
+  background: var(--border);
+}
+
+.network-canvas__hint {
+  padding: 0 10px;
+  color: var(--text-muted);
+  font-size: 15px;
+}
+
+/* ---- Device-type menu (Add node) ---- */
+
+.network-canvas__type-menu {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  width: 180px; /* NetworkCanvas.jsx keeps a 180px-wide menu inside the canvas */
+  padding: 6px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18), 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.network-canvas__type-menu-title {
+  padding: 4px 10px 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.network-canvas__type-menu button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.network-canvas__type-menu button svg {
+  color: var(--vt-maroon);
+}
+
+.network-canvas__type-menu button:hover,
+.network-canvas__type-menu button:focus-visible {
+  background: #f3e8ec;
+  outline: none;
+}
