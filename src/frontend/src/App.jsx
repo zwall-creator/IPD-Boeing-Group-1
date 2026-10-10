@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
 import { useEventSource } from './hooks/useEventSource';
+import NetworkCanvas from './components/NetworkCanvas';
 
 // Map SSE event types to a log-entry CSS variant for colour coding
 function eventToLogVariant(type) {
@@ -183,10 +184,7 @@ export default function App() {
 
           <div className="canvas-viewport">
             {activeTab === 'canvas' ? (
-              <div className="canvas-placeholder">
-                <p>Base Simulation Display Active</p>
-                <small>Network graph rendering canvas container (Ticket #10)</small>
-              </div>
+              <NetworkCanvas />
             ) : (
               <div className="metrics-placeholder">
                 <p>Optimization Performance Metrics</p>
