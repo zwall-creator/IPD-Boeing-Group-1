@@ -1,29 +1,29 @@
-import React, { useState, useEffect, useRef } from "react";
-import "./App.css";
-import { useEventSource } from "./hooks/useEventSource";
-import NetworkCanvas from "./components/NetworkCanvas";
+import React, { useState, useEffect, useRef } from 'react';
+import './App.css';
+import { useEventSource } from './hooks/useEventSource';
+import NetworkCanvas from './components/NetworkCanvas';
 
 // Map SSE event types to a log-entry CSS variant for colour coding
 function eventToLogVariant(type) {
-  if (type === "connected") return "info";
-  if (type === "simulation.started") return "info";
-  if (type === "simulation.progress") return "default";
-  if (type === "simulation.done") return "success";
-  if (type === "error") return "error";
-  if (type === "warn") return "warn";
-  return "default";
+  if (type === 'connected')              return 'info';
+  if (type === 'simulation.started')     return 'info';
+  if (type === 'simulation.progress')    return 'default';
+  if (type === 'simulation.done')        return 'success';
+  if (type === 'error')                  return 'error';
+  if (type === 'warn')                   return 'warn';
+  return 'default';
 }
 
 function formatEvent(event) {
   const { type, data } = event;
   switch (type) {
-    case "connected":
-      return "[SSE] Connection established.";
-    case "simulation.started":
+    case 'connected':
+      return '[SSE] Connection established.';
+    case 'simulation.started':
       return `[Sim] Started — solver: ${data.solver}`;
-    case "simulation.progress":
+    case 'simulation.progress':
       return `[Sim] Step ${data.step}/${data.total}: ${data.message}`;
-    case "simulation.done":
+    case 'simulation.done':
       return `[Sim] Complete — solver: ${data.solver} · status: ${data.status}`;
     default:
       return `[${type}] ${JSON.stringify(data)}`;
@@ -31,26 +31,25 @@ function formatEvent(event) {
 }
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState("canvas");
-  const [solverType, setSolverType] = useState("classical");
+  const [activeTab, setActiveTab]   = useState('canvas');
+  const [solverType, setSolverType] = useState('classical');
 
   // Local UI logs (seed entries shown before the SSE connection is ready)
   const [localLogs, setLocalLogs] = useState([
-    { text: "[System] Initialised simulation environment.", variant: "info" },
-    { text: "[Backend] Computation API mapped at :8000.", variant: "info" },
+    { text: '[System] Initialised simulation environment.', variant: 'info' },
+    { text: '[Backend] Computation API mapped at :8000.', variant: 'info' },
   ]);
 
-  const { events, status, backendOk, clearEvents, emitEvent, runSim } =
-    useEventSource();
+  const { events, status, backendOk, clearEvents, emitEvent, runSim } = useEventSource();
 
   // Scroll the log console to the bottom whenever new entries arrive
   const logEndRef = useRef(null);
   useEffect(() => {
-    logEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    logEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [events, localLogs]);
 
   // Derive combined log list: local seed entries + live SSE events
-  const liveEntries = events.map((ev) => ({
+  const liveEntries = events.map(ev => ({
     text: formatEvent(ev),
     variant: eventToLogVariant(ev.type),
   }));
@@ -60,51 +59,45 @@ export default function App() {
   // Handlers
   // ------------------------------------------------------------------
   const handleRunSimulation = async () => {
-    setLocalLogs((prev) => [
+    setLocalLogs(prev => [
       ...prev,
-      { text: `[Run] Triggering ${solverType} solver…`, variant: "info" },
+      { text: `[Run] Triggering ${solverType} solver…`, variant: 'info' },
     ]);
     const ok = await runSim(solverType);
     if (!ok) {
-      setLocalLogs((prev) => [
+      setLocalLogs(prev => [
         ...prev,
-        {
-          text: "[Error] Could not reach backend — is Flask running on :8000?",
-          variant: "error",
-        },
+        { text: '[Error] Could not reach backend — is Flask running on :8000?', variant: 'error' },
       ]);
     }
   };
 
   const handleAddNode = () =>
-    emitEvent("graph.add_node", { label: `Node-${Date.now()}` });
+    emitEvent('graph.add_node', { label: `Node-${Date.now()}` });
 
   const handleAddEdge = () =>
-    emitEvent("graph.add_edge", { from: "A", to: "B" });
+    emitEvent('graph.add_edge', { from: 'A', to: 'B' });
 
   const handleReset = () => {
     clearEvents();
-    setLocalLogs([{ text: "[System] Canvas reset.", variant: "warn" }]);
+    setLocalLogs([
+      { text: '[System] Canvas reset.', variant: 'warn' },
+    ]);
   };
 
   // ------------------------------------------------------------------
   // Status badge
   // ------------------------------------------------------------------
   const statusLabel =
-    status === "connected"
-      ? "Backend: Connected"
-      : status === "connecting"
-        ? "Backend: Connecting…"
-        : status === "error"
-          ? "Backend: Reconnecting…"
-          : "Backend: Disconnected";
+    status === 'connected'    ? 'Backend: Connected'    :
+    status === 'connecting'   ? 'Backend: Connecting…'  :
+    status === 'error'        ? 'Backend: Reconnecting…' :
+                                'Backend: Disconnected';
 
   const statusVariant =
-    status === "connected" && backendOk
-      ? "online"
-      : status === "connecting"
-        ? "connecting"
-        : "offline";
+    status === 'connected' && backendOk ? 'online' :
+    status === 'connecting'             ? 'connecting' :
+                                          'offline';
 
   // ------------------------------------------------------------------
   // Render
@@ -118,9 +111,7 @@ export default function App() {
           <span className="badge-env">Local Dev</span>
         </div>
         <div className="header-actions">
-          <span className={`status-indicator ${statusVariant}`}>
-            {statusLabel}
-          </span>
+          <span className={`status-indicator ${statusVariant}`}>{statusLabel}</span>
           <button
             type="button"
             className="btn-primary"
@@ -151,25 +142,13 @@ export default function App() {
 
           <div className="control-group">
             <label>Graph Tools</label>
-            <button
-              type="button"
-              className="btn-secondary"
-              onClick={handleAddNode}
-            >
+            <button type="button" className="btn-secondary" onClick={handleAddNode}>
               + Add Node
             </button>
-            <button
-              type="button"
-              className="btn-secondary"
-              onClick={handleAddEdge}
-            >
+            <button type="button" className="btn-secondary" onClick={handleAddEdge}>
               + Add Edge
             </button>
-            <button
-              type="button"
-              className="btn-secondary"
-              onClick={handleReset}
-            >
+            <button type="button" className="btn-secondary" onClick={handleReset}>
               Reset Canvas
             </button>
           </div>
@@ -187,19 +166,15 @@ export default function App() {
             <div className="tabs">
               <button
                 type="button"
-                className={
-                  activeTab === "canvas" ? "tab-btn active" : "tab-btn"
-                }
-                onClick={() => setActiveTab("canvas")}
+                className={activeTab === 'canvas' ? 'tab-btn active' : 'tab-btn'}
+                onClick={() => setActiveTab('canvas')}
               >
                 Network Topology
               </button>
               <button
                 type="button"
-                className={
-                  activeTab === "metrics" ? "tab-btn active" : "tab-btn"
-                }
-                onClick={() => setActiveTab("metrics")}
+                className={activeTab === 'metrics' ? 'tab-btn active' : 'tab-btn'}
+                onClick={() => setActiveTab('metrics')}
               >
                 Optimization Metrics
               </button>
@@ -208,14 +183,12 @@ export default function App() {
           </div>
 
           <div className="canvas-viewport">
-            {activeTab === "canvas" ? (
+            {activeTab === 'canvas' ? (
               <NetworkCanvas />
             ) : (
               <div className="metrics-placeholder">
                 <p>Optimization Performance Metrics</p>
-                <small>
-                  Execution duration, bitstring states, and schedule plots.
-                </small>
+                <small>Execution duration, bitstring states, and schedule plots.</small>
               </div>
             )}
           </div>
