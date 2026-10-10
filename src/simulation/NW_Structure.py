@@ -15,7 +15,7 @@ class NW_Node:
         :type device_ip: list<int>
         :type base_sec_level: float
         :type risk_level: float
-        :type connections: list< tuple<destination_ip:list<int>, cost:int, bandwidth:int, connection_type:str > >
+        :type connections: list< tuple<destination_ip:list<int>, cost:int, bandwidth:int, connection_type:str, source_port:int > >
 
         :param device_type: str that states what type of network-connected device is represnted by this node
         :param device_ip: a 4-element list consisting of integers between 0 and 255 (inclusive), acting as a unique identifier
@@ -65,7 +65,7 @@ class NW_Node:
     def get_state_str(self):
         """
         Creates a universally-designed string representation of the state of this NW_Node for use with external project components
-        \n example: \n'PC','255.255.255.255',0.0,1.0,2.0,[(0.0.0.0,1,1,'TCP'),(1.1.1.1,2,2,'UDP')];
+        \n example: \n'PC','255.255.255.255',0.0,1.0,2.0,[(0.0.0.0,1,1,'TCP',24),(1.1.1.1,2,2,'UDP',80)];
         \nThe semicolon acts as the indicator of the end of this node's state string.
         \n NOTE: any value that is NONE or NULL will be represented with the null char ('\\\\0').
         :return: string representation of this NW_Node
@@ -80,11 +80,12 @@ class NW_Node:
             connections += ('([{},{},{},{}],'#IP addr
                             '{},'#cost
                             '{},'#bandwidth
-                            '{})'#connection type
+                            '{},'#connection type
+                            '{})'#source port number
                             ).format(connection[0][0], connection[0][1], connection[0][2], connection[0][3],
                                      connection[1],
                                      connection[2],
-                                     connection[3])
+                                     connection[3],connection[4])
             if i != len(self.connections) - 1:
                 connections += ','
             else:
@@ -128,7 +129,7 @@ class NW_Node:
             return False
         raise TypeError('given object is not a NW_Node instance, cannot compare')
 
-    def add_connection(self, destination_ip, cost, bandwidth, connection_type):
+    def add_connection(self, destination_ip, cost, bandwidth, connection_type, source_port):
         #input validation
         if type(destination_ip) != list:
             raise TypeError('destination_ip should be a list')
@@ -144,8 +145,23 @@ class NW_Node:
             raise TypeError('connection_type should be a string')
         if connection_type not in ['TCP', 'UDP']:
             raise ValueError('connection_type should be either TCP or UDP')
+        if type(source_port) != int:
+            raise TypeError('source_port should be an integer')
+        if source_port < 0:
+            raise ValueError('source_port should be a positive integer')
 
-        self.connections.append((destination_ip, cost, bandwidth, connection_type))
+        self.connections.append((destination_ip, cost, bandwidth, connection_type, source_port))
+
+    def remove_connection(self, source_port):
+        if type(source_port) != int:
+            raise TypeError('source_port should be an integer')
+        if source_port < 0:
+            raise ValueError('source_port should be a positive integer')
+        for i in range(len(self.connections)):
+            connection =self.connections[i]
+            if connection[4] == source_port:
+                return self.connections.pop(i)
+        return None
 
     def get_ip_str(self):
         """

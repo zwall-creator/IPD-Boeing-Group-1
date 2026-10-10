@@ -10,7 +10,7 @@ TEMPLATE_NODE_CONSTRUCTOR_TEST_STATES = {
         'Invalid IP Node': ('PC',[256,256,256,256],0.0,0.0,[]),
         'Negative IP Node': ('PC',[-1,-1,-1,-1],0.0,0.0,[]),
         'None Type Node': (None,None,None,None),
-        'Single TCP Connection PC Node' : ('PC',[0,0,0,0],0.0,0.0,[([1,1,1,1],1,1,'TCP')])
+        'Single TCP Connection PC Node' : ('PC',[0,0,0,0],0.0,0.0,[([1,1,1,1],1,1,'TCP',80)])
 }
 #Template for parameters for constructor tests (includes current security_level values)
 TEMPLATE_NODE_TEST_STATES = {
@@ -34,6 +34,8 @@ class NW_Structure_Test(unittest.TestCase):
 
     def test_something(self):
         self.assertEqual(True, True)  # add assertion here
+    def test_fail(self):
+        self.assertEqual(True, False, 'This test should fail')  # add assertion here
 
 # Tests for NW_Node's __init__ function
     def test_NW_Node__init__state_tests(self):
@@ -347,7 +349,7 @@ class NW_Structure_Test(unittest.TestCase):
             (('PC',[0,0,0,0],0.0,0.0,[]),(NW_Node,'PC',[0,0,0,0],0.0,0.0,0.0,[])),
             (('Mobile',[0,0,0,0],0.0,0.0,[]),(NW_Node,'Mobile',[0,0,0,0],0.0,0.0,0.0,[])),
             (('Mobile',[0,0,0,0],0.0,0.0,None),(NW_Node,'Mobile',[0,0,0,0],0.0,0.0,0.0,[])),
-            (('Mobile',[0,0,0,0],0.0,0.0,[([0,0,0,1],1,1,'TCP'),]),(NW_Node,'Mobile',[0,0,0,0],0.0,0.0,0.0,[([0,0,0,1],1,1,'TCP'),])),
+            (('Mobile',[0,0,0,0],0.0,0.0,[([0,0,0,1],1,1,'TCP',80),]),(NW_Node,'Mobile',[0,0,0,0],0.0,0.0,0.0,[([0,0,0,1],1,1,'TCP',80),])),
         ]
         for test_case in test_cases:
             #test setup
@@ -377,8 +379,8 @@ class NW_Structure_Test(unittest.TestCase):
             (('Mobile',[0,0,0,0],0.0,0.0,[]), (str, 'Mobile,[0,0,0,0],0.0,0.0,0.0,[];')),
             (('Mobile',[0,0,0,0],1.0,0.0,None),(str,'Mobile,[0,0,0,0],1.0,1.0,0.0,[];')),
             (('Mobile',[0,0,0,0],0.0,0.0,None),(str,'Mobile,[0,0,0,0],0.0,0.0,0.0,[];')),
-            (('Mobile',[0,0,0,0],0.0,0.0,[([0,0,0,1],1,1,'TCP'),]),(str,'Mobile,[0,0,0,0],0.0,0.0,0.0,[([0,0,0,1],1,1,TCP)];')),
-            (('Mobile',[0,0,0,0],0.0,0.0,[([0,0,0,1],1,1,'TCP'),([0,0,0,2],3,4,'UDP'),]),(str,'Mobile,[0,0,0,0],0.0,0.0,0.0,[([0,0,0,1],1,1,TCP),([0,0,0,2],3,4,UDP)];')),
+            (('Mobile',[0,0,0,0],0.0,0.0,[([0,0,0,1],1,1,'TCP',80),]),(str,'Mobile,[0,0,0,0],0.0,0.0,0.0,[([0,0,0,1],1,1,TCP,80)];')),
+            (('Mobile',[0,0,0,0],0.0,0.0,[([0,0,0,1],1,1,'TCP',80),([0,0,0,2],3,4,'UDP',81),]),(str,'Mobile,[0,0,0,0],0.0,0.0,0.0,[([0,0,0,1],1,1,TCP,80),([0,0,0,2],3,4,UDP,81)];')),
         ]
         for test_case in test_cases:
             #test setup
@@ -389,7 +391,6 @@ class NW_Structure_Test(unittest.TestCase):
             new_node_1 = NW_Node(device_type_1, ip_1, base_sec_level_1, risk_level_1, connections_1)
 
             #perform functions to be tested
-            print(test_case)
             result = new_node_1.get_state_str()
 
             #assert that actual is expected
