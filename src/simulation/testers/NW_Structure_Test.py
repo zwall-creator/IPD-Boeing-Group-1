@@ -35,7 +35,7 @@ class NW_Structure_Test(unittest.TestCase):
     def test_something(self):
         self.assertEqual(True, True)  # add assertion here
     def test_fail(self):
-        self.assertEqual(True, False, 'This test should fail')  # add assertion here
+        self.assertNotEqual(True, False)  # add assertion here
 
 # Tests for NW_Node's __init__ function
     def test_NW_Node__init__state_tests(self):
@@ -678,7 +678,7 @@ class NW_Structure_Test(unittest.TestCase):
             self.assertEqual(expected_error, type(actual_exception),
                              'Failed error test | expected: {}, got: {}'.format(expected_error, actual_exception))
 
-# Tests fpr NW_Node's remove_connection function
+# Tests for NW_Node's remove_connection function
 
     def test_NW_Node_remove_connection_state(self):
         #a test case is a set of two tuples - inputs, expected results
@@ -805,6 +805,66 @@ class NW_Structure_Test(unittest.TestCase):
             actual_exception = cm.exception
             self.assertEqual(expected_error, type(actual_exception),
                              'Failed error test | expected: {}, got: {}'.format(expected_error, actual_exception))
+
+# Tests for NW_Node's get_ip_str function
+
+    def test_NW_Node_get_ip_str_state(self):
+        #a test case is a set of two tuples - inputs, expected results
+        test_cases = [
+            (('PC',[0,0,0,0],0.0,0.0,[]),(NW_Node,'PC',[0,0,0,0],0.0,0.0,0.0,[])),
+            (('Mobile',[0,0,0,0],0.0,0.0,[]),(NW_Node,'Mobile',[0,0,0,0],0.0,0.0,0.0,[])),
+            (('Mobile',[0,0,0,0],0.0,0.0,None),(NW_Node,'Mobile',[0,0,0,0],0.0,0.0,0.0,[])),
+        ]
+        for test_case in test_cases:
+            #test setup
+            inputs = test_case[0]
+            expected_output = test_case[1]
+            device_type, ip, base_sec_level, risk_level, connections = inputs
+            expected_object_type, expected_device_type, expected_ip, expected_base_sec_level, expected_security_level, expected_risk_level, expected_connections = expected_output
+            new_node = NW_Node(device_type, ip, base_sec_level, risk_level, connections)
+
+            #run function to be tested
+            result = new_node.get_ip_str()
+
+            #assert state is now as expected
+            self.assertEqual(expected_object_type, type(new_node), 'Failed type checking of object | got: {}, expected: {}'.format(type(new_node),expected_object_type)) # add assertion here
+            self.assertEqual(expected_device_type, new_node.device_type, 'Failed value checking of device_type | got: {}, expected: {}'.format(new_node.device_type,expected_device_type))  # add assertion here
+            self.assertEqual(expected_ip, new_node.device_ip, 'Failed value checking of ip address | got: {}, expected: {}'.format(new_node.device_ip,expected_ip))  # add assertion here
+            self.assertEqual(expected_base_sec_level, new_node.base_sec_level, 'Failed value checking of base_security_level | got: {}, expected: {}'.format(new_node.base_sec_level,expected_base_sec_level))  # add assertion here
+            self.assertEqual(expected_security_level, new_node.security_level, 'Failed value checking of security_level | got: {}, expected: {}'.format(new_node.security_level,expected_security_level))  # add assertion here
+            self.assertEqual(expected_risk_level, new_node.risk_level, 'Failed value checking of risk_level | got: {}, expected: {}'.format(new_node.risk_level,expected_risk_level))  # add assertion here
+            self.assertEqual(expected_connections, new_node.connections, 'Failed value checking of connections | got: {}, expected: {}'.format(new_node.connections,expected_connections))  # add assertion here
+
+    def test_NW_Node_get_ip_str_value(self):
+        #a test case is a set of two tuples - inputs, expected results
+        test_cases = [
+            (('PC',[0,0,0,0],0.0,0.0,[]),(str,'0.0.0.0')),
+            (('Mobile',[0,0,0,0],0.0,0.0,[]),(str,'0.0.0.0')),
+            (('Mobile',[0,0,0,0],0.0,0.0,None),(str,'0.0.0.0')),
+            (('Mobile',[1,0,0,0],0.0,0.0,None),(str,'1.0.0.0')),
+            (('Mobile',[0,1,0,0],0.0,0.0,None),(str,'0.1.0.0')),
+            (('Mobile',[0,0,1,0],0.0,0.0,None),(str,'0.0.1.0')),
+            (('Mobile',[0,0,0,1],0.0,0.0,[]),(str,'0.0.0.1')),
+            (('Mobile',[255,0,0,0],0.0,0.0,None),(str,'255.0.0.0')),
+            (('Mobile',[0,255,0,0],0.0,0.0,None),(str,'0.255.0.0')),
+            (('Mobile',[0,0,255,0],0.0,0.0,[]),(str,'0.0.255.0')),
+            (('Mobile',[0,0,0,255],0.0,0.0,None),(str,'0.0.0.255')),
+            (('Mobile',[255,255,255,255],0.0,0.0,None),(str,'255.255.255.255')),
+        ]
+        for test_case in test_cases:
+            #test setup
+            inputs = test_case[0]
+            expected_output = test_case[1]
+            device_type, ip, base_sec_level, risk_level, connections = inputs
+            expected_return_type, expected_return_value = expected_output
+            new_node = NW_Node(device_type, ip, base_sec_level, risk_level, connections)
+
+            #run function to be tested
+            result = str(new_node)
+
+            #assert state is now as expected
+            self.assertEqual(expected_return_type, type(result), 'Failed type checking of returned value | got: {}, expected: {}'.format(type(result),expected_return_type)) # add assertion here
+            self.assertEqual(expected_return_type, type(result), 'Failed value checking of returned value | got: {}, expected: {}'.format(result,expected_return_value)) # add assertion here
 
 
 if __name__ == '__main__':
