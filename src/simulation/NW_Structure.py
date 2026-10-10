@@ -129,6 +129,30 @@ class NW_Node:
             return False
         raise TypeError('given object is not a NW_Node instance, cannot compare')
 
+    def search_for_connection(self, source_port):
+        """
+        Searches for a connection that is using the given port number
+        :type source_port: int
+        :param source_port: number of the port to check for a connection assigned to
+        :return: string representation of the connection details if a connection is present
+        """
+        for connection in self.connections:
+            if source_port == connection[4]:
+                return '([{},{},{},{}],{},{},{},{})'.format(connection[0][0], connection[0][1], connection[0][2], connection[0][3],
+                                                            connection[1],connection[2],connection[3],connection[4])
+        return None
+
+    def is_open_port(self, port):
+        """
+        Checks to see if a given port is currently being used for a connection
+        :type port: int
+        :param port: number of a port to check the availability of
+        :return: True if port not in use, false if currently in use
+        """
+        if self.search_for_connection(port) is not None:
+            return False
+        return True
+
     def add_connection(self, destination_ip, cost, bandwidth, connection_type, source_port):
         #input validation
         if type(destination_ip) != list:
