@@ -8,6 +8,7 @@ from typing import override
 
 class NW_Node:
     DEVICE_TYPES = ('PC', 'Laptop', 'Cell Phone','Router', 'Switch','Server')
+    VALID_CONNECTION_TYPES = ('TCP','UDP')
 
     def __init__(self, device_type, device_ip, base_sec_level, risk_level, connections = []):
         """
@@ -190,13 +191,14 @@ class NW_Node:
             raise ValueError('bandwidth should be a positive integer')
         if type(connection_type) != str:
             raise TypeError('connection_type should be a string')
-        if connection_type not in ['TCP', 'UDP']:
-            raise ValueError('connection_type should be either TCP or UDP')
+        if connection_type not in NW_Node.VALID_CONNECTION_TYPES:
+            raise ValueError('given connection_type is not a valid connection type')
         if type(source_port) != int:
             raise TypeError('source_port should be an integer')
         if source_port < 0:
             raise ValueError('source_port should be a positive integer')
-
+        if not self.is_open_port(source_port):
+            raise ValueError('source_port should be a currently open port')
         self.connections.append((destination_ip, cost, bandwidth, connection_type, source_port))
 
     def remove_connection(self, source_port):
