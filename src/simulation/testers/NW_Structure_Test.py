@@ -678,6 +678,134 @@ class NW_Structure_Test(unittest.TestCase):
             self.assertEqual(expected_error, type(actual_exception),
                              'Failed error test | expected: {}, got: {}'.format(expected_error, actual_exception))
 
+# Tests fpr NW_Node's remove_connection function
+
+    def test_NW_Node_remove_connection_state(self):
+        #a test case is a set of two tuples - inputs, expected results
+        test_cases = [
+            (('PC',[0,0,0,0],0.0,0.0,[([0,0,0,1],1,1,'TCP',80)]),
+             (80),
+             (NW_Node,'PC',[0,0,0,0],0.0,0.0,0.0,[])),
+
+            (('PC',[0,0,0,0],0.0,0.0,[([0,0,0,1],1,1,'TCP',80),([0,0,0,2],3,4,'UDP',81)]),
+             (81),
+             (NW_Node,'PC',[0,0,0,0],0.0,0.0,0.0,[([0,0,0,1],1,1,'TCP',80)])),
+
+            (('PC',[0,0,0,0],0.0,0.0,[([0,0,0,1],1,1,'TCP',80)]),
+             (81),
+             (NW_Node,'PC',[0,0,0,0],0.0,0.0,0.0,[([0,0,0,1],1,1,'TCP',80)])),
+
+            (('PC',[0,0,0,0],0.0,0.0,None),
+             (80),
+             (NW_Node,'PC',[0,0,0,0],0.0,0.0,0.0,[])),
+        ]
+        for test_case in test_cases:
+            #test setup
+            inputs_1 = test_case[0]
+            params = test_case[1]
+            expected_output = test_case[2]
+            device_type_1, ip_1, base_sec_level_1, risk_level_1, connections_1 = inputs_1
+            param_source_port = params
+            expected_object_type, expected_device_type, expected_ip, expected_base_sec_level, expected_security_level, expected_risk_level, expected_connections = expected_output
+            new_node_1 = NW_Node(device_type_1, ip_1, base_sec_level_1, risk_level_1, connections_1)
+
+            #perform functions to be tested
+            try:
+                result = new_node_1.remove_connection(param_source_port)
+            except:
+                temp = 0 #do nothing if exception occurs, state must still be tested post-error
+            #assert that actual is expected
+            self.assertEqual(expected_object_type, type(new_node_1), 'Failed type checking of constructed object | got: {}, expected: {}'.format(type(new_node_1),expected_object_type)) # add assertion here
+            self.assertEqual(expected_device_type, new_node_1.device_type, 'Failed value checking of device_type | got: {}, expected: {}'.format(new_node_1.device_type,expected_device_type))  # add assertion here
+            self.assertEqual(expected_ip, new_node_1.device_ip, 'Failed value checking of ip address | got: {}, expected: {}'.format(new_node_1.device_ip,expected_ip))  # add assertion here
+            self.assertEqual(expected_base_sec_level, new_node_1.base_sec_level, 'Failed value checking of base_security_level | got: {}, expected: {}'.format(new_node_1.base_sec_level,expected_base_sec_level))  # add assertion here
+            self.assertEqual(expected_security_level, new_node_1.security_level, 'Failed value checking of security_level | got: {}, expected: {}'.format(new_node_1.security_level,expected_security_level))  # add assertion here
+            self.assertEqual(expected_risk_level, new_node_1.risk_level, 'Failed value checking of risk_level | got: {}, expected: {}'.format(new_node_1.risk_level,expected_risk_level))  # add assertion here
+            self.assertEqual(expected_connections, new_node_1.connections, 'Failed value checking of connections | got: {}, expected: {}'.format(new_node_1.connections,expected_connections))  # add assertion here
+
+    def test_NW_Node_remove_connection_value(self):
+        #a test case is a set of two tuples - inputs, expected results
+        test_cases = [
+            (('PC',[0,0,0,0],0.0,0.0,[([0,0,0,1],1,1,'TCP',80)]),
+             (80),
+             (tuple,([0,0,0,1],1,1,'TCP',80))),
+
+            (('PC',[0,0,0,0],0.0,0.0,[([0,0,0,1],1,1,'TCP',80),([0,0,0,2],3,4,'UDP',81)]),
+             (81),
+             (tuple,([0,0,0,2],3,4,'UDP',81))),
+
+            (('PC',[0,0,0,0],0.0,0.0,[([0,0,0,1],1,1,'TCP',80)]),
+             (81),
+             (type(None),None)),
+
+            (('PC',[0,0,0,0],0.0,0.0,None),
+             (80),
+             (type(None),None)),
+        ]
+        for test_case in test_cases:
+            #test setup
+            inputs_1 = test_case[0]
+            params_1 = test_case[1]
+            expected_output = test_case[2]
+            device_type_1, ip_1, base_sec_level_1, risk_level_1, connections_1 = inputs_1
+            expected_return_type, expected_return_value = expected_output
+            new_node_1 = NW_Node(device_type_1, ip_1, base_sec_level_1, risk_level_1, connections_1)
+
+            #perform functions to be tested
+            result = new_node_1.remove_connection(params_1)
+
+            #assert that actual is expected
+            self.assertEqual(expected_return_type,type(result),  'Failed type checking of returned value | got: {}, expected: {}'.format(type(result),expected_return_type)) # add assertion here
+            self.assertEqual(expected_return_value, result, 'Failed value checking of returned value | got: {}, expected: {}'.format(result,expected_return_value)) # add assertion here
+
+    def test_NW_Node_remove_connection_errors(self):
+        #a test case is a set of two tuples - inputs, expected results
+        test_cases = [
+            #Checking for incorrect parameter types
+            (('PC',[0,0,0,0],0.0,0.0,[]),
+             (None),
+             (TypeError)),
+
+            (('PC',[0,0,0,0],0.0,0.0,[]),
+             ('80'),
+             (TypeError)),
+
+            (('PC',[0,0,0,0],0.0,0.0,[]),
+             (80.5),
+             (TypeError)),
+
+            (('PC',[0,0,0,0],0.0,0.0,[]),
+             (80.0),
+             (TypeError)),
+
+            (('PC',[0,0,0,0],0.0,0.0,[]),
+             ([0,0,0,1],1,1,'TCP',None),
+             (TypeError)),
+
+            #Checking for incorrect parameter values
+            (('PC',[0,0,0,0],0.0,0.0,[]),
+             (-1),
+             (ValueError)),
+
+        ]
+        for test_case in test_cases:
+            #test setup
+            inputs_1 = test_case[0]
+            params_1 = test_case[1]
+            expected_output = test_case[2]
+            device_type_1, ip_1, base_sec_level_1, risk_level_1, connections_1 = inputs_1
+            param_source_port = params_1
+            expected_error = expected_output
+            new_node_1 = NW_Node(device_type_1, ip_1, base_sec_level_1, risk_level_1, connections_1)
+
+
+            with self.assertRaises(expected_error) as cm:
+                # perform functions to be tested
+                result = new_node_1.remove_connection(param_source_port)
+            actual_exception = cm.exception
+            self.assertEqual(expected_error, type(actual_exception),
+                             'Failed error test | expected: {}, got: {}'.format(expected_error, actual_exception))
+
 
 if __name__ == '__main__':
     unittest.main()
