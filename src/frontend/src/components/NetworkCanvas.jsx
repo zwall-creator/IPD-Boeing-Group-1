@@ -145,9 +145,9 @@ export default function NetworkCanvas() {
         const { clientWidth, clientHeight } = containerRef.current
         setTypeMenu({
           position: { ...evt.position }, // model coordinates, already adjusted for pan/zoom
-          // Keep the 180×260px menu inside the canvas.
-          left: Math.max(0, Math.min(x, clientWidth - 180)),
-          top: Math.max(0, Math.min(y, clientHeight - 260)),
+          // Keep the 140×190px menu inside the canvas.
+          left: Math.max(0, Math.min(x, clientWidth - 140)),
+          top: Math.max(0, Math.min(y, clientHeight - 190)),
         })
       }
       return
@@ -288,10 +288,10 @@ export default function NetworkCanvas() {
         >
           Delete
         </button>
-        <span className="network-canvas__hint" role="status">
-          {hint}
-        </span>
       </div>
+      <span className="network-canvas__hint" role="status">
+        {hint}
+      </span>
       {typeMenu && (
         <div
           ref={typeMenuRef}
@@ -309,7 +309,7 @@ export default function NetworkCanvas() {
               autoFocus={i === 0}
               onClick={() => addNode(type)}
             >
-              <Icon size={18} aria-hidden="true" />
+              <Icon size={16} aria-hidden="true" />
               {type}
             </button>
           ))}
