@@ -26,13 +26,11 @@ TEMPLATE_NODE_OBJECTS = {
     'Empty PC Node': NW_Node('PC',[0,0,0,0],0.0,0.0,[]),
     'Empty Mobile Node': NW_Node('Mobile',[0,0,0,0],0.0,0.0,[]),
     'Empty Server Node': NW_Node('Server',[0,0,0,0],0.0,0.0,[]),
-
-
-
 }
 class NW_Structure_Test(unittest.TestCase):
 
-    def test_something(self):
+# Control tests; these should NEVER fail
+    def test_pass(self):
         self.assertEqual(True, True)  # add assertion here
     def test_fail(self):
         self.assertNotEqual(True, False)  # add assertion here
@@ -866,6 +864,127 @@ class NW_Structure_Test(unittest.TestCase):
             self.assertEqual(expected_return_type, type(result), 'Failed type checking of returned value | got: {}, expected: {}'.format(type(result),expected_return_type)) # add assertion here
             self.assertEqual(expected_return_type, type(result), 'Failed value checking of returned value | got: {}, expected: {}'.format(result,expected_return_value)) # add assertion here
 
+# Tests for NW_Sec_Device's __init__ funciton
+    def test_NW_Sec_Device__init__state_tests(self):
+        #a test case is a set of two tuples - inputs, expected results
+        test_cases = [
+            (('PC',[0,0,0,0],0.0,0.0,0.0,[],[]),
+             (NW_Sec_Device,'PC',[0,0,0,0],0.0,0.0,0.0,0.0,[],[])),
+
+            (('PC',[0,0,0,0],0.0,0.0,0.0,None,[]),
+             (NW_Sec_Device,'PC',[0,0,0,0],0.0,0.0,0.0,0.0,[],[])),
+
+            (('Mobile',[0,0,0,0],0.0,0.0,0.0,[],[]),
+             (NW_Sec_Device,'Mobile',[0,0,0,0],0.0,0.0,0.0,0.0,[],[])),
+
+            (('Mobile',[0,0,0,0],0.0,0.0,0.0,[],None),
+             (NW_Sec_Device,'Mobile',[0,0,0,0],0.0,0.0,0.0,0.0,[],[])),
+        ]
+        for test_case in test_cases:
+            inputs = test_case[0]
+            expected_output = test_case[1]
+            device_type, ip, base_sec_level, risk_level, sec_modifier, coverage, connections = inputs
+            expected_object_type, expected_device_type, expected_ip, expected_base_sec_level, expected_security_level, expected_risk_level, expected_modifier, expected_coverage, expected_connections = expected_output
+            new_node = NW_Sec_Device(device_type, ip, base_sec_level, risk_level, sec_modifier, coverage, connections)
+            self.assertEqual(expected_object_type, type(new_node), 'Failed type checking of constructed object | got: {}, expected: {}'.format(type(new_node),expected_object_type)) # add assertion here
+            self.assertEqual(expected_device_type, new_node.device_type, 'Failed value checking of device_type | got: {}, expected: {}'.format(new_node.device_type,expected_device_type))  # add assertion here
+            self.assertEqual(expected_ip, new_node.device_ip, 'Failed value checking of ip address | got: {}, expected: {}'.format(new_node.device_ip,expected_ip))  # add assertion here
+            self.assertEqual(expected_base_sec_level, new_node.base_sec_level, 'Failed value checking of base_security_level | got: {}, expected: {}'.format(new_node.base_sec_level,expected_base_sec_level))  # add assertion here
+            self.assertEqual(expected_security_level, new_node.security_level, 'Failed value checking of security_level | got: {}, expected: {}'.format(new_node.security_level,expected_security_level))  # add assertion here
+            self.assertEqual(expected_risk_level, new_node.risk_level, 'Failed value checking of risk_level | got: {}, expected: {}'.format(new_node.risk_level,expected_risk_level))  # add assertion here
+            self.assertEqual(expected_modifier, new_node.sec_modifier, 'Failed value checking of risk_level | got: {}, expected: {}'.format(new_node.sec_modifier,expected_modifier))  # add assertion here
+            self.assertEqual(expected_coverage, new_node.covered_devices, 'Failed value checking of risk_level | got: {}, expected: {}'.format(new_node.covered_devices,expected_coverage))  # add assertion here
+            self.assertEqual(expected_connections, new_node.connections, 'Failed value checking of connections | got: {}, expected: {}'.format(new_node.connections,expected_connections))  # add assertion here
+
+    def test_NW_Sec_Device__init__error_tests(self):
+        #a test case is a set of two tuples - inputs, expected results
+        test_cases = [
+            (('Typewriter',[0,0,0,0],0.0,0.0,0.0,[],[]),(ValueError)),
+            (('PC',[256,0,0,0],0.0,0.0,0.0,[],[]),(ValueError)),
+            (('PC',[0,256,0,0],0.0,0.0,0.0,[],[]),(ValueError)),
+            (('PC',[0,0,256,0],0.0,0.0,0.0,[],[]),(ValueError)),
+            (('PC',[0,0,0,256],0.0,0.0,0.0,[],[]),(ValueError)),
+            (('PC',[-1,0,0,0],0.0,0.0,0.0,[],[]),(ValueError)),
+            (('PC',[0,-1,0,0],0.0,0.0,0.0,[],[]),(ValueError)),
+            (('PC',[0,0,-1,0],0.0,0.0,0.0,[],[]),(ValueError)),
+            (('PC',[0,0,0,-1],0.0,0.0,0.0,[],[]),(ValueError)),
+            (('PC',[0,0,0,0],0.0,0.0,0.0,[],()),(TypeError)),
+            (('PC',[0,0,0,0],0.0,0.0,0.0,(),[]),(TypeError)),
+            (('PC',[0,0,0,0],0.0,0.0,0.0,[],'Not a List'),(TypeError)),
+            (('PC',[0,0,0,0],0.0,0.0,0.0,'Not a List',[]),(TypeError)),
+        ]
+        for test_case in test_cases:
+            inputs = test_case[0]
+            expected_output = test_case[1]
+            device_type, ip, base_sec_level, risk_level, modifier, coverage, connections = inputs
+            expected_error = expected_output
+
+            with self.assertRaises(expected_error) as cm:
+                NW_Sec_Device(device_type, ip, base_sec_level, risk_level, modifier, coverage, connections)
+            actual_exception = cm.exception
+            self.assertEqual(expected_error, type(actual_exception), 'Failed error test | expected: {}, got: {}'.format(expected_error,actual_exception))
+
+    def test_NW_Sec_Device__init__NONE_value_errors(self):
+        """
+        Test function to ensure that __init__ function for NW_Node handles incorrect input types
+        :return:
+        """
+        #a test case is a set of two tuples - inputs, expected results
+        test_cases = [
+            ((None,[0,0,0,0],0.0,0.0,0.0,[],[]),(TypeError)),
+            (('PC',None,0.0,0.0,0.0,[],[]),(TypeError)),
+            (('PC',[None,0,0,0],0.0,0.0,0.0,[],[]),(TypeError)),
+            (('PC',[0,None,0,0],0.0,0.0,0.0,[],[]),(TypeError)),
+            (('PC',[0,0,None,0],0.0,0.0,0.0,[],[]),(TypeError)),
+            (('PC',[0,0,0,None],0.0,0.0,0.0,[],[]),(TypeError)),
+            (('PC',[0,0,0,0],None,0.0,0.0,[],[]),(TypeError)),
+            (('PC',[0,0,0,0],0.0,None,0.0,[],[]),(TypeError)),
+            (('PC',[0,0,0,0],0.0,0.0,None,[],[]),(TypeError)),
+            (('PC',[0.1,0,0,0],0.0,0.0,0.0,[],[]),(TypeError)),
+            ((1,[0,0,0,0],0.0,0.0,0.0,[],[]),(TypeError)),
+            (('PC',1,0.0,0.0,0.0,[],[]),(TypeError)),
+            (('PC','0.0.0.0',0.0,0.0,0.0,[],[]),(TypeError)),
+        ]
+        for test_case in test_cases:
+            inputs = test_case[0]
+            expected_output = test_case[1]
+            device_type, ip, base_sec_level, risk_level, modifier, coverage, connections = inputs
+            expected_error = expected_output
+
+            with self.assertRaises(expected_error) as cm:
+                NW_Sec_Device(device_type, ip, base_sec_level, risk_level, modifier, coverage, connections)
+            actual_exception = cm.exception
+            self.assertEqual(expected_error, type(actual_exception), 'Failed error test | expected: {}, got: {}'.format(expected_error,actual_exception))
+
+
+# Tests for NW_Sec_Device's __str__ function
+    def test_NW_Sec_Device__str__state(self):
+        #a test case is a set of two tuples - inputs, expected results
+        test_cases = [
+            (('PC',[0,0,0,0],0.0,0.0,0.0,[],[]),(NW_Sec_Device,'PC',[0,0,0,0],0.0,0.0,0.0,0.0,[],[])),
+            (('Mobile',[0,0,0,0],0.0,0.0,0.0,[],[]),(NW_Sec_Device,'Mobile',[0,0,0,0],0.0,0.0,0.0,0.0,[],[])),
+        ]
+        for test_case in test_cases:
+            #test setup
+            inputs = test_case[0]
+            expected_output = test_case[1]
+            device_type, ip, base_sec_level, risk_level, modifier, coverage, connections = inputs
+            expected_object_type, expected_device_type, expected_ip, expected_base_sec_level, expected_security_level, expected_risk_level, expected_modifier, expected_coverage, expected_connections = expected_output
+            new_node = NW_Sec_Device(device_type, ip, base_sec_level, risk_level, modifier, coverage, connections)
+
+            #run function to be tested
+            result = str(new_node)
+
+            #assert state is now as expected
+            self.assertEqual(expected_object_type, type(new_node), 'Failed type checking of object | got: {}, expected: {}'.format(type(new_node),expected_object_type)) # add assertion here
+            self.assertEqual(expected_device_type, new_node.device_type, 'Failed value checking of device_type | got: {}, expected: {}'.format(new_node.device_type,expected_device_type))  # add assertion here
+            self.assertEqual(expected_ip, new_node.device_ip, 'Failed value checking of ip address | got: {}, expected: {}'.format(new_node.device_ip,expected_ip))  # add assertion here
+            self.assertEqual(expected_base_sec_level, new_node.base_sec_level, 'Failed value checking of base_security_level | got: {}, expected: {}'.format(new_node.base_sec_level,expected_base_sec_level))  # add assertion here
+            self.assertEqual(expected_security_level, new_node.security_level, 'Failed value checking of security_level | got: {}, expected: {}'.format(new_node.security_level,expected_security_level))  # add assertion here
+            self.assertEqual(expected_risk_level, new_node.risk_level, 'Failed value checking of risk_level | got: {}, expected: {}'.format(new_node.risk_level,expected_risk_level))  # add assertion here
+            self.assertEqual(expected_modifier, new_node.sec_modifier, 'Failed value checking of risk_level | got: {}, expected: {}'.format(new_node.sec_modifier,expected_modifier))  # add assertion here
+            self.assertEqual(expected_coverage, new_node.covered_devices, 'Failed value checking of risk_level | got: {}, expected: {}'.format(new_node.covered_devices,expected_coverage))  # add assertion here
+            self.assertEqual(expected_connections, new_node.connections, 'Failed value checking of connections | got: {}, expected: {}'.format(new_node.connections,expected_connections))  # add assertion here
 
 if __name__ == '__main__':
     unittest.main()

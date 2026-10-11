@@ -7,7 +7,7 @@ from typing import override
 
 
 class NW_Node:
-    DEVICE_TYPES = ('PC', 'Laptop', 'Cell Phone','Router', 'Switch','Server')
+    DEVICE_TYPES = ('PC', 'Laptop', 'Mobile','Router', 'Switch','Server')
     VALID_CONNECTION_TYPES = ('TCP','UDP')
 
     def __init__(self, device_type, device_ip, base_sec_level, risk_level, connections = []):
@@ -24,6 +24,7 @@ class NW_Node:
         :param risk_level: a float that acts as the target value that this node's security_level should be
         :param connections: a list of tuples that contain all info regarding a connection from this node to another node on the network
         """
+        #TODO: Check that parameter values are valid
         #check parameter types
         if type(device_type) != str:
             raise TypeError('given device type is not a string')
