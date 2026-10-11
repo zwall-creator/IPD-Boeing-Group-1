@@ -19,4 +19,4 @@ Table Editor → profiles to verify its profile row in database
   yet load/edit profile data (future potential update)
 
 ## Things to improve:
-Design, password security, profile configuration, logo/name, 
+Design, password security, profile configuration, logo/name, connection to main application page
