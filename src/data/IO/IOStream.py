@@ -174,7 +174,6 @@ class LogStream(IOStream):
         if not self.can_write:
             raise PermissionError('Permission to write data is invalid')
         cmd, args = command
-        #TODO: Update timestamp to call get_timestamp() once the function is implemented
         func_record = '{timestamp} | Function Called: {func} | Params: {params}\n'.format(timestamp=self.get_timestamp(),func=cmd,params=args)
         self.file.write(func_record)
 
@@ -186,7 +185,6 @@ class LogStream(IOStream):
         if not self.can_write:
             raise PermissionError('Permission to write data is invalid')
         err, msg = error
-        #TODO: Update timestamp to call get_timestamp() once the function is implemented
         error_record = '{timestamp} | Error: {error_type} | Msg: {error_msg}'.format(timestamp=self.get_timestamp(),error_type=err,error_msg=msg)
         self.file.write(error_record)
 
@@ -198,7 +196,6 @@ class LogStream(IOStream):
         if not self.can_write:
             raise PermissionError('Permission to write data is invalid')
         wng, msg = warning
-        #TODO: Update timestamp to call get_timestamp() once the function is implemented
         warning_record = '{timestamp} | Warning: {warning_type} | {warning_msg}'.format(timestamp=self.get_timestamp(),warning_type=wng,warning_msg=msg)
         self.file.write(warning_record)
 
@@ -210,7 +207,6 @@ class LogStream(IOStream):
         if not self.can_write:
             raise PermissionError('Permission to write data is invalid')
         evt, msg = event
-        #TODO: Update timestamp to call get_timestamp() once the function is implemented
         input_record = '{timestamp} | Event: {event} | Details: {details}\n'.format(timestamp=self.get_timestamp(),event=evt,details=msg)
         self.file.write(input_record)
 
@@ -221,7 +217,6 @@ class LogStream(IOStream):
         """
         if not self.can_write:
             raise PermissionError('Permission to write data is invalid')
-        #TODO: Update timestamp to call get_timestamp() once the function is implemented
         info_record = '{timestamp} | Info: {info}'.format(timestamp=self.get_timestamp(),info=info)
         self.file.write(info_record)
 
@@ -277,8 +272,49 @@ class ReportStream(IOStream):
 
         self.file.write(report_entry)
 
+class SolutionStream(IOStream):
+    def __init__(self, f_path = '', read_write_type = 'rw', solution_id = -1):
+        super(SolutionStream, self).__init__(f_path, read_write_type)
 
+    def __del__(self):
+        super().__del__()
 
+    def write_solution(self, solution_id, problem_state, solution_state, runtime):
+        """
+        Function to write a solution entry to the solution file, if correct permissions are present
+        :type solution_id: int
+        :type problem_state: str
+        :type solution_state: str
+        :type runtime: int
 
+        :param solution_id: ID number of the associated solution
+        :param problem_state: string state of the problem state for which this solution solves
+        :param solution_state: the string state of the solution
+        :param runtime: number of seconds it took for the simulation to finish for this solution
+
+        :raises PermissionError: if have insufficient permissions to write to this stream's file
+        """
+        if not self.can_write:
+            raise PermissionError('Permission to write data is invalid')
+        solution_entry = ('Solution No. {solutionID}\n'
+                          'Problem State: {problemState}\n'
+                          'Solution State: {solutionState}\n'
+                          'Runtime (seconds): {runtime}\n').format(
+            solutionID=solution_id,
+            problemState=problem_state,
+            solutionState=solution_state,
+            runtime=runtime
+        )
+        self.file.write(solution_entry)
+
+    def read_solution(self):
+        if not self.can_read:
+            raise PermissionError('Permission to read data is invalid')
+        lines = self.read()
+        solution_id = lines[0][13:]
+        problem_state = lines[1][15:]
+        solution_state = lines[2][16:]
+        runtime = lines[3][19:]
+        return solution_id, problem_state, solution_state, runtime
 
 
