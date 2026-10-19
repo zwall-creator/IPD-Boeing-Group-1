@@ -29,6 +29,13 @@ class IOStream:
         # TODO: Send IOStream Update that file was opened
         self.file = open(self.f_path, permission_type)
 
+    def check_permission(self, access_type):
+        if access_type == 'r' or access_type == 'rw' or access_type == 'read':
+            return self.can_read
+        if access_type == 'w' or access_type == 'rw' or access_type == 'write':
+            return self.can_write
+        raise ValueError('arg access_type must be \'r\' or \'rw\' or \'w\'')
+
     def close_file(self):
         """
         Function to close the file, if still open
@@ -79,7 +86,7 @@ class IOStream:
     #IOStream's read and write methods
     def read(self):
         """
-        Function to read data from a file, given that the stream has the correct permissions
+        Function to read all data from a file, given that the stream has the correct permissions
         :return: string of the file contents
         """
         if not self.can_read:
@@ -145,10 +152,18 @@ class LogStream(IOStream):
         """
         :return: list of log contents
         """
-        return NotImplemented
+        return self.read()
 
     def log_command(self, command):
-        return NotImplemented
+        """
+        Function to write a command entry to the log file
+        :param command: Set containing the function and a list of that function's arguments
+        """
+        if not self.can_write:
+            raise PermissionError('Permission to write data is invalid')
+        cmd, args = command
+        func_record = '{timestamp} | Function Called: {func} | Params: {params}\n'.format(timestamp=0,func=cmd,params=args)
+        self.file.write(func_record)
 
     def log_error(self, error):
         return NotImplemented
