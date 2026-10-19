@@ -82,7 +82,6 @@ class IOStream:
         Function to read data from a file, given that the stream has the correct permissions
         :return: string of the file contents
         """
-        #TODO: Implement IOStream's Read function
         if not self.can_read:
             raise PermissionError('Permission to read file is invalid')
         return self.file.readlines()
@@ -113,16 +112,16 @@ class IOStream:
             retlist.append(lines[i].strip())
         return retlist
 
-
-
     def write(self, data):
         """
         Function to write data to a file, given that the stream has the correct permissions
+        :type data: string containing the data to write
         :param data: data to write to file
-        :return: True if success, False otherwise
+        \n NOTE: the data to write must include user-written newline characters.
         """
-        #TODO: Implement IOStream's Write Function
-        return NotImplemented
+        if not self.can_write:
+            raise PermissionError('Permission to write data is invalid')
+        self.file.write(data)
 
 class LogStream(IOStream):
     def __init__(self, f_path = '', read_write_type = 'r', log_id = -1):
