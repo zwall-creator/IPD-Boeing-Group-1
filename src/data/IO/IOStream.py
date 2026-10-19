@@ -162,20 +162,56 @@ class LogStream(IOStream):
         if not self.can_write:
             raise PermissionError('Permission to write data is invalid')
         cmd, args = command
-        func_record = '{timestamp} | Function Called: {func} | Params: {params}\n'.format(timestamp=0,func=cmd,params=args)
+        #TODO: Update timestamp to call get_timestamp() once the function is implemented
+        func_record = '{timestamp} | Function Called: {func} | Params: {params}\n'.format(timestamp=-1,func=cmd,params=args)
         self.file.write(func_record)
 
     def log_error(self, error):
-        return NotImplemented
+        """
+        Function to write an error entry to the log file
+        :param error: Set containing the error type and a string of its error message
+        """
+        if not self.can_write:
+            raise PermissionError('Permission to write data is invalid')
+        err, msg = error
+        #TODO: Update timestamp to call get_timestamp() once the function is implemented
+        error_record = '{timestamp} | Error: {error_type} | Msg: {error_msg}'.format(timestamp=-1,error_type=err,error_msg=msg)
+        self.file.write(error_record)
 
     def log_warning(self, warning):
-        return NotImplemented
+        """
+        Function to write a warning entry to the log file
+        :param warning: Set containing the warning type and a string of its warning message
+        """
+        if not self.can_write:
+            raise PermissionError('Permission to write data is invalid')
+        wng, msg = warning
+        #TODO: Update timestamp to call get_timestamp() once the function is implemented
+        warning_record = '{timestamp} | Warning: {warning_type} | {warning_msg}'.format(timestamp=-1,warning_type=wng,warning_msg=msg)
+        self.file.write(warning_record)
 
     def log_event(self, event):
-        return NotImplemented
+        """
+        Function to write a user input event entry to the log file
+        :param event: Set containing the event type and a string of its event details
+        """
+        if not self.can_write:
+            raise PermissionError('Permission to write data is invalid')
+        evt, msg = event
+        #TODO: Update timestamp to call get_timestamp() once the function is implemented
+        input_record = '{timestamp} | Event: {event} | Details: {details}\n'.format(timestamp=-1,event=evt,details=msg)
+        self.file.write(input_record)
 
     def log_info(self, info):
-        return NotImplemented
+        """
+        Function to write a misc info entry to the log file
+        :param info: string containing misc info to record
+        """
+        if not self.can_write:
+            raise PermissionError('Permission to write data is invalid')
+        #TODO: Update timestamp to call get_timestamp() once the function is implemented
+        info_record = '{timestamp} | Info: {info}'.format(timestamp=-1,info=info)
+        self.file.write(info_record)
 
 
 
