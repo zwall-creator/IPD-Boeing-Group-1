@@ -1,4 +1,5 @@
 import os
+import time
 
 class IOStream:
 
@@ -130,6 +131,17 @@ class IOStream:
             raise PermissionError('Permission to write data is invalid')
         self.file.write(data)
 
+    def get_timestamp(self):
+        timestamp = time.localtime()
+        return '{Month}/{Day}/{Year} {Hours}:{Minutes}:{Seconds}'.format(
+            Month = timestamp.tm_mon,
+            Day = timestamp.tm_mday,
+            Year = timestamp.tm_year,
+            Hours = timestamp.tm_hour,
+            Minutes = timestamp.tm_min,
+            Seconds = timestamp.tm_sec
+        )
+
 class LogStream(IOStream):
     def __init__(self, f_path = '', read_write_type = 'r', log_id = -1):
         """
@@ -163,7 +175,7 @@ class LogStream(IOStream):
             raise PermissionError('Permission to write data is invalid')
         cmd, args = command
         #TODO: Update timestamp to call get_timestamp() once the function is implemented
-        func_record = '{timestamp} | Function Called: {func} | Params: {params}\n'.format(timestamp=-1,func=cmd,params=args)
+        func_record = '{timestamp} | Function Called: {func} | Params: {params}\n'.format(timestamp=self.get_timestamp(),func=cmd,params=args)
         self.file.write(func_record)
 
     def log_error(self, error):
@@ -175,7 +187,7 @@ class LogStream(IOStream):
             raise PermissionError('Permission to write data is invalid')
         err, msg = error
         #TODO: Update timestamp to call get_timestamp() once the function is implemented
-        error_record = '{timestamp} | Error: {error_type} | Msg: {error_msg}'.format(timestamp=-1,error_type=err,error_msg=msg)
+        error_record = '{timestamp} | Error: {error_type} | Msg: {error_msg}'.format(timestamp=self.get_timestamp(),error_type=err,error_msg=msg)
         self.file.write(error_record)
 
     def log_warning(self, warning):
@@ -187,7 +199,7 @@ class LogStream(IOStream):
             raise PermissionError('Permission to write data is invalid')
         wng, msg = warning
         #TODO: Update timestamp to call get_timestamp() once the function is implemented
-        warning_record = '{timestamp} | Warning: {warning_type} | {warning_msg}'.format(timestamp=-1,warning_type=wng,warning_msg=msg)
+        warning_record = '{timestamp} | Warning: {warning_type} | {warning_msg}'.format(timestamp=self.get_timestamp(),warning_type=wng,warning_msg=msg)
         self.file.write(warning_record)
 
     def log_event(self, event):
@@ -199,7 +211,7 @@ class LogStream(IOStream):
             raise PermissionError('Permission to write data is invalid')
         evt, msg = event
         #TODO: Update timestamp to call get_timestamp() once the function is implemented
-        input_record = '{timestamp} | Event: {event} | Details: {details}\n'.format(timestamp=-1,event=evt,details=msg)
+        input_record = '{timestamp} | Event: {event} | Details: {details}\n'.format(timestamp=self.get_timestamp(),event=evt,details=msg)
         self.file.write(input_record)
 
     def log_info(self, info):
@@ -210,7 +222,7 @@ class LogStream(IOStream):
         if not self.can_write:
             raise PermissionError('Permission to write data is invalid')
         #TODO: Update timestamp to call get_timestamp() once the function is implemented
-        info_record = '{timestamp} | Info: {info}'.format(timestamp=-1,info=info)
+        info_record = '{timestamp} | Info: {info}'.format(timestamp=self.get_timestamp(),info=info)
         self.file.write(info_record)
 
 
