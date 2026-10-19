@@ -226,7 +226,56 @@ class LogStream(IOStream):
         self.file.write(info_record)
 
 
+class ReportStream(IOStream):
+    def __init__(self, f_path = '', read_write_type = 'r', report_id = -1):
+        super(ReportStream, self).__init__(f_path, read_write_type)
+        self.report_id = report_id
 
+    def __del__(self):
+        super().__del__()
+
+    def get_id(self):
+        return self.report_id
+
+    def write_report(self, log_id, state_str, runtime, completed_run, chosen_algorithm, solution_state_str):
+        """
+        Function to write a report entry to the report file, if correct permissions are present
+        :type log_id: int
+        :type state_str: str
+        :type runtime: int
+        :type completed_run: bool
+        :type chosen_algorithm: str
+        :type solution_state_str: str
+
+        :param log_id: ID number of the associated log file
+        :param state_str: A valid problem state string for the associated simulation network
+        :param runtime: The number of seconds it took for the simulation to finish
+        :param completed_run: Boolean indicator of if the simulation was completed or not
+        :param chosen_algorithm: The algorithm that was the most effective
+        :param solution_state_str: The state string for the simulation solution
+
+        :raises PermissionError: if have insufficient permissions to write to this stream's file
+        """
+        if not self.can_write:
+            raise PermissionError('Permission to write data is invalid')
+
+        report_entry = ('Report No. {reportID}\n'
+                        'Log No. {logID}\n'
+                        'State Str: {stateStr}\n'
+                        'Runtime: {runtime}\n'
+                        'Completed Run: {completedRun}\n'
+                        'Algorithm Chosen: {chosenAlgorithm}\n'
+                        'Solution State Str: {solutionStateStr}\n').format(
+            reportID=self.get_id(),
+            logID=log_id,
+            stateStr=state_str,
+            runtime=runtime,
+            completedRun=completed_run,
+            chosenAlgorithm=chosen_algorithm,
+            solutionStateStr=solution_state_str
+        )
+
+        self.file.write(report_entry)
 
 
 
