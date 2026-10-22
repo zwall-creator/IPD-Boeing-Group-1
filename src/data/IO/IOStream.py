@@ -11,30 +11,46 @@ class IOStream:
         :param f_path: path to file
         :param read_write_type: string indicating read/write permissions
         """
+        if f_path is None:
+            raise TypeError('f_path cannot be None')
+        if read_write_type is None:
+            raise TypeError('read_write_type cannot be None')
         self.f_path = f_path
         if read_write_type == 'r':
             self.can_read = True
             self.can_write = False
-        if read_write_type == 'w':
+        elif read_write_type == 'w':
             self.can_write = True
             self.can_read = False
-        if read_write_type == 'rw':
+        elif read_write_type == 'rw':
             self.can_read = True
             self.can_write = True
+        else:
+            raise ValueError('arg read_write_type must be \'r\' or \'w\' or \'rw\'')
+
         # Opening file during IOStream construction
         permission_type = ''
         if self.can_read:
             permission_type += 'r'
         if self.can_write:
             permission_type += 'w'
+
+        # fixes mode issues with the open function without modifying chunks of code
+        if permission_type == 'rw':
+            permission_type = 'r+'
         # TODO: Send IOStream Update that file was opened
-        self.file = open(self.f_path, permission_type)
+        try:
+            self.file = open(self.f_path, permission_type)
+        except FileNotFoundError:
+            raise FileNotFoundError('File not found; please ensure file path is correct')
 
     def check_permission(self, access_type):
-        if access_type == 'r' or access_type == 'rw' or access_type == 'read':
+        if access_type == 'r' or access_type == 'read':
             return self.can_read
-        if access_type == 'w' or access_type == 'rw' or access_type == 'write':
+        if access_type == 'w'  or access_type == 'write':
             return self.can_write
+        if access_type == 'rw':
+            return self.can_read and self.can_write
         raise ValueError('arg access_type must be \'r\' or \'rw\' or \'w\'')
 
     def close_file(self):
