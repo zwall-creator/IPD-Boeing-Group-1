@@ -24,4 +24,25 @@ Describe to the solver what a valid placement looks like and what makes a placem
 - For each link a list of which nodes will be protected if a security device is placed on it will need to be precomputed (discuss with zak, although I think this should be relatively simple)
 - We are staring with a relatively simple problem but I believe it should be easy to modify in the future to update it to actually be RCPSP or RCPSP adjacent
 
+#### What the solver needs to know
+- Nodes
+    - Identifier, in our case IP
+    - Base security level
+    - Risk level
+- Links
+    - Which nodes are connected to each other
+- The devices from which the solver has to work with
+    - Device IDs
+    - Security modifier
+- Rules
+    - How do security devices protect the nodes, is it only the directly connected? Is it one hop away from directly connected?
 
+
+
+
+### Questions for the group
+- Zak what is your progress on the text format
+- Hudson we need a way for results to be dislpayed on the frontend, how difficult is that to implement
+- Are security levels going to be arbitrary: set by the user but they have a default value of something
+- I'm going to need some sort of intermediate representation of the network before inputting into a solver, should I use the existing one or create a new one that can be used for each solver
+- What exactly is the simulation layer going to even do?: middle man between frontend and computation
