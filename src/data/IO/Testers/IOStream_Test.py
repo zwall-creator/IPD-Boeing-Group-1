@@ -155,6 +155,38 @@ class IOStream_Test(unittest.TestCase):
             self.assertEqual(expected_return_type,type(result),  'Failed type checking of returned value | got: {}, expected: {}'.format(type(result),expected_return_type)) # add assertion here
             self.assertEqual(expected_return_value, result, 'Failed value checking of returned value | got: {}, expected: {}'.format(result,expected_return_value)) # add assertion here
 
+    # Testing for IOStream's close_file method
+    def test_IOStream_close_file_state(self):
+        #a test case is a set of two tuples - inputs, expected results
+        test_cases = [
+            (('src/data/IO/Testers/test-files/iostream-close-file-state-test-1','w'),(IOStream,'src/data/IO/Testers/test-files/iostream-close-file-state-test-1',False,True,True)),
+            (('src/data/IO/Testers/test-files/iostream-close-file-state-test-2','r'),(IOStream,'src/data/IO/Testers/test-files/iostream-close-file-state-test-2',True,False,True)),
+            (('src/data/IO/Testers/test-files/iostream-close-file-state-test-3','rw'),(IOStream,'src/data/IO/Testers/test-files/iostream-close-file-state-test-3',True,True,True)),
+
+        ]
+        for test_case in test_cases:
+            #test setup
+            test_no = test_cases.index(test_case) + 1
+            inputs_1 = test_case[0]
+            # func_args = test_case[1]
+            expected_output = test_case[1]
+            fpath, mode = inputs_1
+            # mode_arg = func_args
+            expected_object_type, expected_fpath, expected_can_read, expected_can_write, expected_is_closed = expected_output
+            new_stream_1 = IOStream(fpath, mode)
+
+            #perform functions to be tested
+            result = new_stream_1.close_file()
+
+            #assert that actual is expected
+            self.assertEqual(expected_object_type, type(new_stream_1), 'Failed type checking of constructed object | got: {}, expected: {} for test{}'.format(type(new_stream_1),expected_object_type, test_no)) # add assertion here
+            self.assertEqual(expected_fpath, new_stream_1.f_path, 'Failed value checking of fpath | got: {}, expected: {} for test{}'.format(new_stream_1.f_path,expected_fpath, test_no))  # add assertion here
+            self.assertEqual(expected_can_read, new_stream_1.can_read, 'Failed value checking of can_read | got: {}, expected: {} for test{}'.format(new_stream_1.can_read,expected_can_read, test_no))  # add assertion here
+            self.assertEqual(expected_can_write, new_stream_1.can_write, 'Failed value checking of can_write | got: {}, expected: {} for test{}'.format(new_stream_1.can_write,expected_can_write, test_no))  # add assertion here
+            self.assertEqual(expected_is_closed, new_stream_1.file.closed, 'Failed value checking of is_open | got: {}, expected: {} for test{}'.format(new_stream_1.file.closed,expected_is_closed, test_no))  # add assertion here
+
+
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -45,6 +45,12 @@ class IOStream:
             raise FileNotFoundError('File not found; please ensure file path is correct')
 
     def check_permission(self, access_type):
+        """
+        Function to check if the stream has a given permission
+        :param access_type: stream mode to check if permission exists
+        :return: True if permission exists, False otherwise
+        :raise: ValueError if access_type is an invalid mode
+        """
         if access_type == 'r' or access_type == 'read':
             return self.can_read
         if access_type == 'w'  or access_type == 'write':
