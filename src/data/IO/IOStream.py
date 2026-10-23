@@ -96,6 +96,8 @@ class IOStream:
         :type can_read: bool
         :param can_read: new reading permissions
         """
+        if type(can_read) != bool:
+            raise TypeError('arg can_read must be bool')
         self.can_read = can_read
 
     def set_can_write(self, can_write):
@@ -103,6 +105,8 @@ class IOStream:
         :type can_write: bool
         :param can_write: new writing permissions
         """
+        if type(can_write) != bool:
+            raise TypeError('arg can_write must be bool')
         self.can_write = can_write
 
 
