@@ -29,14 +29,18 @@ Describe to the solver what a valid placement looks like and what makes a placem
     - Identifier, in our case IP
     - Base security level
     - Risk level
-- Links
+- Links/Cables
     - Which nodes are connected to each other
 - The devices from which the solver has to work with
     - Device IDs
     - Security modifier
+    - One-way or Two-way
 - Rules
     - How do security devices protect the nodes, is it only the directly connected? Is it one hop away from directly connected?
 
+#### variables
+- The solver has to actually decide where things are placed which is where decision variables come in.
+    - For the placement of devices the solver has to answer for each link if a device will be placed there (x["deviceID", A-B] deviceID is placed on link A-B) the variables will be either 1 or 0. If we have 3 devices and 10 links then we need 30 variables.
 
 
 
