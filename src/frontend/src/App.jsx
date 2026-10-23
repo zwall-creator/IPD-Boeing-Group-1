@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
 import { useEventSource } from './hooks/useEventSource';
 import NetworkCanvas from './components/NetworkCanvas';
+import GraphToolsPanel from './components/GraphToolsPanel';
 
 // Map SSE event types to a log-entry CSS variant for colour coding
 function eventToLogVariant(type) {
@@ -40,7 +41,12 @@ export default function App() {
     { text: '[Backend] Computation API mapped at :8000.', variant: 'info' },
   ]);
 
-  const { events, status, backendOk, clearEvents, emitEvent, runSim } = useEventSource();
+  const { events, status, backendOk, clearEvents, runSim } = useEventSource();
+
+  // Graph editor state, shared by the sidebar tools and the canvas
+  const canvasRef = useRef(null);
+  const [graphMode, setGraphMode] = useState('select');
+  const [selectedCount, setSelectedCount] = useState(0);
 
   // Scroll the log console to the bottom whenever new entries arrive
   const logEndRef = useRef(null);
@@ -72,17 +78,15 @@ export default function App() {
     }
   };
 
-  const handleAddNode = () =>
-    emitEvent('graph.add_node', { label: `Node-${Date.now()}` });
-
-  const handleAddEdge = () =>
-    emitEvent('graph.add_edge', { from: 'A', to: 'B' });
-
   const handleReset = () => {
     clearEvents();
     setLocalLogs([
       { text: '[System] Canvas reset.', variant: 'warn' },
     ]);
+  };
+
+  const handleDeleteSelected = () => {
+    canvasRef.current?.deleteSelected();
   };
 
   // ------------------------------------------------------------------
@@ -142,15 +146,13 @@ export default function App() {
 
           <div className="control-group">
             <label>Graph Tools</label>
-            <button type="button" className="btn-secondary" onClick={handleAddNode}>
-              + Add Node
-            </button>
-            <button type="button" className="btn-secondary" onClick={handleAddEdge}>
-              + Add Edge
-            </button>
-            <button type="button" className="btn-secondary" onClick={handleReset}>
-              Reset Canvas
-            </button>
+            <GraphToolsPanel
+              mode={graphMode}
+              selectedCount={selectedCount}
+              onModeChange={setGraphMode}
+              onDeleteSelected={handleDeleteSelected}
+              onReset={handleReset}
+            />
           </div>
 
           {/* Live event counter */}
@@ -184,7 +186,11 @@ export default function App() {
 
           <div className="canvas-viewport">
             {activeTab === 'canvas' ? (
-              <NetworkCanvas />
+              <NetworkCanvas
+                ref={canvasRef}
+                mode={graphMode}
+                onSelectionChange={setSelectedCount}
+              />
             ) : (
               <div className="metrics-placeholder">
                 <p>Optimization Performance Metrics</p>
