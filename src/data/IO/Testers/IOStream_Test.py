@@ -245,8 +245,70 @@ class IOStream_Test(unittest.TestCase):
             self.assertEqual(expected_return_type,type(result),  'Failed type checking of returned value | got: {}, expected: {}'.format(type(result),expected_return_type)) # add assertion here
             self.assertEqual(expected_return_value, result, 'Failed value checking of returned value | got: {}, expected: {}'.format(result,expected_return_value)) # add assertion here
 
+    # Testing for IOStream's get_can_read method
+    def test_IOStream_get_can_read_state(self):
+        #a test case is a set of two tuples - inputs, expected results
+        fpath_func = 'get-can-read'
+        test_type = 'state'
+        test_cases = [
+            (('src/data/IO/Testers/test-files/iostream-{}-{}-test-1'.format(fpath_func,test_type),'w'),(IOStream,'src/data/IO/Testers/test-files/iostream-{}-{}-test-1'.format(fpath_func,test_type),False,True,False)),
+            (('src/data/IO/Testers/test-files/iostream-{}-{}-test-2'.format(fpath_func,test_type),'r'),(IOStream,'src/data/IO/Testers/test-files/iostream-{}-{}-test-2'.format(fpath_func,test_type),True,False,False)),
+            (('src/data/IO/Testers/test-files/iostream-{}-{}-test-3'.format(fpath_func,test_type),'rw'),(IOStream,'src/data/IO/Testers/test-files/iostream-{}-{}-test-3'.format(fpath_func,test_type),True,True,False)),
 
+        ]
+        for test_case in test_cases:
+            #test setup
+            test_no = test_cases.index(test_case) + 1
+            inputs_1 = test_case[0]
+            # func_args = test_case[1]
+            expected_output = test_case[1]
+            fpath, mode = inputs_1
+            # mode_arg = func_args
+            expected_object_type, expected_fpath, expected_can_read, expected_can_write, expected_is_open = expected_output
+            new_stream_1 = IOStream(fpath, mode)
 
+            #perform functions to be tested
+            result = new_stream_1.get_can_read()
+
+            #assert that actual is expected
+            self.assertEqual(expected_object_type, type(new_stream_1), 'Failed type checking of constructed object | got: {}, expected: {} for test{}'.format(type(new_stream_1),expected_object_type, test_no)) # add assertion here
+            self.assertEqual(expected_fpath, new_stream_1.f_path, 'Failed value checking of fpath | got: {}, expected: {} for test{}'.format(new_stream_1.f_path,expected_fpath, test_no))  # add assertion here
+            self.assertEqual(expected_can_read, new_stream_1.can_read, 'Failed value checking of can_read | got: {}, expected: {} for test{}'.format(new_stream_1.can_read,expected_can_read, test_no))  # add assertion here
+            self.assertEqual(expected_can_write, new_stream_1.can_write, 'Failed value checking of can_write | got: {}, expected: {} for test{}'.format(new_stream_1.can_write,expected_can_write, test_no))  # add assertion here
+            self.assertEqual(expected_is_open, new_stream_1.file.closed, 'Failed value checking of is_open | got: {}, expected: {} for test{}'.format(new_stream_1.file.closed,expected_is_open, test_no))  # add assertion here
+
+    def test_IOStream_get_can_read_value(self):
+        #a test case is a set of two tuples - inputs, expected results
+        fpath_func = 'get-can-read'
+        test_type = 'value'
+        test_cases = [
+            (('src/data/IO/Testers/test-files/iostream-{}-{}-test-1'.format(fpath_func,test_type), 'r'), (bool, True)),
+            (('src/data/IO/Testers/test-files/iostream-{}-{}-test-2'.format(fpath_func,test_type), 'w'), (bool, False)),
+            (('src/data/IO/Testers/test-files/iostream-{}-{}-test-3'.format(fpath_func,test_type), 'rw'), (bool, True)),
+            (('src/data/IO/Testers/test-files/iostream-{}-{}-test-4'.format(fpath_func,test_type), 'r'), (bool, True)),
+            (('src/data/IO/Testers/test-files/iostream-{}-{}-test-5'.format(fpath_func,test_type), 'w'), (bool, False)),
+            (('src/data/IO/Testers/test-files/iostream-{}-{}-test-6'.format(fpath_func,test_type), 'rw'), (bool, True)),
+            (('src/data/IO/Testers/test-files/iostream-{}-{}-test-7'.format(fpath_func,test_type), 'r'), (bool, True)),
+            (('src/data/IO/Testers/test-files/iostream-{}-{}-test-8'.format(fpath_func,test_type), 'w'), (bool, False)),
+            (('src/data/IO/Testers/test-files/iostream-{}-{}-test-9'.format(fpath_func, test_type), 'rw'), (bool, True)),
+        ]
+        for test_case in test_cases:
+            #test setup
+            test_no = test_cases.index(test_case) + 1
+            inputs_1 = test_case[0]
+            # func_args = test_case[1]
+            expected_output = test_case[1]
+            f_path, mode = inputs_1
+            # mode_arg = func_args
+            expected_return_type, expected_return_value = expected_output
+            new_stream_1 = IOStream(f_path, mode)
+
+            #perform functions to be tested
+            result = new_stream_1.get_can_read()
+
+            #assert that actual is expected
+            self.assertEqual(expected_return_type,type(result),  'Failed type checking of returned value | got: {}, expected: {} for test no. {}'.format(type(result),expected_return_type, test_no)) # add assertion here
+            self.assertEqual(expected_return_value, result, 'Failed value checking of returned value | got: {}, expected: {} for test no. {}'.format(result,expected_return_value, test_no)) # add assertion here
 
 if __name__ == '__main__':
     unittest.main()
