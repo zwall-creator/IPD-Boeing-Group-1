@@ -40,6 +40,7 @@ export default function App() {
     bandwidthWeight: 50,
     riskThreshold:   30,
   });
+  const [quantumStatus, setQuantumStatus] = useState(null);
 
   // Local UI logs (seed entries shown before the SSE connection is ready)
   const [localLogs, setLocalLogs] = useState([
@@ -47,7 +48,17 @@ export default function App() {
     { text: '[Backend] Computation API mapped at :8000.', variant: 'info' },
   ]);
 
-  const { events, status, backendOk, clearEvents, emitEvent, runSim } = useEventSource();
+  const { events, status, backendOk, clearEvents, emitEvent, runSim, checkQuantumStatus } = useEventSource();
+
+  // When user switches to quantum solver, fetch IBM status from backend
+  useEffect(() => {
+    if (solverType === 'quantum') {
+      setQuantumStatus(null); // show loading state
+      checkQuantumStatus().then(s => setQuantumStatus(s));
+    } else {
+      setQuantumStatus(null);
+    }
+  }, [solverType, checkQuantumStatus]);
 
   // Scroll the log console to the bottom whenever new entries arrive
   const logEndRef = useRef(null);
@@ -146,6 +157,29 @@ export default function App() {
               <option value="quantum">Quantum Qiskit (QAOA/VQE)</option>
             </select>
           </div>
+
+          {/* IBM Quantum status — shown only when quantum solver is selected */}
+          {solverType === 'quantum' && (
+            <div className="ibm-status">
+              {quantumStatus === null ? (
+                <span className="ibm-status__row connecting">Checking IBM Quantum…</span>
+              ) : quantumStatus.connected ? (
+                <>
+                  <span className="ibm-status__row online">IBM Quantum: Connected</span>
+                  <span className="ibm-status__detail">Backend: {quantumStatus.backend}</span>
+                  <span className="ibm-status__detail">{quantumStatus.qubits} qubits available</span>
+                </>
+              ) : (
+                <>
+                  <span className="ibm-status__row offline">IBM Quantum: Unavailable</span>
+                  <span className="ibm-status__detail">Using local Aer simulator</span>
+                  {quantumStatus.error && (
+                    <span className="ibm-status__error">{quantumStatus.error}</span>
+                  )}
+                </>
+              )}
+            </div>
+          )}
 
           <div className="control-group">
             <label>Graph Tools</label>
