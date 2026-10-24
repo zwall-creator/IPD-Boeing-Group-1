@@ -256,3 +256,37 @@ body, html {
   min-width: 2rem;
   text-align: center;
 }
+
+/* IBM Quantum status panel */
+.ibm-status {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 4px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.78rem;
+}
+
+.ibm-status__row {
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
+.ibm-status__row.online     { color: #4ade80; }
+.ibm-status__row.connecting { color: #facc15; }
+.ibm-status__row.offline    { color: #f87171; }
+
+.ibm-status__detail {
+  color: #94a3b8;
+  font-family: monospace;
+  font-size: 0.75rem;
+}
+
+.ibm-status__error {
+  color: #f87171;
+  font-size: 0.7rem;
+  line-height: 1.3;
+  word-break: break-word;
+}
