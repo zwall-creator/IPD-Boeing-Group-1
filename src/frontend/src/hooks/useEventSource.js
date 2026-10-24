@@ -118,12 +118,12 @@ export function useEventSource() {
     }
   }, []);
 
-  const runSim = useCallback(async (solver = 'classical') => {
+  const runSim = useCallback(async (solver = 'classical', optParams = {}) => {
     try {
       const res = await fetch(`${BACKEND_URL}/simulation/run`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ solver }),
+        body: JSON.stringify({ solver, ...optParams }),
       });
       return res.ok;
     } catch {
