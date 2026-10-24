@@ -5,6 +5,7 @@ import time
 from flask import Flask, Response, jsonify, request, stream_with_context
 from flask_cors import CORS
 from quantum_backend import get_status as qb_get_status, run_circuit, build_sample_circuit
+import db
 
 app = Flask(__name__)
 CORS(app)
@@ -67,6 +68,18 @@ def quantum_status():
     """
     status = qb_get_status()
     return jsonify(status)
+
+
+@app.get("/runs")
+def get_runs():
+    """Return the 20 most recent simulation runs with their results."""
+    runs = db.get_runs(limit=20)
+    # Convert datetime objects to ISO strings for JSON serialisation
+    for run in runs:
+        for key in ("started_at", "completed_at"):
+            if run.get(key) is not None:
+                run[key] = run[key].isoformat()
+    return jsonify(runs)
 
 
 @app.get("/events/stream")
@@ -143,7 +156,8 @@ def run_simulation():
     }
 
     def _run_classical():
-        _broadcast("simulation.started", {"solver": "classical", "params": opt_params})
+        run_id = db.insert_run("classical", opt_params)
+        _broadcast("simulation.started", {"solver": "classical", "params": opt_params, "run_id": run_id})
         steps = [
             "Initialising problem graph…",
             "Building constraint model…",
@@ -155,50 +169,64 @@ def run_simulation():
         for i, step in enumerate(steps):
             time.sleep(0.8)
             _broadcast("simulation.progress", {"step": i + 1, "total": len(steps), "message": step})
-        _broadcast("simulation.done", {"solver": "classical", "status": "success", "params": opt_params})
+            db.insert_log(run_id, i + 1, len(steps), step)
+        db.update_run_status(run_id, "success")
+        _broadcast("simulation.done", {"solver": "classical", "status": "success", "params": opt_params, "run_id": run_id})
 
     def _run_quantum():
-        _broadcast("simulation.started", {"solver": "quantum", "params": opt_params})
+        run_id = db.insert_run("quantum", opt_params)
+        _broadcast("simulation.started", {"solver": "quantum", "params": opt_params, "run_id": run_id})
 
         # Step 1 — check IBM connection
         qstatus = qb_get_status()
-        _broadcast("simulation.progress", {"step": 1, "total": 6, "message": "Checking IBM Quantum connection…"})
+        msg1 = "Checking IBM Quantum connection…"
+        _broadcast("simulation.progress", {"step": 1, "total": 6, "message": msg1})
+        db.insert_log(run_id, 1, 6, msg1)
         time.sleep(0.5)
 
         if qstatus["connected"]:
-            _broadcast("simulation.progress", {"step": 2, "total": 6,
-                "message": f"Connected to IBM backend: {qstatus['backend']} ({qstatus['qubits']} qubits)"})
+            msg2 = f"Connected to IBM backend: {qstatus['backend']} ({qstatus['qubits']} qubits)"
         else:
-            _broadcast("simulation.progress", {"step": 2, "total": 6,
-                "message": f"IBM unavailable ({qstatus['error']}) — using local Aer simulator"})
+            msg2 = f"IBM unavailable ({qstatus['error']}) — using local Aer simulator"
+        _broadcast("simulation.progress", {"step": 2, "total": 6, "message": msg2})
+        db.insert_log(run_id, 2, 6, msg2)
         time.sleep(0.5)
 
-        _broadcast("simulation.progress", {"step": 3, "total": 6,
-            "message": f"Applying weights — sec:{opt_params['securityWeight']} cost:{opt_params['costWeight']} bw:{opt_params['bandwidthWeight']} risk:{opt_params['riskThreshold']}…"})
+        msg3 = f"Applying weights — sec:{opt_params['securityWeight']} cost:{opt_params['costWeight']} bw:{opt_params['bandwidthWeight']} risk:{opt_params['riskThreshold']}…"
+        _broadcast("simulation.progress", {"step": 3, "total": 6, "message": msg3})
+        db.insert_log(run_id, 3, 6, msg3)
         time.sleep(0.5)
 
-        _broadcast("simulation.progress", {"step": 4, "total": 6,
-            "message": "Building QAOA/VQE circuit from network topology…"})
+        msg4 = "Building QAOA/VQE circuit from network topology…"
+        _broadcast("simulation.progress", {"step": 4, "total": 6, "message": msg4})
+        db.insert_log(run_id, 4, 6, msg4)
         time.sleep(0.5)
 
         # Step 5 — run the circuit
-        _broadcast("simulation.progress", {"step": 5, "total": 6,
-            "message": f"Submitting circuit to {'IBM Quantum' if qstatus['connected'] else 'Aer simulator'}…"})
+        msg5 = f"Submitting circuit to {'IBM Quantum' if qstatus['connected'] else 'Aer simulator'}…"
+        _broadcast("simulation.progress", {"step": 5, "total": 6, "message": msg5})
+        db.insert_log(run_id, 5, 6, msg5)
         circuit = build_sample_circuit(n_qubits=2)
         result = run_circuit(circuit, shots=1024)
-
         time.sleep(0.5)
-        _broadcast("simulation.progress", {"step": 6, "total": 6,
-            "message": f"Results collected from {result['backend']} — top counts: {dict(list(result['counts'].items())[:3])}"})
+
+        msg6 = f"Results collected from {result['backend']} — top counts: {dict(list(result['counts'].items())[:3])}"
+        _broadcast("simulation.progress", {"step": 6, "total": 6, "message": msg6})
+        db.insert_log(run_id, 6, 6, msg6)
         time.sleep(0.3)
+
+        final_status = "success" if not result.get("error") or result["used_ibm"] else "fallback"
+        db.insert_result(run_id, result)
+        db.update_run_status(run_id, final_status, result.get("error"))
 
         _broadcast("simulation.done", {
             "solver":   "quantum",
-            "status":   "success" if not result["error"] else "fallback",
+            "status":   final_status,
             "backend":  result["backend"],
             "used_ibm": result["used_ibm"],
             "counts":   result["counts"],
             "params":   opt_params,
+            "run_id":   run_id,
         })
 
     if solver == "quantum":
