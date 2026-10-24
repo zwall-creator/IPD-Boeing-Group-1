@@ -16,8 +16,6 @@ Describe to the solver what a valid placement looks like and what makes a placem
 
 
 ### Specific to our problem
-
-- Our nodes store directed connections but it may be useful to convert them to an undirected single connection for the solver.
 - The way that the problem is going to be fed into the solver initially is to have it place a security device on a link and then the post processing will update the network to to create new links between the old two nodes to the device (note that this will not allow for chained device placement, maybe a feature down the line)
 - The solver will need a security level expression which calculates the final security level for each node.
 - The goal of the solver is to minimize the sum of the gaps between each nodes risk level and security level (gap = risk - security)
