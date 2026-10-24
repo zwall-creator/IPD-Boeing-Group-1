@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
 import { useEventSource } from './hooks/useEventSource';
 import NetworkCanvas from './components/NetworkCanvas';
+import OptimizationControls from './components/OptimizationControls';
 
 // Map SSE event types to a log-entry CSS variant for colour coding
 function eventToLogVariant(type) {
@@ -33,6 +34,12 @@ function formatEvent(event) {
 export default function App() {
   const [activeTab, setActiveTab]   = useState('canvas');
   const [solverType, setSolverType] = useState('classical');
+  const [optParams, setOptParams]   = useState({
+    securityWeight:  50,
+    costWeight:      50,
+    bandwidthWeight: 50,
+    riskThreshold:   30,
+  });
 
   // Local UI logs (seed entries shown before the SSE connection is ready)
   const [localLogs, setLocalLogs] = useState([
@@ -61,9 +68,9 @@ export default function App() {
   const handleRunSimulation = async () => {
     setLocalLogs(prev => [
       ...prev,
-      { text: `[Run] Triggering ${solverType} solver…`, variant: 'info' },
+      { text: `[Run] Triggering ${solverType} solver… (sec:${optParams.securityWeight} cost:${optParams.costWeight} bw:${optParams.bandwidthWeight} risk:${optParams.riskThreshold})`, variant: 'info' },
     ]);
-    const ok = await runSim(solverType);
+    const ok = await runSim(solverType, optParams);
     if (!ok) {
       setLocalLogs(prev => [
         ...prev,
@@ -158,6 +165,9 @@ export default function App() {
             <label>SSE Events Received</label>
             <span className="event-counter">{events.length}</span>
           </div>
+
+          {/* Optimization priority sliders */}
+          <OptimizationControls params={optParams} onChange={setOptParams} />
         </aside>
 
         {/* Central Display / Visual Canvas Container */}

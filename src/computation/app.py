@@ -116,15 +116,27 @@ def run_simulation():
     """
     Kick off a mock simulation and stream progress events back through the
     event bus so every connected client sees them in real time.
+    Accepts optional optimization parameters:
+      - securityWeight  (0-100)
+      - costWeight      (0-100)
+      - bandwidthWeight (0-100)
+      - riskThreshold   (0-100)
     """
     body = request.get_json(silent=True) or {}
     solver = body.get("solver", "classical")
+    opt_params = {
+        "securityWeight":  body.get("securityWeight", 50),
+        "costWeight":      body.get("costWeight", 50),
+        "bandwidthWeight": body.get("bandwidthWeight", 50),
+        "riskThreshold":   body.get("riskThreshold", 30),
+    }
 
     def _run():
-        _broadcast("simulation.started", {"solver": solver})
+        _broadcast("simulation.started", {"solver": solver, "params": opt_params})
         steps = [
             "Initialising problem graph…",
             "Building constraint model…",
+            f"Applying weights — sec:{opt_params['securityWeight']} cost:{opt_params['costWeight']} bw:{opt_params['bandwidthWeight']} risk:{opt_params['riskThreshold']}…",
             f"Executing {'CP-SAT classical solver' if solver == 'classical' else 'QAOA/VQE quantum circuit'}…",
             "Collecting results…",
             "Simulation complete.",
@@ -132,7 +144,7 @@ def run_simulation():
         for i, step in enumerate(steps):
             time.sleep(0.8)
             _broadcast("simulation.progress", {"step": i + 1, "total": len(steps), "message": step})
-        _broadcast("simulation.done", {"solver": solver, "status": "success"})
+        _broadcast("simulation.done", {"solver": solver, "status": "success", "params": opt_params})
 
     threading.Thread(target=_run, daemon=True).start()
-    return jsonify(ok=True, solver=solver)
+    return jsonify(ok=True, solver=solver, params=opt_params)
