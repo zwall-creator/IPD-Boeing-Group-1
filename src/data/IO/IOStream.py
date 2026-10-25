@@ -305,9 +305,15 @@ class ReportStream(IOStream):
 class SolutionStream(IOStream):
     def __init__(self, f_path = '', read_write_type = 'rw', solution_id = -1):
         super(SolutionStream, self).__init__(f_path, read_write_type)
+        if type(solution_id) != int:
+            raise TypeError('arg solution_id must be int')
+        self.solution_id = solution_id
 
     def __del__(self):
         super().__del__()
+
+    def get_id(self):
+        return self.solution_id
 
     def write_solution(self, solution_id, problem_state, solution_state, runtime):
         """
@@ -341,10 +347,10 @@ class SolutionStream(IOStream):
         if not self.can_read:
             raise PermissionError('Permission to read data is invalid')
         lines = self.read()
-        solution_id = lines[0][13:]
-        problem_state = lines[1][15:]
-        solution_state = lines[2][16:]
-        runtime = lines[3][19:]
-        return solution_id, problem_state, solution_state, runtime
+        solution_id = lines[0][13:].strip()
+        problem_state = lines[1][15:].strip()
+        solution_state = lines[2][16:].strip()
+        runtime = lines[3][19:].strip()
+        return '{}, {}, {}, {}'.format(solution_id, problem_state, solution_state, runtime)
 
 
