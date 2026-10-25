@@ -224,7 +224,7 @@ class LogStream(IOStream):
         if not self.can_write:
             raise PermissionError('Permission to write data is invalid')
         wng, msg = warning
-        warning_record = '{timestamp} | Warning: {warning_type} | {warning_msg}'.format(timestamp=self.get_timestamp(),warning_type=wng,warning_msg=msg)
+        warning_record = '{timestamp} | Warning: {warning_type} | Msg: {warning_msg}'.format(timestamp=self.get_timestamp(),warning_type=wng,warning_msg=msg)
         self.file.write(warning_record)
 
     def log_event(self, event):
