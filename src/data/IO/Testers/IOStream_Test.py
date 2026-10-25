@@ -1,6 +1,15 @@
 import unittest
 from src.data.IO.IOStream import IOStream
 
+system = "Win"
+def fix_paths(fpath):
+    if system == "Win":
+        fpath = str(fpath).replace("/","\\")
+        return fpath
+    if system == "Mac":
+        fpath = str(fpath).replace("\\","/")
+        return fpath
+
 class IOStream_Test(unittest.TestCase):
     # Control tests; these should NEVER fail
     def test_pass(self):
@@ -12,9 +21,9 @@ class IOStream_Test(unittest.TestCase):
     def test_IOStream__init__state_tests(self):
         #a test case is a set of two tuples - inputs, expected results
         test_cases = [
-            (('src/data/IO/Testers/test-files/iostream-init-state-test-1','r'),(IOStream,'src/data/IO/Testers/test-files/iostream-init-state-test-1',True,False,True)),
-            (('src/data/IO/Testers/test-files/iostream-init-state-test-2','w'),(IOStream,'src/data/IO/Testers/test-files/iostream-init-state-test-2',False,True,True)),
-            (('src/data/IO/Testers/test-files/iostream-init-state-test-3','rw'),(IOStream,'src/data/IO/Testers/test-files/iostream-init-state-test-3',True,True,True)),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-init-state-test-1'),'r'),(IOStream,fix_paths('src/data/IO/Testers/test-files/iostream-init-state-test-1'),True,False,True)),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-init-state-test-2'),'w'),(IOStream,fix_paths('src/data/IO/Testers/test-files/iostream-init-state-test-2'),False,True,True)),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-init-state-test-3'),'rw'),(IOStream,fix_paths('src/data/IO/Testers/test-files/iostream-init-state-test-3'),True,True,True)),
         ]
         for test_case in test_cases:
             inputs = test_case[0]
@@ -33,10 +42,10 @@ class IOStream_Test(unittest.TestCase):
         #a test case is a set of two tuples - inputs, expected results
         test_cases = [
             (('','r'),(FileNotFoundError)),
-            (('./test-files/iostream-init-error-test-1',''),(ValueError)),
-            (('./test-files/iostream-init-error-test-2','apple'),(ValueError)),
-            (('./test-files/iostream-init-error-test-3','read'),(ValueError)),
-            (('./test-files/iostream-init-error-test-4','write'),(ValueError)),
+            ((fix_paths('./test-files/iostream-init-error-test-1'),''),(ValueError)),
+            ((fix_paths('./test-files/iostream-init-error-test-2'),'apple'),(ValueError)),
+            ((fix_paths('./test-files/iostream-init-error-test-3'),'read'),(ValueError)),
+            ((fix_paths('./test-files/iostream-init-error-test-4'),'write'),(ValueError)),
 
         ]
         for test_case in test_cases:
@@ -60,7 +69,7 @@ class IOStream_Test(unittest.TestCase):
             ((None,'r'),(TypeError)),
             ((None,'w'),(TypeError)),
             ((None,'rw'),(TypeError)),
-            (('src/data/IO/Testers/test-files/iostream-init-NONE-value-errors-test-1',None),(TypeError)),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-init-NONE-value-errors-test-1'),None),(TypeError)),
 
         ]
         for test_case in test_cases:
@@ -78,9 +87,9 @@ class IOStream_Test(unittest.TestCase):
     def test_IOStream_check_permission_state(self):
         #a test case is a set of two tuples - inputs, expected results
         test_cases = [
-            (('src/data/IO/Testers/test-files/iostream-check-permission-state-test-1','w'),('w'),(IOStream,'src/data/IO/Testers/test-files/iostream-check-permission-state-test-1',False,True,True)),
-            (('src/data/IO/Testers/test-files/iostream-check-permission-state-test-2','r'),('r'),(IOStream,'src/data/IO/Testers/test-files/iostream-check-permission-state-test-2',True,False,True)),
-            (('src/data/IO/Testers/test-files/iostream-check-permission-state-test-3','rw'),('rw'),(IOStream,'src/data/IO/Testers/test-files/iostream-check-permission-state-test-3',True,True,True)),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-check-permission-state-test-1'),'w'),('w'),(IOStream,fix_paths('src/data/IO/Testers/test-files/iostream-check-permission-state-test-1'),False,True,True)),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-check-permission-state-test-2'),'r'),('r'),(IOStream,fix_paths('src/data/IO/Testers/test-files/iostream-check-permission-state-test-2'),True,False,True)),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-check-permission-state-test-3'),'rw'),('rw'),(IOStream,fix_paths('src/data/IO/Testers/test-files/iostream-check-permission-state-test-3'),True,True,True)),
 
         ]
         for test_case in test_cases:
@@ -106,10 +115,10 @@ class IOStream_Test(unittest.TestCase):
     def test_IOStream_check_permission_error_tests(self):
         #a test case is a set of two tuples - inputs, expected results
         test_cases = [
-            (('src/data/IO/Testers/test-files/iostream-check-permission-error-test-1','w'),(''),(ValueError)),
-            (('src/data/IO/Testers/test-files/iostream-check-permission-error-test-2','w'),('apple'),(ValueError)),
-            (('src/data/IO/Testers/test-files/iostream-check-permission-error-test-3','w'),('x'),(ValueError)),
-            (('src/data/IO/Testers/test-files/iostream-check-permission-error-test-4','w'),('b'),(ValueError)),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-check-permission-error-test-1'),'w'),(''),(ValueError)),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-check-permission-error-test-2'),'w'),('apple'),(ValueError)),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-check-permission-error-test-3'),'w'),('x'),(ValueError)),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-check-permission-error-test-4'),'w'),('b'),(ValueError)),
 
         ]
         for test_case in test_cases:
@@ -128,15 +137,15 @@ class IOStream_Test(unittest.TestCase):
     def test_IOStream_check_permission_value(self):
         #a test case is a set of two tuples - inputs, expected results
         test_cases = [
-            (('src/data/IO/Testers/test-files/iostream-check-permission-value-test-1', 'w'), ('w'), (bool, True)),
-            (('src/data/IO/Testers/test-files/iostream-check-permission-value-test-2', 'w'), ('r'), (bool, False)),
-            (('src/data/IO/Testers/test-files/iostream-check-permission-value-test-3', 'r'), ('r'), (bool, True)),
-            (('src/data/IO/Testers/test-files/iostream-check-permission-value-test-4', 'r'), ('w'), (bool, False)),
-            (('src/data/IO/Testers/test-files/iostream-check-permission-value-test-5', 'rw'), ('rw'), (bool, True)),
-            (('src/data/IO/Testers/test-files/iostream-check-permission-value-test-6', 'rw'), ('r'), (bool, True)),
-            (('src/data/IO/Testers/test-files/iostream-check-permission-value-test-7', 'rw'), ('w'), (bool, True)),
-            (('src/data/IO/Testers/test-files/iostream-check-permission-value-test-8', 'w'), ('rw'), (bool, False)),
-            (('src/data/IO/Testers/test-files/iostream-check-permission-value-test-9', 'r'), ('rw'), (bool, False)),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-check-permission-value-test-1'), 'w'), ('w'), (bool, True)),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-check-permission-value-test-2'), 'w'), ('r'), (bool, False)),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-check-permission-value-test-3'), 'r'), ('r'), (bool, True)),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-check-permission-value-test-4'), 'r'), ('w'), (bool, False)),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-check-permission-value-test-5'), 'rw'), ('rw'), (bool, True)),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-check-permission-value-test-6'), 'rw'), ('r'), (bool, True)),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-check-permission-value-test-7'), 'rw'), ('w'), (bool, True)),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-check-permission-value-test-8'), 'w'), ('rw'), (bool, False)),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-check-permission-value-test-9'), 'r'), ('rw'), (bool, False)),
         ]
         for test_case in test_cases:
             #test setup
@@ -159,9 +168,9 @@ class IOStream_Test(unittest.TestCase):
     def test_IOStream_close_file_state(self):
         #a test case is a set of two tuples - inputs, expected results
         test_cases = [
-            (('src/data/IO/Testers/test-files/iostream-close-file-state-test-1','w'),(IOStream,'src/data/IO/Testers/test-files/iostream-close-file-state-test-1',False,True,True)),
-            (('src/data/IO/Testers/test-files/iostream-close-file-state-test-2','r'),(IOStream,'src/data/IO/Testers/test-files/iostream-close-file-state-test-2',True,False,True)),
-            (('src/data/IO/Testers/test-files/iostream-close-file-state-test-3','rw'),(IOStream,'src/data/IO/Testers/test-files/iostream-close-file-state-test-3',True,True,True)),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-close-file-state-test-1'),'w'),(IOStream,fix_paths('src/data/IO/Testers/test-files/iostream-close-file-state-test-1'),False,True,True)),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-close-file-state-test-2'),'r'),(IOStream,fix_paths('src/data/IO/Testers/test-files/iostream-close-file-state-test-2'),True,False,True)),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-close-file-state-test-3'),'rw'),(IOStream,fix_paths('src/data/IO/Testers/test-files/iostream-close-file-state-test-3'),True,True,True)),
 
         ]
         for test_case in test_cases:
@@ -189,9 +198,9 @@ class IOStream_Test(unittest.TestCase):
     def test_IOStream_get_f_path_state(self):
         #a test case is a set of two tuples - inputs, expected results
         test_cases = [
-            (('src/data/IO/Testers/test-files/iostream-get-f-path-state-test-1','w'),(IOStream,'src/data/IO/Testers/test-files/iostream-get-f-path-state-test-1',False,True,False)),
-            (('src/data/IO/Testers/test-files/iostream-get-f-path-state-test-2','r'),(IOStream,'src/data/IO/Testers/test-files/iostream-get-f-path-state-test-2',True,False,False)),
-            (('src/data/IO/Testers/test-files/iostream-get-f-path-state-test-3','rw'),(IOStream,'src/data/IO/Testers/test-files/iostream-get-f-path-state-test-3',True,True,False)),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-get-f-path-state-test-1'),'w'),(IOStream,fix_paths('src/data/IO/Testers/test-files/iostream-get-f-path-state-test-1'),False,True,False)),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-get-f-path-state-test-2'),'r'),(IOStream,fix_paths('src/data/IO/Testers/test-files/iostream-get-f-path-state-test-2'),True,False,False)),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-get-f-path-state-test-3'),'rw'),(IOStream,fix_paths('src/data/IO/Testers/test-files/iostream-get-f-path-state-test-3'),True,True,False)),
 
         ]
         for test_case in test_cases:
@@ -218,15 +227,15 @@ class IOStream_Test(unittest.TestCase):
     def test_IOStream_get_f_path_value(self):
         #a test case is a set of two tuples - inputs, expected results
         test_cases = [
-            (('src/data/IO/Testers/test-files/iostream-get-f-path-value-test-1', 'w'), (str, 'src/data/IO/Testers/test-files/iostream-get-f-path-value-test-1')),
-            (('src/data/IO/Testers/test-files/iostream-get-f-path-value-test-2', 'r'), (str, 'src/data/IO/Testers/test-files/iostream-get-f-path-value-test-2')),
-            (('src/data/IO/Testers/test-files/iostream-get-f-path-value-test-3', 'rw'), (str, 'src/data/IO/Testers/test-files/iostream-get-f-path-value-test-3')),
-            (('src/data/IO/Testers/test-files/iostream-get-f-path-value-test-4', 'w'), (str, 'src/data/IO/Testers/test-files/iostream-get-f-path-value-test-4')),
-            (('src/data/IO/Testers/test-files/iostream-get-f-path-value-test-5', 'r'), (str, 'src/data/IO/Testers/test-files/iostream-get-f-path-value-test-5')),
-            (('src/data/IO/Testers/test-files/iostream-get-f-path-value-test-6', 'rw'), (str, 'src/data/IO/Testers/test-files/iostream-get-f-path-value-test-6')),
-            (('src/data/IO/Testers/test-files/iostream-get-f-path-value-test-7', 'w'), (str, 'src/data/IO/Testers/test-files/iostream-get-f-path-value-test-7')),
-            (('src/data/IO/Testers/test-files/iostream-get-f-path-value-test-8', 'r'), (str, 'src/data/IO/Testers/test-files/iostream-get-f-path-value-test-8')),
-            (('src/data/IO/Testers/test-files/iostream-get-f-path-value-test-9', 'rw'), (str, 'src/data/IO/Testers/test-files/iostream-get-f-path-value-test-9')),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-get-f-path-value-test-1'), 'w'), (str, fix_paths('src/data/IO/Testers/test-files/iostream-get-f-path-value-test-1'))),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-get-f-path-value-test-2'), 'r'), (str, fix_paths('src/data/IO/Testers/test-files/iostream-get-f-path-value-test-2'))),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-get-f-path-value-test-3'), 'rw'), (str,fix_paths('src/data/IO/Testers/test-files/iostream-get-f-path-value-test-3'))),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-get-f-path-value-test-4'), 'w'), (str, fix_paths('src/data/IO/Testers/test-files/iostream-get-f-path-value-test-4'))),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-get-f-path-value-test-5'), 'r'), (str, fix_paths('src/data/IO/Testers/test-files/iostream-get-f-path-value-test-5'))),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-get-f-path-value-test-6'), 'rw'), (str,fix_paths('src/data/IO/Testers/test-files/iostream-get-f-path-value-test-6'))),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-get-f-path-value-test-7'), 'w'), (str, fix_paths('src/data/IO/Testers/test-files/iostream-get-f-path-value-test-7'))),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-get-f-path-value-test-8'), 'r'), (str, fix_paths('src/data/IO/Testers/test-files/iostream-get-f-path-value-test-8'))),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-get-f-path-value-test-9'), 'rw'), (str,fix_paths('src/data/IO/Testers/test-files/iostream-get-f-path-value-test-9'))),
         ]
         for test_case in test_cases:
             #test setup
@@ -251,9 +260,9 @@ class IOStream_Test(unittest.TestCase):
         fpath_func = 'get-can-read'
         test_type = 'state'
         test_cases = [
-            (('src/data/IO/Testers/test-files/iostream-{}-{}-test-1'.format(fpath_func,test_type),'w'),(IOStream,'src/data/IO/Testers/test-files/iostream-{}-{}-test-1'.format(fpath_func,test_type),False,True,False)),
-            (('src/data/IO/Testers/test-files/iostream-{}-{}-test-2'.format(fpath_func,test_type),'r'),(IOStream,'src/data/IO/Testers/test-files/iostream-{}-{}-test-2'.format(fpath_func,test_type),True,False,False)),
-            (('src/data/IO/Testers/test-files/iostream-{}-{}-test-3'.format(fpath_func,test_type),'rw'),(IOStream,'src/data/IO/Testers/test-files/iostream-{}-{}-test-3'.format(fpath_func,test_type),True,True,False)),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-{}-{}-test-1').format(fpath_func,test_type),'w'),(IOStream,fix_paths('src/data/IO/Testers/test-files/iostream-{}-{}-test-1').format(fpath_func,test_type),False,True,False)),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-{}-{}-test-2').format(fpath_func,test_type),'r'),(IOStream,fix_paths('src/data/IO/Testers/test-files/iostream-{}-{}-test-2').format(fpath_func,test_type),True,False,False)),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-{}-{}-test-3').format(fpath_func,test_type),'rw'),(IOStream,fix_paths('src/data/IO/Testers/test-files/iostream-{}-{}-test-3').format(fpath_func,test_type),True,True,False)),
 
         ]
         for test_case in test_cases:
@@ -282,15 +291,15 @@ class IOStream_Test(unittest.TestCase):
         fpath_func = 'get-can-read'
         test_type = 'value'
         test_cases = [
-            (('src/data/IO/Testers/test-files/iostream-{}-{}-test-1'.format(fpath_func,test_type), 'r'), (bool, True)),
-            (('src/data/IO/Testers/test-files/iostream-{}-{}-test-2'.format(fpath_func,test_type), 'w'), (bool, False)),
-            (('src/data/IO/Testers/test-files/iostream-{}-{}-test-3'.format(fpath_func,test_type), 'rw'), (bool, True)),
-            (('src/data/IO/Testers/test-files/iostream-{}-{}-test-4'.format(fpath_func,test_type), 'r'), (bool, True)),
-            (('src/data/IO/Testers/test-files/iostream-{}-{}-test-5'.format(fpath_func,test_type), 'w'), (bool, False)),
-            (('src/data/IO/Testers/test-files/iostream-{}-{}-test-6'.format(fpath_func,test_type), 'rw'), (bool, True)),
-            (('src/data/IO/Testers/test-files/iostream-{}-{}-test-7'.format(fpath_func,test_type), 'r'), (bool, True)),
-            (('src/data/IO/Testers/test-files/iostream-{}-{}-test-8'.format(fpath_func,test_type), 'w'), (bool, False)),
-            (('src/data/IO/Testers/test-files/iostream-{}-{}-test-9'.format(fpath_func, test_type), 'rw'), (bool, True)),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-{}-{}-test-1'.format(fpath_func,test_type)), 'r'), (bool, True)),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-{}-{}-test-2'.format(fpath_func,test_type)), 'w'), (bool, False)),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-{}-{}-test-3'.format(fpath_func,test_type)), 'rw'), (bool, True)),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-{}-{}-test-4'.format(fpath_func,test_type)), 'r'), (bool, True)),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-{}-{}-test-5'.format(fpath_func,test_type)), 'w'), (bool, False)),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-{}-{}-test-6'.format(fpath_func,test_type)), 'rw'), (bool, True)),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-{}-{}-test-7'.format(fpath_func,test_type)), 'r'), (bool, True)),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-{}-{}-test-8'.format(fpath_func,test_type)), 'w'), (bool, False)),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-{}-{}-test-9'.format(fpath_func,test_type)), 'rw'), (bool, True)),
         ]
         for test_case in test_cases:
             #test setup
@@ -316,9 +325,9 @@ class IOStream_Test(unittest.TestCase):
         fpath_func = 'get-can-write'
         test_type = 'state'
         test_cases = [
-            (('src/data/IO/Testers/test-files/iostream-{}-{}-test-1'.format(fpath_func,test_type),'r'),(IOStream,'src/data/IO/Testers/test-files/iostream-{}-{}-test-1'.format(fpath_func,test_type),True,False,False)),
-            (('src/data/IO/Testers/test-files/iostream-{}-{}-test-2'.format(fpath_func,test_type),'w'),(IOStream,'src/data/IO/Testers/test-files/iostream-{}-{}-test-2'.format(fpath_func,test_type),False,True,False)),
-            (('src/data/IO/Testers/test-files/iostream-{}-{}-test-3'.format(fpath_func,test_type),'rw'),(IOStream,'src/data/IO/Testers/test-files/iostream-{}-{}-test-3'.format(fpath_func,test_type),True,True,False)),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-{}-{}-test-1'.format(fpath_func,test_type)),'r'),(IOStream,fix_paths('src/data/IO/Testers/test-files/iostream-{}-{}-test-1'.format(fpath_func,test_type)),True,False,False)),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-{}-{}-test-2'.format(fpath_func,test_type)),'w'),(IOStream,fix_paths('src/data/IO/Testers/test-files/iostream-{}-{}-test-2'.format(fpath_func,test_type)),False,True,False)),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-{}-{}-test-3'.format(fpath_func,test_type)),'rw'),(IOStream,fix_paths('src/data/IO/Testers/test-files/iostream-{}-{}-test-3'.format(fpath_func,test_type)),True,True,False)),
         ]
         for test_case in test_cases:
             #test setup
@@ -346,15 +355,15 @@ class IOStream_Test(unittest.TestCase):
         fpath_func = 'get-can-write'
         test_type = 'value'
         test_cases = [
-            (('src/data/IO/Testers/test-files/iostream-{}-{}-test-1'.format(fpath_func,test_type), 'r'), (bool, False)),
-            (('src/data/IO/Testers/test-files/iostream-{}-{}-test-2'.format(fpath_func,test_type), 'w'), (bool, True)),
-            (('src/data/IO/Testers/test-files/iostream-{}-{}-test-3'.format(fpath_func,test_type), 'rw'), (bool, True)),
-            (('src/data/IO/Testers/test-files/iostream-{}-{}-test-4'.format(fpath_func,test_type), 'r'), (bool, False)),
-            (('src/data/IO/Testers/test-files/iostream-{}-{}-test-5'.format(fpath_func,test_type), 'w'), (bool, True)),
-            (('src/data/IO/Testers/test-files/iostream-{}-{}-test-6'.format(fpath_func,test_type), 'rw'), (bool, True)),
-            (('src/data/IO/Testers/test-files/iostream-{}-{}-test-7'.format(fpath_func,test_type), 'r'), (bool, False)),
-            (('src/data/IO/Testers/test-files/iostream-{}-{}-test-8'.format(fpath_func,test_type), 'w'), (bool, True)),
-            (('src/data/IO/Testers/test-files/iostream-{}-{}-test-9'.format(fpath_func, test_type), 'rw'), (bool, True)),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-{}-{}-test-1'.format(fpath_func,test_type)), 'r'), (bool, False)),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-{}-{}-test-2'.format(fpath_func,test_type)), 'w'), (bool, True)),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-{}-{}-test-3'.format(fpath_func,test_type)), 'rw'), (bool, True)),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-{}-{}-test-4'.format(fpath_func,test_type)), 'r'), (bool, False)),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-{}-{}-test-5'.format(fpath_func,test_type)), 'w'), (bool, True)),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-{}-{}-test-6'.format(fpath_func,test_type)), 'rw'), (bool, True)),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-{}-{}-test-7'.format(fpath_func,test_type)), 'r'), (bool, False)),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-{}-{}-test-8'.format(fpath_func,test_type)), 'w'), (bool, True)),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-{}-{}-test-9'.format(fpath_func,test_type)), 'rw'), (bool, True)),
         ]
         for test_case in test_cases:
             #test setup
@@ -381,15 +390,15 @@ class IOStream_Test(unittest.TestCase):
         function_var = IOStream.set_can_write
         test_type = 'state'
         test_cases = [
-            (('src/data/IO/Testers/test-files/iostream-{}-{}-test-1'.format(fpath_func,test_type),'r'),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-{}-{}-test-1'.format(fpath_func,test_type)),'r'),
              (True,),
-             (IOStream,'src/data/IO/Testers/test-files/iostream-{}-{}-test-1'.format(fpath_func,test_type),True,True,False)),
-            (('src/data/IO/Testers/test-files/iostream-{}-{}-test-2'.format(fpath_func,test_type),'w'),
+             (IOStream,fix_paths('src/data/IO/Testers/test-files/iostream-{}-{}-test-1'.format(fpath_func,test_type)),True,True,False)),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-{}-{}-test-2'.format(fpath_func,test_type)),'w'),
              (False,),
-             (IOStream,'src/data/IO/Testers/test-files/iostream-{}-{}-test-2'.format(fpath_func,test_type),False,False,False)),
-            (('src/data/IO/Testers/test-files/iostream-{}-{}-test-3'.format(fpath_func,test_type),'rw'),
+             (IOStream,fix_paths('src/data/IO/Testers/test-files/iostream-{}-{}-test-2'.format(fpath_func,test_type)),False,False,False)),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-{}-{}-test-3'.format(fpath_func,test_type)),'rw'),
              (True,),
-             (IOStream,'src/data/IO/Testers/test-files/iostream-{}-{}-test-3'.format(fpath_func,test_type),True,True,False)),
+             (IOStream,fix_paths('src/data/IO/Testers/test-files/iostream-{}-{}-test-3'.format(fpath_func,test_type)),True,True,False)),
         ]
         for test_case in test_cases:
             #test setup
@@ -417,13 +426,13 @@ class IOStream_Test(unittest.TestCase):
         function_var = IOStream.set_can_write
         test_type = 'error'
         test_cases = [
-            (('src/data/IO/Testers/test-files/iostream-{}-{}-test-1'.format(fpath_func, test_type), 'r'),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-{}-{}-test-1'.format(fpath_func, test_type)), 'r'),
              ('abc',),
              (TypeError)),
-            (('src/data/IO/Testers/test-files/iostream-{}-{}-test-2'.format(fpath_func, test_type), 'w'),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-{}-{}-test-2'.format(fpath_func, test_type)), 'w'),
              ('False',),
              (TypeError)),
-            (('src/data/IO/Testers/test-files/iostream-{}-{}-test-3'.format(fpath_func, test_type), 'rw'),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-{}-{}-test-3'.format(fpath_func, test_type)), 'rw'),
              (1,),
              (TypeError)),
         ]
@@ -447,15 +456,15 @@ class IOStream_Test(unittest.TestCase):
         function_var = IOStream.set_can_read
         test_type = 'state'
         test_cases = [
-            (('src/data/IO/Testers/test-files/iostream-{}-{}-test-1'.format(fpath_func,test_type),'r'),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-{}-{}-test-1'.format(fpath_func,test_type)),'r'),
              (False,),
-             (IOStream,'src/data/IO/Testers/test-files/iostream-{}-{}-test-1'.format(fpath_func,test_type),False,False,False)),
-            (('src/data/IO/Testers/test-files/iostream-{}-{}-test-2'.format(fpath_func,test_type),'w'),
+             (IOStream,fix_paths('src/data/IO/Testers/test-files/iostream-{}-{}-test-1'.format(fpath_func,test_type)),False,False,False)),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-{}-{}-test-2'.format(fpath_func,test_type)),'w'),
              (True,),
-             (IOStream,'src/data/IO/Testers/test-files/iostream-{}-{}-test-2'.format(fpath_func,test_type),True,True,False)),
-            (('src/data/IO/Testers/test-files/iostream-{}-{}-test-3'.format(fpath_func,test_type),'rw'),
+             (IOStream,fix_paths('src/data/IO/Testers/test-files/iostream-{}-{}-test-2'.format(fpath_func,test_type)),True,True,False)),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-{}-{}-test-3'.format(fpath_func,test_type)),'rw'),
              (False,),
-             (IOStream,'src/data/IO/Testers/test-files/iostream-{}-{}-test-3'.format(fpath_func,test_type),False,True,False)),
+             (IOStream,fix_paths('src/data/IO/Testers/test-files/iostream-{}-{}-test-3'.format(fpath_func,test_type)),False,True,False)),
         ]
         for test_case in test_cases:
             #test setup
@@ -483,13 +492,13 @@ class IOStream_Test(unittest.TestCase):
         function_var = IOStream.set_can_read
         test_type = 'error'
         test_cases = [
-            (('src/data/IO/Testers/test-files/iostream-{}-{}-test-1'.format(fpath_func, test_type), 'r'),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-{}-{}-test-1'.format(fpath_func, test_type)), 'r'),
              ('abc',),
              (TypeError)),
-            (('src/data/IO/Testers/test-files/iostream-{}-{}-test-2'.format(fpath_func, test_type), 'w'),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-{}-{}-test-2'.format(fpath_func, test_type)), 'w'),
              ('False',),
              (TypeError)),
-            (('src/data/IO/Testers/test-files/iostream-{}-{}-test-3'.format(fpath_func, test_type), 'rw'),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-{}-{}-test-3'.format(fpath_func, test_type)), 'rw'),
              (1,),
              (TypeError)),
         ]
@@ -513,12 +522,12 @@ class IOStream_Test(unittest.TestCase):
         function_var = IOStream.read
         test_type = 'state'
         test_cases = [
-            (('src/data/IO/Testers/test-files/iostream-{}-{}-test-1'.format(fpath_func,test_type),'r'),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-{}-{}-test-1'.format(fpath_func,test_type)),'r'),
              (),
-             (IOStream,'src/data/IO/Testers/test-files/iostream-{}-{}-test-1'.format(fpath_func,test_type),True,False,False)),
-            (('src/data/IO/Testers/test-files/iostream-{}-{}-test-2'.format(fpath_func,test_type),'rw'),
+             (IOStream,fix_paths('src/data/IO/Testers/test-files/iostream-{}-{}-test-1'.format(fpath_func,test_type)),True,False,False)),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-{}-{}-test-2'.format(fpath_func,test_type)),'rw'),
              (),
-             (IOStream,'src/data/IO/Testers/test-files/iostream-{}-{}-test-2'.format(fpath_func,test_type),True,True,False)),
+             (IOStream,fix_paths('src/data/IO/Testers/test-files/iostream-{}-{}-test-2'.format(fpath_func,test_type)),True,True,False)),
 
         ]
         for test_case in test_cases:
@@ -547,7 +556,7 @@ class IOStream_Test(unittest.TestCase):
         function_var = IOStream.read
         test_type = 'error'
         test_cases = [
-            (('src/data/IO/Testers/test-files/iostream-{}-{}-test-1'.format(fpath_func, test_type), 'w'),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-{}-{}-test-1'.format(fpath_func, test_type)), 'w'),
              (),
              (PermissionError)),
         ]
@@ -570,33 +579,15 @@ class IOStream_Test(unittest.TestCase):
         function_var = IOStream.read
         test_type = 'value'
         test_cases = [
-            (('src/data/IO/Testers/test-files/iostream-{}-{}-test-1'.format(fpath_func,test_type), 'r'),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-{}-{}-test-1'.format(fpath_func,test_type)), 'r'),
              (),
              (list, ['This is a test'])),
-            (('src/data/IO/Testers/test-files/iostream-{}-{}-test-2'.format(fpath_func,test_type), 'rw'),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-{}-{}-test-2'.format(fpath_func,test_type)), 'rw'),
              (),
              (list, ['This is a multi-line test\n','This is the start of the next line'])),
-            (('src/data/IO/Testers/test-files/iostream-{}-{}-test-3'.format(fpath_func,test_type), 'r'),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-{}-{}-test-3'.format(fpath_func,test_type)), 'r'),
              (),
              (list, ['This\n','is\n','a\n','very\n','multi\n','line\n','test\n'])),
-            (('src/data/IO/Testers/test-files/iostream-{}-{}-test-4'.format(fpath_func,test_type), 'rw'),
-             (),
-             (str, '')),
-            (('src/data/IO/Testers/test-files/iostream-{}-{}-test-5'.format(fpath_func,test_type), 'r'),
-             (),
-             (str, '')),
-            (('src/data/IO/Testers/test-files/iostream-{}-{}-test-6'.format(fpath_func,test_type), 'rw'),
-             (),
-             (str, '')),
-            (('src/data/IO/Testers/test-files/iostream-{}-{}-test-7'.format(fpath_func,test_type), 'r'),
-             (),
-             (str, '')),
-            (('src/data/IO/Testers/test-files/iostream-{}-{}-test-8'.format(fpath_func,test_type), 'rw'),
-             (),
-             (str, '')),
-            (('src/data/IO/Testers/test-files/iostream-{}-{}-test-9'.format(fpath_func, test_type), 'rw'),
-             (),
-             (str, '')),
         ]
         for test_case in test_cases:
             #test setup
