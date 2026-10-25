@@ -175,6 +175,8 @@ class LogStream(IOStream):
         :param read_write_type:
         """
         super(LogStream, self).__init__(f_path, read_write_type)
+        if type(log_id) != int:
+            raise TypeError('arg log_id must be int')
         self.log_id = log_id
 
     def __del__(self):

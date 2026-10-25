@@ -1,6 +1,6 @@
 import unittest
 from pathlib import Path
-from src.data.IO.IOStream import IOStream
+from src.data.IO.IOStream import IOStream, LogStream
 
 system = "Mac"
 def fix_paths(fpath):
@@ -703,6 +703,446 @@ class IOStream_Test(unittest.TestCase):
             #assert that actual is expected
             self.assertEqual(expected_return_type,type(result),  'Failed type checking of returned value | got: {}, expected: {} for test no. {}'.format(type(result),expected_return_type, test_no)) # add assertion here
             self.assertEqual(expected_return_value, result, 'Failed value checking of returned value | got: {}, expected: {} for test no. {}'.format(result,expected_return_value, test_no)) # add assertion here
+
+    # Test LogStream's __init__ method
+    def test_LogStream__init__state_tests(self):
+        #a test case is a set of two tuples - inputs, expected results
+        class_type = LogStream
+        class_type_str = 'logstream'
+        fpath_func = 'init'
+        function_var = class_type.get_id
+        test_type = 'state'
+        test_cases = [
+            ((fix_paths('src/data/IO/Testers/test-files/{}-{}-{}-test-1'.format(class_type_str,fpath_func, test_type)), 'w',1),
+             (),
+             (LogStream, fix_paths('src/data/IO/Testers/test-files/{}-{}-{}-test-1'.format(class_type_str,fpath_func, test_type)),
+              False, True, False, 1)),
+            ((fix_paths('src/data/IO/Testers/test-files/{}-{}-{}-test-2'.format(class_type_str,fpath_func, test_type)), 'rw',2),
+             (),
+             (LogStream, fix_paths('src/data/IO/Testers/test-files/{}-{}-{}-test-2'.format(class_type_str,fpath_func, test_type)),
+              True, True, False, 2)),
+            ((fix_paths('src/data/IO/Testers/test-files/{}-{}-{}-test-3'.format(class_type_str,fpath_func, test_type)), 'r',3),
+             (),
+             (LogStream, fix_paths('src/data/IO/Testers/test-files/{}-{}-{}-test-3'.format(class_type_str,fpath_func, test_type)),
+              True, False, False, 3)),
+
+        ]
+        for test_case in test_cases:
+            # test setup
+            test_no = test_cases.index(test_case) + 1
+            inputs_1 = test_case[0]
+            func_args = test_case[1]
+            expected_output = test_case[2]
+            fpath, mode, id = inputs_1
+            expected_object_type, expected_fpath, expected_can_read, expected_can_write, expected_is_open, expected_id = expected_output
+            new_stream_1 = class_type(fpath, mode, id)
+
+            # perform functions to be tested
+            result = function_var(new_stream_1, *func_args)
+
+            # assert that actual is expected
+            self.assertEqual(expected_object_type, type(new_stream_1),
+                             'Failed type checking of constructed object | got: {}, expected: {} for test{}'.format(
+                                 type(new_stream_1), expected_object_type, test_no))  # add assertion here
+            self.assertEqual(expected_fpath, new_stream_1.f_path,
+                             'Failed value checking of fpath | got: {}, expected: {} for test{}'.format(
+                                 new_stream_1.f_path, expected_fpath, test_no))  # add assertion here
+            self.assertEqual(expected_can_read, new_stream_1.can_read,
+                             'Failed value checking of can_read | got: {}, expected: {} for test{}'.format(
+                                 new_stream_1.can_read, expected_can_read, test_no))  # add assertion here
+            self.assertEqual(expected_can_write, new_stream_1.can_write,
+                             'Failed value checking of can_write | got: {}, expected: {} for test{}'.format(
+                                 new_stream_1.can_write, expected_can_write, test_no))  # add assertion here
+            self.assertEqual(expected_is_open, new_stream_1.file.closed,
+                             'Failed value checking of is_open | got: {}, expected: {} for test{}'.format(
+                                 new_stream_1.file.closed, expected_is_open, test_no))  # add assertion here
+            self.assertEqual(expected_id, new_stream_1.log_id,
+                             'Failed value checking of log_id | got: {}, expected: {} for test{}'.format(
+                                 new_stream_1.log_id, expected_id, test_no))  # add assertion here
+
+    def test_LogStream__init__error_tests(self):
+        #a test case is a set of two tuples - inputs, expected results
+        class_type = LogStream
+        class_type_str = 'logstream'
+        fpath_func = 'init'
+        function_var = class_type.get_id
+        test_type = 'error'
+        test_cases = [
+            ((fix_paths('src/data/IO/Testers/test-files/{}-{}-{}-test-1'.format(class_type_str,fpath_func, test_type)), 'w', '1'),
+             (),
+             (TypeError)),
+        ]
+        for test_case in test_cases:
+            test_no = test_cases.index(test_case) + 1
+            inputs = test_case[0]
+            func_args = test_case[1]
+            expected_output = test_case[2]
+            fpath, permission_type, id = inputs
+            expected_error = expected_output
+            with self.assertRaises(expected_error) as cm:
+                stream = class_type(fpath, permission_type, id)
+                function_var(stream, *func_args)
+            actual_exception = cm.exception
+            self.assertEqual(expected_error, type(actual_exception), 'Failed error test | expected: {}, got: {} for test no {}'.format(expected_error,actual_exception, test_no))
+
+    # Test LogStream's get_id method
+    def test_LogStream_get_id_state_tests(self):
+        #a test case is a set of two tuples - inputs, expected results
+        class_type = LogStream
+        class_type_str = 'logstream'
+        fpath_func = 'get_id'
+        function_var = class_type.get_id
+        test_type = 'state'
+        test_cases = [
+            ((fix_paths('src/data/IO/Testers/test-files/{}-{}-{}-test-1'.format(class_type_str,fpath_func, test_type)), 'w',1),
+             (),
+             (LogStream, fix_paths('src/data/IO/Testers/test-files/{}-{}-{}-test-1'.format(class_type_str,fpath_func, test_type)),
+              False, True, False, 1)),
+            ((fix_paths('src/data/IO/Testers/test-files/{}-{}-{}-test-2'.format(class_type_str,fpath_func, test_type)), 'rw',2),
+             (),
+             (LogStream, fix_paths('src/data/IO/Testers/test-files/{}-{}-{}-test-2'.format(class_type_str,fpath_func, test_type)),
+              True, True, False, 2)),
+            ((fix_paths('src/data/IO/Testers/test-files/{}-{}-{}-test-3'.format(class_type_str,fpath_func, test_type)), 'r',3),
+             (),
+             (LogStream, fix_paths('src/data/IO/Testers/test-files/{}-{}-{}-test-3'.format(class_type_str,fpath_func, test_type)),
+              True, False, False, 3)),
+
+        ]
+        for test_case in test_cases:
+            # test setup
+            test_no = test_cases.index(test_case) + 1
+            inputs_1 = test_case[0]
+            func_args = test_case[1]
+            expected_output = test_case[2]
+            fpath, mode, id = inputs_1
+            expected_object_type, expected_fpath, expected_can_read, expected_can_write, expected_is_open, expected_id = expected_output
+            new_stream_1 = class_type(fpath, mode, id)
+
+            # perform functions to be tested
+            result = function_var(new_stream_1, *func_args)
+
+            # assert that actual is expected
+            self.assertEqual(expected_object_type, type(new_stream_1),
+                             'Failed type checking of constructed object | got: {}, expected: {} for test{}'.format(
+                                 type(new_stream_1), expected_object_type, test_no))  # add assertion here
+            self.assertEqual(expected_fpath, new_stream_1.f_path,
+                             'Failed value checking of fpath | got: {}, expected: {} for test{}'.format(
+                                 new_stream_1.f_path, expected_fpath, test_no))  # add assertion here
+            self.assertEqual(expected_can_read, new_stream_1.can_read,
+                             'Failed value checking of can_read | got: {}, expected: {} for test{}'.format(
+                                 new_stream_1.can_read, expected_can_read, test_no))  # add assertion here
+            self.assertEqual(expected_can_write, new_stream_1.can_write,
+                             'Failed value checking of can_write | got: {}, expected: {} for test{}'.format(
+                                 new_stream_1.can_write, expected_can_write, test_no))  # add assertion here
+            self.assertEqual(expected_is_open, new_stream_1.file.closed,
+                             'Failed value checking of is_open | got: {}, expected: {} for test{}'.format(
+                                 new_stream_1.file.closed, expected_is_open, test_no))  # add assertion here
+            self.assertEqual(expected_id, new_stream_1.log_id,
+                             'Failed value checking of log_id | got: {}, expected: {} for test{}'.format(
+                                 new_stream_1.log_id, expected_id, test_no))  # add assertion here
+
+    def test_LogStream_get_id_value(self):
+        #a test case is a set of two tuples - inputs, expected results
+        class_type = LogStream
+        class_type_str = 'logstream'
+        fpath_func = 'get_id'
+        function_var = class_type.get_id
+        test_type = 'value'
+        test_cases = [
+            ((fix_paths('src/data/IO/Testers/test-files/{}-{}-{}-test-1'.format(class_type_str,fpath_func,test_type)), 'r', 1),
+             (),
+             (int, 1)),
+            ((fix_paths('src/data/IO/Testers/test-files/{}-{}-{}-test-2'.format(class_type_str,fpath_func,test_type)), 'w', 2),
+             (),
+             (int, 2)),
+            ((fix_paths('src/data/IO/Testers/test-files/{}-{}-{}-test-3'.format(class_type_str,fpath_func,test_type)), 'rw', 3),
+             (),
+             (int, 3)),
+        ]
+        for test_case in test_cases:
+            #test setup
+            test_no = test_cases.index(test_case) + 1
+            inputs_1 = test_case[0]
+            func_args = test_case[1]
+            expected_output = test_case[2]
+            f_path, mode, id = inputs_1
+            expected_return_type, expected_return_value = expected_output
+            new_stream_1 = class_type(f_path, mode, id)
+
+            #perform functions to be tested
+            result = function_var(new_stream_1, *func_args)
+
+            #assert that actual is expected
+            self.assertEqual(expected_return_type,type(result),  'Failed type checking of returned value | got: {}, expected: {} for test no. {}'.format(type(result),expected_return_type, test_no)) # add assertion here
+            self.assertEqual(expected_return_value, result, 'Failed value checking of returned value | got: {}, expected: {} for test no. {}'.format(result,expected_return_value, test_no)) # add assertion here
+
+    # Test LogStream's log_command method
+    def test_LogStream_log_command_state_tests(self):
+        #a test case is a set of two tuples - inputs, expected results
+        class_type = LogStream
+        class_type_str = 'logstream'
+        fpath_func = 'log-command'
+        function_var = class_type.log_command
+        test_type = 'state'
+        test_cases = [
+            ((fix_paths('src/data/IO/Testers/test-files/{}-{}-{}-test-1'.format(class_type_str,fpath_func, test_type)), 'w',1),
+             (('command 1','arg 1'),),
+             (LogStream, fix_paths('src/data/IO/Testers/test-files/{}-{}-{}-test-1'.format(class_type_str,fpath_func, test_type)),
+              False, True, False, 1)),
+            ((fix_paths('src/data/IO/Testers/test-files/{}-{}-{}-test-2'.format(class_type_str,fpath_func, test_type)), 'w',2),
+             (('command 2', 'arg 2'),),
+             (LogStream, fix_paths('src/data/IO/Testers/test-files/{}-{}-{}-test-2'.format(class_type_str,fpath_func, test_type)),
+              False, True, False, 2)),
+            ((fix_paths('src/data/IO/Testers/test-files/{}-{}-{}-test-3'.format(class_type_str,fpath_func, test_type)), 'rw',3),
+             (('COMMAND 3', 3),),
+             (LogStream, fix_paths('src/data/IO/Testers/test-files/{}-{}-{}-test-3'.format(class_type_str,fpath_func, test_type)),
+              True, True, False, 3)),
+
+        ]
+        for test_case in test_cases:
+            # test setup
+            test_no = test_cases.index(test_case) + 1
+            inputs_1 = test_case[0]
+            func_args = test_case[1]
+            expected_output = test_case[2]
+            fpath, mode, id = inputs_1
+            expected_object_type, expected_fpath, expected_can_read, expected_can_write, expected_is_open, expected_id = expected_output
+            new_stream_1 = class_type(fpath, mode, id)
+
+            # perform functions to be tested
+            result = function_var(new_stream_1, *func_args)
+
+            # assert that actual is expected
+            self.assertEqual(expected_object_type, type(new_stream_1),
+                             'Failed type checking of constructed object | got: {}, expected: {} for test{}'.format(
+                                 type(new_stream_1), expected_object_type, test_no))  # add assertion here
+            self.assertEqual(expected_fpath, new_stream_1.f_path,
+                             'Failed value checking of fpath | got: {}, expected: {} for test{}'.format(
+                                 new_stream_1.f_path, expected_fpath, test_no))  # add assertion here
+            self.assertEqual(expected_can_read, new_stream_1.can_read,
+                             'Failed value checking of can_read | got: {}, expected: {} for test{}'.format(
+                                 new_stream_1.can_read, expected_can_read, test_no))  # add assertion here
+            self.assertEqual(expected_can_write, new_stream_1.can_write,
+                             'Failed value checking of can_write | got: {}, expected: {} for test{}'.format(
+                                 new_stream_1.can_write, expected_can_write, test_no))  # add assertion here
+            self.assertEqual(expected_is_open, new_stream_1.file.closed,
+                             'Failed value checking of is_open | got: {}, expected: {} for test{}'.format(
+                                 new_stream_1.file.closed, expected_is_open, test_no))  # add assertion here
+            self.assertEqual(expected_id, new_stream_1.log_id,
+                             'Failed value checking of log_id | got: {}, expected: {} for test{}'.format(
+                                 new_stream_1.log_id, expected_id, test_no))  # add assertion here
+
+    def test_LogStream_log_command_error_tests(self):
+        #a test case is a set of two tuples - inputs, expected results
+        class_type = LogStream
+        class_type_str = 'logstream'
+        fpath_func = 'log-command'
+        function_var = class_type.log_command
+        test_type = 'error'
+        test_cases = [
+            ((fix_paths('src/data/IO/Testers/test-files/{}-{}-{}-test-1'.format(class_type_str,fpath_func, test_type)), 'r', 1),
+             (('command 1', 'arg 1'),),
+             (PermissionError)),
+        ]
+        for test_case in test_cases:
+            test_no = test_cases.index(test_case) + 1
+            inputs = test_case[0]
+            func_args = test_case[1]
+            expected_output = test_case[2]
+            fpath, permission_type, id = inputs
+            expected_error = expected_output
+            stream = class_type(fpath, permission_type, id)
+            with self.assertRaises(expected_error) as cm:
+                function_var(stream, *func_args)
+            actual_exception = cm.exception
+            self.assertEqual(expected_error, type(actual_exception), 'Failed error test | expected: {}, got: {} for test no {}'.format(expected_error,actual_exception, test_no))
+
+    def test_LogStream_log_command_file_value(self):
+        #a test case is a set of two tuples - inputs, expected results
+        class_type = LogStream
+        class_type_str = 'logstream'
+        fpath_func = 'log-command'
+        function_var = class_type.log_command
+        test_type = 'value'
+        test_cases = [
+            ((fix_paths('src/data/IO/Testers/test-files/{}-{}-{}-test-1'.format(class_type_str,fpath_func,test_type)), 'w', 1),
+             (('func 1', 'args 1'),),
+             (str, 'Function Called: func 1'),
+             (str, 'Params: args 1'),
+             ),
+            ((fix_paths('src/data/IO/Testers/test-files/{}-{}-{}-test-2'.format(class_type_str,fpath_func,test_type)), 'w', 2),
+             (('func 2', 'args 2'),),
+             (str, 'Function Called: func 2'),
+             (str, 'Params: args 2'),
+             ),
+            ((fix_paths('src/data/IO/Testers/test-files/{}-{}-{}-test-3'.format(class_type_str,fpath_func,test_type)), 'w', 3),
+             (('func 3', 'args 3'),),
+             (str, 'Function Called: func 3'),
+             (str, 'Params: args 3'),
+             ),
+        ]
+        for test_case in test_cases:
+            #test setup
+            test_no = test_cases.index(test_case) + 1
+            inputs_1 = test_case[0]
+            func_args = test_case[1]
+            expected_output_1 = test_case[2]
+            expected_output_2 = test_case[3]
+            f_path, mode, id = inputs_1
+            expected_return_type, expected_return_value = expected_output_1
+            expected_return_type2, expected_return_value2 = expected_output_2
+            new_stream_1 = class_type(f_path, mode, id)
+
+
+            #perform functions to be tested
+            function_var(new_stream_1, *func_args)
+            new_stream_1.__del__()
+            new_stream_2 = class_type(f_path, 'rw', 10)
+            temp = new_stream_2.read()
+            temp = temp[0].split('|')
+            result = temp[1].strip()
+            result2 = temp[2].strip()
+
+
+            #assert that actual is expected
+            self.assertEqual(expected_return_type,type(result),  'Failed type checking of returned value | got: {}, expected: {} for test no. {}a'.format(type(result),expected_return_type, test_no)) # add assertion here
+            self.assertEqual(expected_return_value, result, 'Failed value checking of returned value | got: {}, expected: {} for test no. {}a'.format(result,expected_return_value, test_no)) # add assertion here
+            self.assertEqual(expected_return_type2,type(result2),  'Failed type checking of returned value | got: {}, expected: {} for test no. {}b'.format(type(result2),expected_return_type2, test_no)) # add assertion here
+            self.assertEqual(expected_return_value2, result2, 'Failed value checking of returned value | got: {}, expected: {} for test no. {}b'.format(result2,expected_return_value2, test_no)) # add assertion here
+
+    # Test LogStream's log_error method
+    def test_LogStream_log_error_state_tests(self):
+        #a test case is a set of two tuples - inputs, expected results
+        class_type = LogStream
+        class_type_str = 'logstream'
+        fpath_func = 'log-error'
+        function_var = class_type.log_error
+        test_type = 'state'
+        test_cases = [
+            ((fix_paths('src/data/IO/Testers/test-files/{}-{}-{}-test-1'.format(class_type_str,fpath_func, test_type)), 'w',1),
+             (('error 1','msg 1'),),
+             (LogStream, fix_paths('src/data/IO/Testers/test-files/{}-{}-{}-test-1'.format(class_type_str,fpath_func, test_type)),
+              False, True, False, 1)),
+            ((fix_paths('src/data/IO/Testers/test-files/{}-{}-{}-test-2'.format(class_type_str,fpath_func, test_type)), 'w',2),
+             (('error 2', 'msg 2'),),
+             (LogStream, fix_paths('src/data/IO/Testers/test-files/{}-{}-{}-test-2'.format(class_type_str,fpath_func, test_type)),
+              False, True, False, 2)),
+            ((fix_paths('src/data/IO/Testers/test-files/{}-{}-{}-test-3'.format(class_type_str,fpath_func, test_type)), 'rw',3),
+             (('ERROR 3', 3),),
+             (LogStream, fix_paths('src/data/IO/Testers/test-files/{}-{}-{}-test-3'.format(class_type_str,fpath_func, test_type)),
+              True, True, False, 3)),
+
+        ]
+        for test_case in test_cases:
+            # test setup
+            test_no = test_cases.index(test_case) + 1
+            inputs_1 = test_case[0]
+            func_args = test_case[1]
+            expected_output = test_case[2]
+            fpath, mode, id = inputs_1
+            expected_object_type, expected_fpath, expected_can_read, expected_can_write, expected_is_open, expected_id = expected_output
+            new_stream_1 = class_type(fpath, mode, id)
+
+            # perform functions to be tested
+            result = function_var(new_stream_1, *func_args)
+
+            # assert that actual is expected
+            self.assertEqual(expected_object_type, type(new_stream_1),
+                             'Failed type checking of constructed object | got: {}, expected: {} for test{}'.format(
+                                 type(new_stream_1), expected_object_type, test_no))  # add assertion here
+            self.assertEqual(expected_fpath, new_stream_1.f_path,
+                             'Failed value checking of fpath | got: {}, expected: {} for test{}'.format(
+                                 new_stream_1.f_path, expected_fpath, test_no))  # add assertion here
+            self.assertEqual(expected_can_read, new_stream_1.can_read,
+                             'Failed value checking of can_read | got: {}, expected: {} for test{}'.format(
+                                 new_stream_1.can_read, expected_can_read, test_no))  # add assertion here
+            self.assertEqual(expected_can_write, new_stream_1.can_write,
+                             'Failed value checking of can_write | got: {}, expected: {} for test{}'.format(
+                                 new_stream_1.can_write, expected_can_write, test_no))  # add assertion here
+            self.assertEqual(expected_is_open, new_stream_1.file.closed,
+                             'Failed value checking of is_open | got: {}, expected: {} for test{}'.format(
+                                 new_stream_1.file.closed, expected_is_open, test_no))  # add assertion here
+            self.assertEqual(expected_id, new_stream_1.log_id,
+                             'Failed value checking of log_id | got: {}, expected: {} for test{}'.format(
+                                 new_stream_1.log_id, expected_id, test_no))  # add assertion here
+
+    def test_LogStream_log_error_error_tests(self):
+        #a test case is a set of two tuples - inputs, expected results
+        class_type = LogStream
+        class_type_str = 'logstream'
+        fpath_func = 'log-error'
+        function_var = class_type.log_error
+        test_type = 'error'
+        test_cases = [
+            ((fix_paths('src/data/IO/Testers/test-files/{}-{}-{}-test-1'.format(class_type_str,fpath_func, test_type)), 'r', 1),
+             (('error 1', 'msg 1'),),
+             (PermissionError)),
+        ]
+        for test_case in test_cases:
+            test_no = test_cases.index(test_case) + 1
+            inputs = test_case[0]
+            func_args = test_case[1]
+            expected_output = test_case[2]
+            fpath, permission_type, id = inputs
+            expected_error = expected_output
+            stream = class_type(fpath, permission_type, id)
+            with self.assertRaises(expected_error) as cm:
+                function_var(stream, *func_args)
+            actual_exception = cm.exception
+            self.assertEqual(expected_error, type(actual_exception), 'Failed error test | expected: {}, got: {} for test no {}'.format(expected_error,actual_exception, test_no))
+
+    def test_LogStream_log_error_file_value(self):
+        #a test case is a set of two tuples - inputs, expected results
+        class_type = LogStream
+        class_type_str = 'logstream'
+        fpath_func = 'log-error'
+        function_var = class_type.log_error
+        test_type = 'value'
+        test_cases = [
+            ((fix_paths('src/data/IO/Testers/test-files/{}-{}-{}-test-1'.format(class_type_str,fpath_func,test_type)), 'w', 1),
+             (('error 1', 'msg 1'),),
+             (str, 'Error: error 1'),
+             (str, 'Msg: msg 1'),
+             ),
+            ((fix_paths('src/data/IO/Testers/test-files/{}-{}-{}-test-2'.format(class_type_str,fpath_func,test_type)), 'w', 2),
+             (('error 2', 'msg 2'),),
+             (str, 'Error: error 2'),
+             (str, 'Msg: msg 2'),
+             ),
+            ((fix_paths('src/data/IO/Testers/test-files/{}-{}-{}-test-3'.format(class_type_str,fpath_func,test_type)), 'w', 3),
+             (('error 3', 'msg 3'),),
+             (str, 'Error: error 3'),
+             (str, 'Msg: msg 3'),
+             ),
+        ]
+        for test_case in test_cases:
+            #test setup
+            test_no = test_cases.index(test_case) + 1
+            inputs_1 = test_case[0]
+            func_args = test_case[1]
+            expected_output_1 = test_case[2]
+            expected_output_2 = test_case[3]
+            f_path, mode, id = inputs_1
+            expected_return_type, expected_return_value = expected_output_1
+            expected_return_type2, expected_return_value2 = expected_output_2
+            new_stream_1 = class_type(f_path, mode, id)
+
+
+            #perform functions to be tested
+            function_var(new_stream_1, *func_args)
+            new_stream_1.__del__()
+            new_stream_2 = class_type(f_path, 'rw', 10)
+            temp = new_stream_2.read()
+            temp = temp[0].split('|')
+            result = temp[1].strip()
+            result2 = temp[2].strip()
+
+
+            #assert that actual is expected
+            self.assertEqual(expected_return_type,type(result),  'Failed type checking of returned value | got: {}, expected: {} for test no. {}a'.format(type(result),expected_return_type, test_no)) # add assertion here
+            self.assertEqual(expected_return_value, result, 'Failed value checking of returned value | got: {}, expected: {} for test no. {}a'.format(result,expected_return_value, test_no)) # add assertion here
+            self.assertEqual(expected_return_type2,type(result2),  'Failed type checking of returned value | got: {}, expected: {} for test no. {}b'.format(type(result2),expected_return_type2, test_no)) # add assertion here
+            self.assertEqual(expected_return_value2, result2, 'Failed value checking of returned value | got: {}, expected: {} for test no. {}b'.format(result2,expected_return_value2, test_no)) # add assertion here
 
 
 if __name__ == '__main__':
