@@ -1819,5 +1819,235 @@ class IOStream_Test(unittest.TestCase):
                              'Failed value checking of returned value | got: {}, expected: {} for test no. {}'.format(
                                  result, expected_return_value, test_no))  # add assertion here
 
+
+
+    # Test ReportStream's write_report method
+
+    def test_ReportStream_write_report_state_tests(self):
+        # a test case is a set of two tuples - inputs, expected results
+        class_type = ReportStream
+        class_type_str = 'reportstream'
+        fpath_func = 'write-report'
+        function_var = class_type.write_report
+        test_type = 'state'
+        test_cases = [
+            ((fix_paths(
+                'src/data/IO/Testers/test-files/{}-{}-{}-test-1'.format(class_type_str, fpath_func, test_type)),
+              'w', 1),
+             (1,'state str 1',111,True,'Classic','solution state str 1',),
+             (ReportStream,
+              fix_paths(
+                  'src/data/IO/Testers/test-files/{}-{}-{}-test-1'.format(class_type_str, fpath_func, test_type)),
+              False, True, False, 1)),
+            ((fix_paths(
+                'src/data/IO/Testers/test-files/{}-{}-{}-test-2'.format(class_type_str, fpath_func, test_type)),
+              'w', 2),
+             (2,'state str 2',222,False,'Classic','solution state str 2',),
+             (ReportStream,
+              fix_paths(
+                  'src/data/IO/Testers/test-files/{}-{}-{}-test-2'.format(class_type_str, fpath_func, test_type)),
+              False, True, False, 2)),
+            ((fix_paths(
+                'src/data/IO/Testers/test-files/{}-{}-{}-test-3'.format(class_type_str, fpath_func, test_type)),
+              'rw', 3),
+             (3,'state str 3',333,True,'Quantum','solution state str 3',),
+             (ReportStream,
+              fix_paths(
+                  'src/data/IO/Testers/test-files/{}-{}-{}-test-3'.format(class_type_str, fpath_func, test_type)),
+              True, True, False, 3)),
+
+        ]
+        for test_case in test_cases:
+            # test setup
+            test_no = test_cases.index(test_case) + 1
+            inputs_1 = test_case[0]
+            func_args = test_case[1]
+            expected_output = test_case[2]
+            fpath, mode, id = inputs_1
+            expected_object_type, expected_fpath, expected_can_read, expected_can_write, expected_is_open, expected_id = expected_output
+            new_stream_1 = class_type(fpath, mode, id)
+
+            # perform functions to be tested
+            result = function_var(new_stream_1, *func_args)
+
+            # assert that actual is expected
+            self.assertEqual(expected_object_type, type(new_stream_1),
+                             'Failed type checking of constructed object | got: {}, expected: {} for test{}'.format(
+                                 type(new_stream_1), expected_object_type, test_no))  # add assertion here
+            self.assertEqual(expected_fpath, new_stream_1.f_path,
+                             'Failed value checking of fpath | got: {}, expected: {} for test{}'.format(
+                                 new_stream_1.f_path, expected_fpath, test_no))  # add assertion here
+            self.assertEqual(expected_can_read, new_stream_1.can_read,
+                             'Failed value checking of can_read | got: {}, expected: {} for test{}'.format(
+                                 new_stream_1.can_read, expected_can_read, test_no))  # add assertion here
+            self.assertEqual(expected_can_write, new_stream_1.can_write,
+                             'Failed value checking of can_write | got: {}, expected: {} for test{}'.format(
+                                 new_stream_1.can_write, expected_can_write, test_no))  # add assertion here
+            self.assertEqual(expected_is_open, new_stream_1.file.closed,
+                             'Failed value checking of is_open | got: {}, expected: {} for test{}'.format(
+                                 new_stream_1.file.closed, expected_is_open, test_no))  # add assertion here
+            self.assertEqual(expected_id, new_stream_1.report_id,
+                             'Failed value checking of log_id | got: {}, expected: {} for test{}'.format(
+                                 new_stream_1.report_id, expected_id, test_no))  # add assertion here
+
+    def test_ReportStream_write_report_error_tests(self):
+        # a test case is a set of two tuples - inputs, expected results
+        class_type = ReportStream
+        class_type_str = 'reportstream'
+        fpath_func = 'write-report'
+        function_var = class_type.write_report
+        test_type = 'error'
+        test_cases = [
+            ((fix_paths(
+                'src/data/IO/Testers/test-files/{}-{}-{}-test-1'.format(class_type_str, fpath_func, test_type)),
+              'r', 1),
+             (1,'state str 1',111,True,'Classic','solution state str 1',),
+             (PermissionError)),
+        ]
+        for test_case in test_cases:
+            test_no = test_cases.index(test_case) + 1
+            inputs = test_case[0]
+            func_args = test_case[1]
+            expected_output = test_case[2]
+            fpath, permission_type, id = inputs
+            expected_error = expected_output
+            stream = class_type(fpath, permission_type, id)
+            with self.assertRaises(expected_error) as cm:
+                function_var(stream, *func_args)
+            actual_exception = cm.exception
+            self.assertEqual(expected_error, type(actual_exception),
+                             'Failed error test | expected: {}, got: {} for test no {}'.format(expected_error,
+                                                                                               actual_exception,
+                                                                                               test_no))
+
+    def test_ReportStream_write_report_file_value(self):
+            # a test case is a set of two tuples - inputs, expected results
+            class_type = ReportStream
+            class_type_str = 'reportstream'
+            fpath_func = 'write-report'
+            function_var = class_type.write_report
+            test_type = 'value'
+            test_cases = [
+                ((fix_paths(
+                    'src/data/IO/Testers/test-files/{}-{}-{}-test-1'.format(class_type_str, fpath_func, test_type)),
+                  'w', 1),
+                 (1,'state str 1',111,True,'Classic','solution state str 1',),
+                 (str, 'Report No. 1'),
+                 (str, 'Log No. 1'),
+                 (str, 'State Str: state str 1'),
+                 (str, 'Runtime: 111'),
+                 (str, 'Completed Run: True'),
+                 (str, 'Algorithm Chosen: Classic'),
+                 (str, 'Solution State Str: solution state str 1'),
+                 ),
+                ((fix_paths(
+                    'src/data/IO/Testers/test-files/{}-{}-{}-test-2'.format(class_type_str, fpath_func, test_type)),
+                  'w', 2),
+                 (2,'state str 2',222,False,'Classic','solution state str 2',),
+                 (str, 'Report No. 2'),
+                 (str, 'Log No. 2'),
+                 (str, 'State Str: state str 2'),
+                 (str, 'Runtime: 222'),
+                 (str, 'Completed Run: False'),
+                 (str, 'Algorithm Chosen: Classic'),
+                 (str, 'Solution State Str: solution state str 2'),
+                 ),
+                ((fix_paths(
+                    'src/data/IO/Testers/test-files/{}-{}-{}-test-3'.format(class_type_str, fpath_func, test_type)),
+                  'w', 3),
+                 (3,'state str 3',333,True,'Quantum','solution state str 3',),
+                 (str, 'Report No. 3'),
+                 (str, 'Log No. 3'),
+                 (str, 'State Str: state str 3'),
+                 (str, 'Runtime: 333'),
+                 (str, 'Completed Run: True'),
+                 (str, 'Algorithm Chosen: Quantum'),
+                 (str, 'Solution State Str: solution state str 3'),
+                 ),
+            ]
+            for test_case in test_cases:
+                # test setup
+                test_no = test_cases.index(test_case) + 1
+                inputs_1 = test_case[0]
+                func_args = test_case[1]
+                expected_output_1 = test_case[2]
+                expected_output_2 = test_case[3]
+                expected_output_3 = test_case[4]
+                expected_output_4 = test_case[5]
+                expected_output_5 = test_case[6]
+                expected_output_6 = test_case[7]
+                expected_output_7 = test_case[8]
+                f_path, mode, id = inputs_1
+                expected_return_type, expected_return_value = expected_output_1
+                expected_return_type2, expected_return_value2 = expected_output_2
+                expected_return_type3, expected_return_value3 = expected_output_3
+                expected_return_type4, expected_return_value4 = expected_output_4
+                expected_return_type5, expected_return_value5 = expected_output_5
+                expected_return_type6, expected_return_value6 = expected_output_6
+                expected_return_type7, expected_return_value7 = expected_output_7
+                new_stream_1 = class_type(f_path, mode, id)
+
+                # perform functions to be tested
+                function_var(new_stream_1, *func_args)
+                new_stream_1.__del__()
+                new_stream_2 = class_type(f_path, 'rw', 10)
+                temp = new_stream_2.read()
+                result = temp[0].strip()
+                result2 = temp[1].strip()
+                result3 = temp[2].strip()
+                result4 = temp[3].strip()
+                result5 = temp[4].strip()
+                result6 = temp[5].strip()
+                result7 = temp[6].strip()
+
+                # assert that actual is expected
+                self.assertEqual(expected_return_type, type(result),
+                                 'Failed type checking of returned value | got: {}, expected: {} for test no. {}a'.format(
+                                     type(result), expected_return_type, test_no))  # add assertion here
+                self.assertEqual(expected_return_value, result,
+                                 'Failed value checking of returned value | got: {}, expected: {} for test no. {}a'.format(
+                                     result, expected_return_value, test_no))  # add assertion here
+                self.assertEqual(expected_return_type2, type(result2),
+                                 'Failed type checking of returned value | got: {}, expected: {} for test no. {}b'.format(
+                                     type(result2), expected_return_type2, test_no))  # add assertion here
+                self.assertEqual(expected_return_value2, result2,
+                                 'Failed value checking of returned value | got: {}, expected: {} for test no. {}b'.format(
+                                     result2, expected_return_value2, test_no))  # add assertion here
+
+                self.assertEqual(expected_return_type3, type(result3),
+                                 'Failed type checking of returned value | got: {}, expected: {} for test no. {}b'.format(
+                                     type(result3), expected_return_type3, test_no))  # add assertion here
+                self.assertEqual(expected_return_value3, result3,
+                                 'Failed value checking of returned value | got: {}, expected: {} for test no. {}b'.format(
+                                     result2, expected_return_value3, test_no))  # add assertion here
+
+                self.assertEqual(expected_return_type4, type(result4),
+                                 'Failed type checking of returned value | got: {}, expected: {} for test no. {}b'.format(
+                                     type(result4), expected_return_type4, test_no))  # add assertion here
+                self.assertEqual(expected_return_value4, result4,
+                                 'Failed value checking of returned value | got: {}, expected: {} for test no. {}b'.format(
+                                     result2, expected_return_value4, test_no))  # add assertion here
+
+                self.assertEqual(expected_return_type5, type(result5),
+                                 'Failed type checking of returned value | got: {}, expected: {} for test no. {}b'.format(
+                                     type(result5), expected_return_type5, test_no))  # add assertion here
+                self.assertEqual(expected_return_value5, result5,
+                                 'Failed value checking of returned value | got: {}, expected: {} for test no. {}b'.format(
+                                     result5, expected_return_value5, test_no))  # add assertion here
+
+                self.assertEqual(expected_return_type6, type(result6),
+                                 'Failed type checking of returned value | got: {}, expected: {} for test no. {}b'.format(
+                                     type(result6), expected_return_type6, test_no))  # add assertion here
+                self.assertEqual(expected_return_value6, result6,
+                                 'Failed value checking of returned value | got: {}, expected: {} for test no. {}b'.format(
+                                     result6, expected_return_value6, test_no))  # add assertion here
+
+                self.assertEqual(expected_return_type7, type(result7),
+                                 'Failed type checking of returned value | got: {}, expected: {} for test no. {}b'.format(
+                                     type(result7), expected_return_type7, test_no))  # add assertion here
+                self.assertEqual(expected_return_value7, result7,
+                                 'Failed value checking of returned value | got: {}, expected: {} for test no. {}b'.format(
+                                     result7, expected_return_value7, test_no))  # add assertion here
+
 if __name__ == '__main__':
     unittest.main()
