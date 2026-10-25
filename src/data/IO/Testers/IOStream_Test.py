@@ -1,8 +1,10 @@
 import unittest
+from pathlib import Path
 from src.data.IO.IOStream import IOStream
 
-system = "Win"
+system = "Mac"
 def fix_paths(fpath):
+    path = str(fpath)
     if system == "Win":
         fpath = str(fpath).replace("/","\\")
         return fpath
@@ -587,7 +589,7 @@ class IOStream_Test(unittest.TestCase):
              (list, ['This is a multi-line test\n','This is the start of the next line'])),
             ((fix_paths('src/data/IO/Testers/test-files/iostream-{}-{}-test-3'.format(fpath_func,test_type)), 'r'),
              (),
-             (list, ['This\n','is\n','a\n','very\n','multi\n','line\n','test\n'])),
+             (list, ['This\n','is\n','a\n','very\n','multi\n','line\n','test'])),
         ]
         for test_case in test_cases:
             #test setup
@@ -601,6 +603,102 @@ class IOStream_Test(unittest.TestCase):
 
             #perform functions to be tested
             result = function_var(new_stream_1, *func_args)
+
+            #assert that actual is expected
+            self.assertEqual(expected_return_type,type(result),  'Failed type checking of returned value | got: {}, expected: {} for test no. {}'.format(type(result),expected_return_type, test_no)) # add assertion here
+            self.assertEqual(expected_return_value, result, 'Failed value checking of returned value | got: {}, expected: {} for test no. {}'.format(result,expected_return_value, test_no)) # add assertion here
+
+
+    # Test IOStream's write method
+    def test_IOStream_write_state(self):
+        #a test case is a set of two tuples - inputs, expected results
+        fpath_func = 'write'
+        function_var = IOStream.write
+        test_type = 'state'
+        test_cases = [
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-{}-{}-test-1'.format(fpath_func,test_type)),'w'),
+             ('This is a single-line write test',),
+             (IOStream,fix_paths('src/data/IO/Testers/test-files/iostream-{}-{}-test-1'.format(fpath_func,test_type)),False,True,False)),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-{}-{}-test-2'.format(fpath_func,test_type)),'rw'),
+             ('This is a multi-line\nwrite test',),
+             (IOStream,fix_paths('src/data/IO/Testers/test-files/iostream-{}-{}-test-2'.format(fpath_func,test_type)),True,True,False)),
+
+        ]
+        for test_case in test_cases:
+            #test setup
+            test_no = test_cases.index(test_case) + 1
+            inputs_1 = test_case[0]
+            func_args = test_case[1]
+            expected_output = test_case[2]
+            fpath, mode = inputs_1
+            expected_object_type, expected_fpath, expected_can_read, expected_can_write, expected_is_open = expected_output
+            new_stream_1 = IOStream(fpath, mode)
+
+            #perform functions to be tested
+            result = function_var(new_stream_1, *func_args)
+
+            #assert that actual is expected
+            self.assertEqual(expected_object_type, type(new_stream_1), 'Failed type checking of constructed object | got: {}, expected: {} for test{}'.format(type(new_stream_1),expected_object_type, test_no)) # add assertion here
+            self.assertEqual(expected_fpath, new_stream_1.f_path, 'Failed value checking of fpath | got: {}, expected: {} for test{}'.format(new_stream_1.f_path,expected_fpath, test_no))  # add assertion here
+            self.assertEqual(expected_can_read, new_stream_1.can_read, 'Failed value checking of can_read | got: {}, expected: {} for test{}'.format(new_stream_1.can_read,expected_can_read, test_no))  # add assertion here
+            self.assertEqual(expected_can_write, new_stream_1.can_write, 'Failed value checking of can_write | got: {}, expected: {} for test{}'.format(new_stream_1.can_write,expected_can_write, test_no))  # add assertion here
+            self.assertEqual(expected_is_open, new_stream_1.file.closed, 'Failed value checking of is_open | got: {}, expected: {} for test{}'.format(new_stream_1.file.closed,expected_is_open, test_no))  # add assertion here
+
+    def test_IOStream_write_error_tests(self):
+        #a test case is a set of two tuples - inputs, expected results
+        fpath_func = 'write'
+        function_var = IOStream.write
+        test_type = 'error'
+        test_cases = [
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-{}-{}-test-1'.format(fpath_func, test_type)), 'r'),
+             ('This is a single-line write test',),
+             (PermissionError)),
+        ]
+        for test_case in test_cases:
+            test_no = test_cases.index(test_case) + 1
+            inputs = test_case[0]
+            func_args = test_case[1]
+            expected_output = test_case[2]
+            fpath, permission_type = inputs
+            expected_error = expected_output
+            stream = IOStream(fpath, permission_type)
+            with self.assertRaises(expected_error) as cm:
+                function_var(stream, *func_args)
+            actual_exception = cm.exception
+            self.assertEqual(expected_error, type(actual_exception), 'Failed error test | expected: {}, got: {} for test no {}'.format(expected_error,actual_exception, test_no))
+
+    def test_IOStream_write_file_value(self):
+        #a test case is a set of two tuples - inputs, expected results
+        fpath_func = 'write'
+        function_var = IOStream.write
+        test_type = 'value'
+        test_cases = [
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-{}-{}-test-1'.format(fpath_func,test_type)), 'w'),
+             ('This is a test',),
+             (list, ['This is a test'])),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-{}-{}-test-2'.format(fpath_func,test_type)), 'rw'),
+             ('This is a multi-line test\nThis is the start of the next line',),
+             (list, ['This is a multi-line test\n','This is the start of the next line'])),
+            ((fix_paths('src/data/IO/Testers/test-files/iostream-{}-{}-test-3'.format(fpath_func,test_type)), 'w'),
+             ('This\nis\na\nvery\nmulti\nline\ntest',),
+             (list, ['This\n','is\n','a\n','very\n','multi\n','line\n','test'])),
+        ]
+        for test_case in test_cases:
+            #test setup
+            test_no = test_cases.index(test_case) + 1
+            inputs_1 = test_case[0]
+            func_args = test_case[1]
+            expected_output = test_case[2]
+            f_path, mode = inputs_1
+            expected_return_type, expected_return_value = expected_output
+            new_stream_1 = IOStream(f_path, mode)
+
+
+            #perform functions to be tested
+            function_var(new_stream_1, *func_args)
+            new_stream_1.__del__()
+            new_stream_2 = IOStream(f_path, 'rw')
+            result = new_stream_2.read()
 
             #assert that actual is expected
             self.assertEqual(expected_return_type,type(result),  'Failed type checking of returned value | got: {}, expected: {} for test no. {}'.format(type(result),expected_return_type, test_no)) # add assertion here
