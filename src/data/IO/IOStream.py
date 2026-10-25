@@ -252,6 +252,8 @@ class LogStream(IOStream):
 class ReportStream(IOStream):
     def __init__(self, f_path = '', read_write_type = 'r', report_id = -1):
         super(ReportStream, self).__init__(f_path, read_write_type)
+        if type(report_id) != int:
+            raise TypeError('arg report_id must be int')
         self.report_id = report_id
 
     def __del__(self):
