@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
 import { useEventSource } from './hooks/useEventSource';
 import NetworkCanvas from './components/NetworkCanvas';
+import OptimizationControls from './components/OptimizationControls';
 import GraphToolsPanel from './components/GraphToolsPanel';
 import ConfirmDialog from './components/ConfirmDialog';
 
@@ -35,6 +36,13 @@ function formatEvent(event) {
 export default function App() {
   const [activeTab, setActiveTab]   = useState('canvas');
   const [solverType, setSolverType] = useState('classical');
+  const [optParams, setOptParams]   = useState({
+    securityWeight:  50,
+    costWeight:      50,
+    bandwidthWeight: 50,
+    riskThreshold:   30,
+  });
+  const [quantumStatus, setQuantumStatus] = useState(null);
 
   // Local UI logs (seed entries shown before the SSE connection is ready)
   const [localLogs, setLocalLogs] = useState([
@@ -42,7 +50,17 @@ export default function App() {
     { text: '[Backend] Computation API mapped at :8000.', variant: 'info' },
   ]);
 
-  const { events, status, backendOk, clearEvents, runSim } = useEventSource();
+  const { events, status, backendOk, clearEvents, runSim, checkQuantumStatus } = useEventSource();
+
+  // When user switches to quantum solver, fetch IBM status from backend
+  useEffect(() => {
+    if (solverType === 'quantum') {
+      setQuantumStatus(null); // show loading state
+      checkQuantumStatus().then(s => setQuantumStatus(s));
+    } else {
+      setQuantumStatus(null);
+    }
+  }, [solverType, checkQuantumStatus]);
 
   // Graph editor state, shared by the sidebar tools and the canvas
   const canvasRef = useRef(null);
@@ -69,9 +87,9 @@ export default function App() {
   const handleRunSimulation = async () => {
     setLocalLogs(prev => [
       ...prev,
-      { text: `[Run] Triggering ${solverType} solver…`, variant: 'info' },
+      { text: `[Run] Triggering ${solverType} solver… (sec:${optParams.securityWeight} cost:${optParams.costWeight} bw:${optParams.bandwidthWeight} risk:${optParams.riskThreshold})`, variant: 'info' },
     ]);
-    const ok = await runSim(solverType);
+    const ok = await runSim(solverType, optParams);
     if (!ok) {
       setLocalLogs(prev => [
         ...prev,
@@ -175,6 +193,29 @@ export default function App() {
             </select>
           </div>
 
+          {/* IBM Quantum status — shown only when quantum solver is selected */}
+          {solverType === 'quantum' && (
+            <div className="ibm-status">
+              {quantumStatus === null ? (
+                <span className="ibm-status__row connecting">Checking IBM Quantum…</span>
+              ) : quantumStatus.connected ? (
+                <>
+                  <span className="ibm-status__row online">IBM Quantum: Connected</span>
+                  <span className="ibm-status__detail">Backend: {quantumStatus.backend}</span>
+                  <span className="ibm-status__detail">{quantumStatus.qubits} qubits available</span>
+                </>
+              ) : (
+                <>
+                  <span className="ibm-status__row offline">IBM Quantum: Unavailable</span>
+                  <span className="ibm-status__detail">Using local Aer simulator</span>
+                  {quantumStatus.error && (
+                    <span className="ibm-status__error">{quantumStatus.error}</span>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+
           <div className="control-group">
             <label>Graph Tools</label>
             <GraphToolsPanel
@@ -191,6 +232,9 @@ export default function App() {
             <label>SSE Events Received</label>
             <span className="event-counter">{events.length}</span>
           </div>
+
+          {/* Optimization priority sliders */}
+          <OptimizationControls params={optParams} onChange={setOptParams} />
         </aside>
 
         {/* Central Display / Visual Canvas Container */}
