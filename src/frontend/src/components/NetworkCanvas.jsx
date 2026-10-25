@@ -108,12 +108,30 @@ export default function NetworkCanvas({
     setTypeMenu(null);
   }
 
+  // Delete selected elements
   function deleteSelected() {
     cyRef.current.$(":selected").remove();
   }
 
-  // App's sidebar Delete button calls deleteSelected() through this ref.
-  useImperativeHandle(ref, () => ({ deleteSelected }));
+  // Check if canvas is empty
+  function isEmpty() {
+    return cyRef.current.elements().length === 0;
+  }
+
+  // Clear the network back to starting state
+  function clear() {
+    cyRef.current.elements().remove();
+    nodeCountRef.current = 0;
+    edgeCountRef.current = 0;
+    typeCountsRef.current = {};
+    setEdgeSourceId(null);
+    setNotice(null);
+    setTypeMenu(null);
+    cyRef.current.reset();
+  }
+
+  // App's sidebar buttons call deleteSelected(), isEmpty(), or clear()
+  useImperativeHandle(ref, () => ({ deleteSelected, isEmpty, clear }));
 
   const resetInteraction = useEffectEvent(() => {
     cyRef.current.elements().unselect();
@@ -174,17 +192,13 @@ export default function NetworkCanvas({
     setEdgeSourceId(null);
   });
 
+  // Escape key handling
   const handleKeyDown = useEffectEvent((e) => {
     if (e.key === "Escape") {
       setTypeMenu(null);
       setEdgeSourceId(null);
       setNotice(null);
       cyRef.current.elements().unselect();
-    } else if (
-      (e.key === "Delete" || e.key === "Backspace") &&
-      !e.target.closest("input, textarea, select, [contenteditable]")
-    ) {
-      deleteSelected();
     }
   });
 
