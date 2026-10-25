@@ -7,7 +7,7 @@ export const MODES = [
   {
     id: "select",
     label: "Select",
-    hint: "Click to select · Drag to move",
+    hint: "Click to select · Drag to move · Shift+Click to multi-select",
   },
   {
     id: "add-node",

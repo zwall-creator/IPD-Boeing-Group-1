@@ -3,6 +3,7 @@ import './App.css';
 import { useEventSource } from './hooks/useEventSource';
 import NetworkCanvas from './components/NetworkCanvas';
 import GraphToolsPanel from './components/GraphToolsPanel';
+import ConfirmDialog from './components/ConfirmDialog';
 
 // Map SSE event types to a log-entry CSS variant for colour coding
 function eventToLogVariant(type) {
@@ -47,6 +48,7 @@ export default function App() {
   const canvasRef = useRef(null);
   const [graphMode, setGraphMode] = useState('select');
   const [selectedCount, setSelectedCount] = useState(0);
+  const [confirmRequest, setConfirmRequest] = useState(null); // Pending confirmation popup: null = close, {message, onConfirm} = show
 
   // Scroll the log console to the bottom whenever new entries arrive
   const logEndRef = useRef(null);
@@ -78,11 +80,40 @@ export default function App() {
     }
   };
 
-  const handleReset = () => {
+  // Clears system logs (originally handleReset)
+  const clearLogs = () => {
     clearEvents();
     setLocalLogs([
       { text: '[System] Canvas reset.', variant: 'warn' },
     ]);
+  };
+
+  // Reset canvas
+  const handleReset = () => {
+    // Empty canvas skips popup
+    if (canvasRef.current?.isEmpty() ?? true) {
+      clearLogs();
+      return;
+    }
+    setConfirmRequest({
+      message: 'This will delete everything in the current network and clear the logs',
+      onConfirm: () => {
+        canvasRef.current?.clear();
+        setGraphMode('select');
+        clearLogs();
+      },
+    });
+  };
+
+  // confirm from popup
+  const handleConfirm = () => {
+    setConfirmRequest(null); // close popup, re-render
+    confirmRequest.onConfirm(); // call the action that was requested
+  };
+
+  // cancel from popup
+  const handleCancel = () => {
+    setConfirmRequest(null); // close popup
   };
 
   const handleDeleteSelected = () => {
@@ -216,6 +247,13 @@ export default function App() {
           <div ref={logEndRef} />
         </div>
       </footer>
+      {/* Confirmation popup */}
+      <ConfirmDialog
+        open={confirmRequest !== null}
+        message={confirmRequest?.message}
+        onConfirm={handleConfirm}
+        onCancel={handleCancel}
+      />
     </div>
   );
 }
