@@ -53,9 +53,8 @@ const LAYOUT_PRESETS = {
       ['Switch', 'DMZ Switch', 360, 210],
       ['Server', 'Web Server', 600, 120],
       ['Server', 'Mail Server', 600, 300],
-      ['Router', 'Internal Firewall', 830, 210],
     ],
-    edges: [[0, 1], [1, 2], [1, 3], [1, 4]],
+    edges: [[0, 1], [1, 2], [1, 3]],
   },
   wan: {
     label: 'Branch WAN',
