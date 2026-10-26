@@ -2,6 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
 import { useEventSource } from './hooks/useEventSource';
 import NetworkCanvas from './components/NetworkCanvas';
+import OptimizationControls from './components/OptimizationControls';
+import GraphToolsPanel from './components/GraphToolsPanel';
+import ConfirmDialog from './components/ConfirmDialog';
 
 // Map SSE event types to a log-entry CSS variant for colour coding
 function eventToLogVariant(type) {
@@ -33,6 +36,13 @@ function formatEvent(event) {
 export default function App() {
   const [activeView, setActiveView] = useState('topology');
   const [solverType, setSolverType] = useState('classical');
+  const [optParams, setOptParams]   = useState({
+    securityWeight:  50,
+    costWeight:      50,
+    bandwidthWeight: 50,
+    riskThreshold:   30,
+  });
+  const [quantumStatus, setQuantumStatus] = useState(null);
 
   // Local UI logs (seed entries shown before the SSE connection is ready)
   const [localLogs, setLocalLogs] = useState([
@@ -40,7 +50,23 @@ export default function App() {
     { text: '[Backend] Computation API mapped at :8000.', variant: 'info' },
   ]);
 
-  const { events, status, backendOk, clearEvents, emitEvent, runSim } = useEventSource();
+  const { events, status, backendOk, clearEvents, runSim, checkQuantumStatus } = useEventSource();
+
+  // When user switches to quantum solver, fetch IBM status from backend
+  useEffect(() => {
+    if (solverType === 'quantum') {
+      setQuantumStatus(null); // show loading state
+      checkQuantumStatus().then(s => setQuantumStatus(s));
+    } else {
+      setQuantumStatus(null);
+    }
+  }, [solverType, checkQuantumStatus]);
+
+  // Graph editor state, shared by the sidebar tools and the canvas
+  const canvasRef = useRef(null);
+  const [graphMode, setGraphMode] = useState('select');
+  const [selectedCount, setSelectedCount] = useState(0);
+  const [confirmRequest, setConfirmRequest] = useState(null); // Pending confirmation popup: null = close, {message, onConfirm} = show
 
   // Scroll the log console to the bottom whenever new entries arrive
   const logEndRef = useRef(null);
@@ -67,9 +93,9 @@ export default function App() {
   const handleRunSimulation = async () => {
     setLocalLogs(prev => [
       ...prev,
-      { text: `[Run] Triggering ${solverType} solver…`, variant: 'info' },
+      { text: `[Run] Triggering ${solverType} solver… (sec:${optParams.securityWeight} cost:${optParams.costWeight} bw:${optParams.bandwidthWeight} risk:${optParams.riskThreshold})`, variant: 'info' },
     ]);
-    const ok = await runSim(solverType);
+    const ok = await runSim(solverType, optParams);
     if (!ok) {
       setLocalLogs(prev => [
         ...prev,
@@ -78,17 +104,44 @@ export default function App() {
     }
   };
 
-  const handleAddNode = () =>
-    emitEvent('graph.add_node', { label: `Node-${Date.now()}` });
-
-  const handleAddEdge = () =>
-    emitEvent('graph.add_edge', { from: 'A', to: 'B' });
-
-  const handleReset = () => {
+  // Clears system logs (originally handleReset)
+  const clearLogs = () => {
     clearEvents();
     setLocalLogs([
       { text: '[System] Canvas reset.', variant: 'warn' },
     ]);
+  };
+
+  // Reset canvas
+  const handleReset = () => {
+    // Empty canvas skips popup
+    if (canvasRef.current?.isEmpty() ?? true) {
+      clearLogs();
+      return;
+    }
+    setConfirmRequest({
+      message: 'This will delete everything in the current network and clear the logs',
+      onConfirm: () => {
+        canvasRef.current?.clear();
+        setGraphMode('select');
+        clearLogs();
+      },
+    });
+  };
+
+  // confirm from popup
+  const handleConfirm = () => {
+    setConfirmRequest(null); // close popup, re-render
+    confirmRequest.onConfirm(); // call the action that was requested
+  };
+
+  // cancel from popup
+  const handleCancel = () => {
+    setConfirmRequest(null); // close popup
+  };
+
+  const handleDeleteSelected = () => {
+    canvasRef.current?.deleteSelected();
   };
 
   // ------------------------------------------------------------------
@@ -154,17 +207,38 @@ export default function App() {
             </select>
           </div>
 
+          {/* IBM Quantum status — shown only when quantum solver is selected */}
+          {solverType === 'quantum' && (
+            <div className="ibm-status">
+              {quantumStatus === null ? (
+                <span className="ibm-status__row connecting">Checking IBM Quantum…</span>
+              ) : quantumStatus.connected ? (
+                <>
+                  <span className="ibm-status__row online">IBM Quantum: Connected</span>
+                  <span className="ibm-status__detail">Backend: {quantumStatus.backend}</span>
+                  <span className="ibm-status__detail">{quantumStatus.qubits} qubits available</span>
+                </>
+              ) : (
+                <>
+                  <span className="ibm-status__row offline">IBM Quantum: Unavailable</span>
+                  <span className="ibm-status__detail">Using local Aer simulator</span>
+                  {quantumStatus.error && (
+                    <span className="ibm-status__error">{quantumStatus.error}</span>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+
           <div className="control-group">
             <label>Graph Tools</label>
-            <button type="button" className="btn-secondary" onClick={handleAddNode}>
-              + Add Node
-            </button>
-            <button type="button" className="btn-secondary" onClick={handleAddEdge}>
-              + Add Edge
-            </button>
-            <button type="button" className="btn-secondary" onClick={handleReset}>
-              Reset Canvas
-            </button>
+            <GraphToolsPanel
+              mode={graphMode}
+              selectedCount={selectedCount}
+              onModeChange={setGraphMode}
+              onDeleteSelected={handleDeleteSelected}
+              onReset={handleReset}
+            />
           </div>
 
           {/* Live event counter */}
@@ -172,6 +246,9 @@ export default function App() {
             <label>SSE Events Received</label>
             <span className="event-counter">{events.length}</span>
           </div>
+
+          {/* Optimization priority sliders */}
+          <OptimizationControls params={optParams} onChange={setOptParams} />
         </aside>
 
         {/* Central Display / Visual Canvas Container */}
@@ -208,6 +285,13 @@ export default function App() {
           <div ref={logEndRef} />
         </div>
       </footer>
+      {/* Confirmation popup */}
+      <ConfirmDialog
+        open={confirmRequest !== null}
+        message={confirmRequest?.message}
+        onConfirm={handleConfirm}
+        onCancel={handleCancel}
+      />
     </div>
   );
 }
