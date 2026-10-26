@@ -8,6 +8,7 @@ import {
 import cytoscape from "cytoscape";
 import { DEVICE_TYPES } from "../deviceIcons";
 import { MODES } from "../graph/networkRules";
+import NodePropertyPanel from "./NodePropertyPanel";
 import "./NetworkCanvas.css";
 
 // Color Codings
@@ -20,8 +21,7 @@ const TEXT = "#1f2933";
 // TODO: IP format (string vs list of ints)
 // TODO: default values for base_sec_level, risk_level, cost and bandwidth
 // TODO: allowed values for connection_type
-// TODO: NW_Structure.py doesn't list device types (they come from deviceIcons.jsx)
-// TODO: security devices (NW_Sec_Device) not supported yet
+// TODO: security devices not supported yet
 // TODO: build derived fields (security_level, connections, destination IP) for the backend
 const NODE_FIELDS = { device_ip: null, base_sec_level: null, risk_level: null };
 const EDGE_FIELDS = { cost: null, bandwidth: null, connection_type: null };
@@ -91,6 +91,7 @@ export default function NetworkCanvas({
   const [edgeSourceId, setEdgeSourceId] = useState(null);
   const [notice, setNotice] = useState(null);
   const [typeMenu, setTypeMenu] = useState(null);
+  const [selectedNode, setSelectedNode] = useState(null);
 
   function addNode(type) {
     const count = (typeCountsRef.current[type] ?? 0) + 1;
@@ -141,7 +142,12 @@ export default function NetworkCanvas({
   });
 
   const reportSelection = useEffectEvent(() => {
-    onSelectionChange(cyRef.current.$(":selected").length);
+    const selected = cyRef.current.$(":selected");
+    onSelectionChange(selected.length);
+    // Check if only one node is selected
+    const isOneNode = selected.length === 1 && selected[0].isNode();
+    // Panel shows only if one node is selected
+    setSelectedNode(isOneNode ? { ...selected.data() } : null);
   });
 
   const handleTap = useEffectEvent((evt) => {

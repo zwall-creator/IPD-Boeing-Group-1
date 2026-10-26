@@ -30,7 +30,7 @@ export const DEVICE_TYPES = [
     height: 42,
   },
   {
-    type: 'Cell Phone',
+    type: 'Mobile',
     Icon: Smartphone,
     shape: 'round-rectangle',
     width: 30,
