@@ -109,6 +109,28 @@ body, html {
   letter-spacing: 0.05em;
 }
 
+.workspace-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.workspace-nav button {
+  border: 0;
+  border-radius: 4px;
+  padding: 0.55rem 0.65rem;
+  background: transparent;
+  color: #cbd5e1;
+  text-align: left;
+  cursor: pointer;
+}
+
+.workspace-nav button:hover,
+.workspace-nav button.active {
+  background: #334155;
+  color: #fff;
+}
+
 .control-group {
   display: flex;
   flex-direction: column;
@@ -169,6 +191,12 @@ body, html {
   color: #64748b;
 }
 
+.canvas-title {
+  padding: 0.65rem 1rem;
+  color: #e2e8f0;
+  font-weight: 500;
+}
+
 .canvas-viewport {
   flex: 1;
   display: flex;
@@ -183,6 +211,27 @@ body, html {
 .canvas-placeholder, .metrics-placeholder {
   text-align: center;
   color: #64748b;
+}
+
+.utility-view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  max-width: 34rem;
+  padding: 2rem;
+  text-align: center;
+  color: #94a3b8;
+}
+
+.utility-view p {
+  color: #e2e8f0;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.utility-action {
+  margin-top: 0.75rem;
 }
 
 .app-footer {

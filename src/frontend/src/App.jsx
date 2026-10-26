@@ -31,7 +31,7 @@ function formatEvent(event) {
 }
 
 export default function App() {
-  const [activeTab, setActiveTab]   = useState('canvas');
+  const [activeView, setActiveView] = useState('topology');
   const [solverType, setSolverType] = useState('classical');
 
   // Local UI logs (seed entries shown before the SSE connection is ready)
@@ -54,6 +54,12 @@ export default function App() {
     variant: eventToLogVariant(ev.type),
   }));
   const allLogs = [...localLogs, ...liveEntries];
+
+  const utilityViews = {
+    simulation: ['Simulation Runs', 'Configure a solver, run the current scenario, and monitor progress in the execution log below.'],
+    reports: ['Reports', 'Completed simulation reports will appear here for review and export.'],
+    solutions: ['Solutions', 'Saved solver solutions and recommended network changes will appear here.'],
+  };
 
   // ------------------------------------------------------------------
   // Handlers
@@ -126,6 +132,14 @@ export default function App() {
       <div className="workspace-body">
         {/* Left Toolbar / Configuration Panel */}
         <aside className="workspace-sidebar">
+          <h3>Workspace</h3>
+          <nav className="workspace-nav" aria-label="Workspace views">
+            <button className={activeView === 'topology' ? 'active' : ''} onClick={() => setActiveView('topology')} type="button">Network Topology</button>
+            <button className={activeView === 'simulation' ? 'active' : ''} onClick={() => setActiveView('simulation')} type="button">Simulation Runs</button>
+            <button className={activeView === 'reports' ? 'active' : ''} onClick={() => setActiveView('reports')} type="button">Reports</button>
+            <button className={activeView === 'solutions' ? 'active' : ''} onClick={() => setActiveView('solutions')} type="button">Solutions</button>
+          </nav>
+
           <h3>Controls &amp; Solvers</h3>
 
           <div className="control-group">
@@ -163,32 +177,16 @@ export default function App() {
         {/* Central Display / Visual Canvas Container */}
         <main className="workspace-canvas">
           <div className="canvas-header">
-            <div className="tabs">
-              <button
-                type="button"
-                className={activeTab === 'canvas' ? 'tab-btn active' : 'tab-btn'}
-                onClick={() => setActiveTab('canvas')}
-              >
-                Network Topology
-              </button>
-              <button
-                type="button"
-                className={activeTab === 'metrics' ? 'tab-btn active' : 'tab-btn'}
-                onClick={() => setActiveTab('metrics')}
-              >
-                Optimization Metrics
-              </button>
-            </div>
-            <span className="canvas-meta">Grid 1000 × 800</span>
+            <span className="canvas-title">{activeView === 'topology' ? 'Network Topology' : utilityViews[activeView][0]}</span>
+            <span className="canvas-meta">IPD Workspace</span>
           </div>
 
           <div className="canvas-viewport">
-            {activeTab === 'canvas' ? (
-              <NetworkCanvas />
-            ) : (
-              <div className="metrics-placeholder">
-                <p>Optimization Performance Metrics</p>
-                <small>Execution duration, bitstring states, and schedule plots.</small>
+            {activeView === 'topology' ? <NetworkCanvas /> : (
+              <div className="utility-view">
+                <p>{utilityViews[activeView][0]}</p>
+                <small>{utilityViews[activeView][1]}</small>
+                {activeView === 'simulation' && <button type="button" className="btn-primary utility-action" onClick={handleRunSimulation}>Run current scenario</button>}
               </div>
             )}
           </div>
