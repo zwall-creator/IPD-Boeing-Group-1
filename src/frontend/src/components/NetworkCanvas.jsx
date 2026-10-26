@@ -26,6 +26,41 @@ const TEXT = "#1f2933";
 const NODE_FIELDS = { device_ip: null, base_sec_level: null, risk_level: null };
 const EDGE_FIELDS = { cost: null, bandwidth: null, connection_type: null };
 
+const LAYOUT_PRESETS = {
+  lan: {
+    label: 'Office LAN',
+    nodes: [
+      ['Router', 'Gateway', 220, 190],
+      ['Switch', 'Core Switch', 430, 190],
+      ['PC', 'Workstation 1', 650, 110],
+      ['PC', 'Workstation 2', 650, 270],
+      ['Server', 'File Server', 430, 360],
+    ],
+    edges: [[0, 1], [1, 2], [1, 3], [1, 4]],
+  },
+  dmz: {
+    label: 'DMZ',
+    nodes: [
+      ['Router', 'Internet Router', 150, 210],
+      ['Switch', 'DMZ Switch', 360, 210],
+      ['Server', 'Web Server', 600, 120],
+      ['Server', 'Mail Server', 600, 300],
+    ],
+    edges: [[0, 1], [1, 2], [1, 3]],
+  },
+  wan: {
+    label: 'Branch WAN',
+    nodes: [
+      ['Router', 'HQ Router', 180, 220],
+      ['Router', 'Branch Router', 520, 120],
+      ['Router', 'Remote Router', 520, 320],
+      ['Switch', 'HQ Switch', 820, 220],
+      ['Server', 'Application Server', 1030, 220],
+    ],
+    edges: [[0, 1], [0, 2], [0, 3], [3, 4]],
+  },
+}
+
 const STYLE = [
   {
     selector: "node",
@@ -108,7 +143,44 @@ export default function NetworkCanvas({
     setTypeMenu(null);
   }
 
-  // Delete selected elements
+  function loadPreset(presetId) {
+    const preset = LAYOUT_PRESETS[presetId]
+    if (!preset || !cyRef.current) return
+
+    cyRef.current.elements().remove()
+    nodeCountRef.current = 0
+    edgeCountRef.current = 0
+    typeCountsRef.current = {}
+    setEdgeSourceId(null)
+    setTypeMenu(null)
+    setNotice(`${preset.label} layout loaded`)
+
+    const nodes = preset.nodes.map(([type, label, x, y]) => {
+      typeCountsRef.current[type] = (typeCountsRef.current[type] ?? 0) + 1
+      return {
+        group: 'nodes',
+        data: {
+          id: `n${++nodeCountRef.current}`,
+          label,
+          device_type: type,
+          ...NODE_FIELDS,
+        },
+        position: { x, y },
+      }
+    })
+    const edges = preset.edges.map(([source, target]) => ({
+      group: 'edges',
+      data: {
+        id: `e${++edgeCountRef.current}`,
+        source: `n${source + 1}`,
+        target: `n${target + 1}`,
+        ...EDGE_FIELDS,
+      },
+    }))
+    cyRef.current.add([...nodes, ...edges])
+    cyRef.current.layout({ name: 'preset', fit: true, padding: 50 }).run()
+  }
+
   function deleteSelected() {
     cyRef.current.$(":selected").remove();
   }
@@ -265,6 +337,38 @@ export default function NetworkCanvas({
         role="application"
         aria-label="Network canvas"
       />
+      <div className="network-canvas__presets" role="toolbar" aria-label="Network layout presets">
+        <span>Layouts</span>
+        {Object.entries(LAYOUT_PRESETS).map(([id, preset]) => (
+          <button key={id} type="button" onClick={() => loadPreset(id)}>
+            {preset.label}
+          </button>
+        ))}
+      </div>
+      <div
+        className="network-canvas__toolbar"
+        role="toolbar"
+        aria-label="Canvas tools"
+      >
+        {MODES.map((m) => (
+          <button
+            key={m.id}
+            type="button"
+            aria-pressed={mode === m.id}
+            onClick={() => changeMode(m.id)}
+          >
+            {m.label}
+          </button>
+        ))}
+        <span className="network-canvas__divider" />
+        <button
+          type="button"
+          onClick={deleteSelected}
+          disabled={selectedCount === 0}
+        >
+          Delete
+        </button>
+      </div>
       <span className="network-canvas__hint" role="status">
         {hint}
       </span>
