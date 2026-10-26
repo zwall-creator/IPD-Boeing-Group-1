@@ -11,6 +11,7 @@ class IOStream:
         :param f_path: path to file
         :param read_write_type: string indicating read/write permissions
         """
+        self.file = None
         if f_path is None:
             raise TypeError('f_path cannot be None')
         if read_write_type is None:
