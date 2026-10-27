@@ -1,8 +1,7 @@
 import unittest
 from pathlib import Path
 
-from data.IO.IOStream import SolutionStream
-from src.data.IO.IOStream import IOStream, LogStream, ReportStream
+from src.data.IO.IOStream import IOStream, LogStream, ReportStream, SolutionStream
 
 system = "Mac"
 def fix_paths(fpath):
