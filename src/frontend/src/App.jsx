@@ -259,7 +259,13 @@ export default function App() {
           </div>
 
           <div className="canvas-viewport">
-            {activeView === 'topology' ? <NetworkCanvas /> : (
+            {activeView === 'topology' ? (
+              <NetworkCanvas
+                ref={canvasRef}
+                mode={graphMode}
+                onSelectionChange={setSelectedCount}
+              />
+            ) : (
               <div className="utility-view">
                 <p>{utilityViews[activeView][0]}</p>
                 <small>{utilityViews[activeView][1]}</small>

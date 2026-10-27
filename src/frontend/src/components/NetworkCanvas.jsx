@@ -345,30 +345,6 @@ export default function NetworkCanvas({
           </button>
         ))}
       </div>
-      <div
-        className="network-canvas__toolbar"
-        role="toolbar"
-        aria-label="Canvas tools"
-      >
-        {MODES.map((m) => (
-          <button
-            key={m.id}
-            type="button"
-            aria-pressed={mode === m.id}
-            onClick={() => changeMode(m.id)}
-          >
-            {m.label}
-          </button>
-        ))}
-        <span className="network-canvas__divider" />
-        <button
-          type="button"
-          onClick={deleteSelected}
-          disabled={selectedCount === 0}
-        >
-          Delete
-        </button>
-      </div>
       <span className="network-canvas__hint" role="status">
         {hint}
       </span>

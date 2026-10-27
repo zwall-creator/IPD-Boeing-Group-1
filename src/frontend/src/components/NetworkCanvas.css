@@ -19,53 +19,6 @@
   cursor: crosshair;
 }
 
-/* ---- Toolbar ---- */
-
-.network-canvas__toolbar {
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  padding: 3px;
-  background: #fff;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-  font-size: 13px;
-}
-
-.network-canvas__toolbar button {
-  padding: 4px 10px;
-  border: 0;
-  border-radius: 4px;
-  background: transparent;
-  color: var(--text);
-  font: inherit;
-  font-weight: 500;
-  cursor: pointer;
-}
-
-.network-canvas__toolbar button:not([aria-pressed="true"]):hover:enabled {
-  background: #ececf0;
-}
-
-.network-canvas__toolbar button[aria-pressed="true"] {
-  background: var(--vt-maroon);
-  color: #fff;
-}
-
-.network-canvas__toolbar button:focus-visible {
-  outline: 2px solid var(--vt-orange);
-  outline-offset: 1px;
-}
-
-.network-canvas__toolbar button:disabled {
-  opacity: 0.4;
-  cursor: default;
-}
-
 .network-canvas__presets {
   position: absolute;
   top: 8px;
@@ -97,13 +50,6 @@
   border-color: var(--vt-maroon);
   color: var(--vt-maroon);
   outline: none;
-}
-
-.network-canvas__divider {
-  align-self: stretch;
-  width: 1px;
-  margin: 2px 3px;
-  background: var(--border);
 }
 
 .network-canvas__hint {
