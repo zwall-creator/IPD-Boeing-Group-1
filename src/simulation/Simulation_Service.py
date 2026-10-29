@@ -82,13 +82,13 @@ class Simulation_Service:
         """
         Function to get the state string of the entire simulation.
         \n example of state string syntax: \n
-        '01234567,../data/configs/01234567config.txt,[PC,255.255.255.255,0.0,1.0,2.0,[(0.0.0.0,1,1,TCP),(1.1.1.1,2,2,UDP);Server,0.0.0.0,0.0,0.0,3.0,[(255.255.255.255,30,45,UDP)];]'
+        '01234567#../data/configs/01234567config.txt#[PC,255.255.255.255,0.0,1.0,2.0,[(0.0.0.0,1,1,TCP),(1.1.1.1,2,2,UDP);Server,0.0.0.0,0.0,0.0,3.0,[(255.255.255.255,30,45,UDP)];]'
         :return: a string instance of the simulation's state string
         """
         # TODO: Add implementation to replace any NONE or NULL values with null character ('\0')
         state = ''
-        state += str(self.sim_id) + ','
-        state += str(self.sim_config_fpath) + ',['
+        state += str(self.sim_id) + '#'
+        state += str(self.sim_config_fpath) + '#['
         for node in self.node_list:
             state += node.get_state_str()
         state += ']'
@@ -100,4 +100,5 @@ class Simulation_Service:
         \nNOTE: this will replace the current data for this simulation, so any unsaved changes will be lost!
         :param state_string: string instance of a simulation's state string
         """
+        
         raise NotImplemented
