@@ -107,11 +107,56 @@ class Simulation_Service:
 
         if type(state_string) != str:
             raise TypeError('state_string must be a string')
+
+        # Split at syntax level 1
         sim_id, config, node_list = state_string.split('#')
         if sim_id.isnumeric():
             sim_id = int(sim_id)
+            self.sim_id = sim_id
             # TODO: update self.sim_id with extracted id
-        node_list = node_list.split(';')
-        # for entry in node_list:
 
-        raise NotImplemented
+        #TODO: Implement Config support
+
+        #collect formatted data for this sim's nodes
+        ret_nodes = []
+        # Split at syntax level 2 for node_list
+        node_list = node_list.split(';')
+        for node_entry in node_list:
+
+            #TODO: Implement boolean logic to extract NW_Node and NW_Sec_Device uniquely
+            object_class = NW_Node
+
+            # Split at syntax level 3 for node data
+            device_type,device_ip_list,base_sec_level,security_level,risk_level,connections = node_entry.split('%')
+            base_sec_level = float(base_sec_level)
+            security_level = float(security_level)
+            risk_level = float(risk_level)
+
+            # Split at syntax level 4 for node IP address
+            device_ip_list = device_ip_list.split('&')
+            device_ip = [int(device_ip_list[0]), int(device_ip_list[1]), int(device_ip_list[2]), int(device_ip_list[3])]
+
+            #collect formated data for this node's connections
+            ret_connections = []
+            # Split at syntax level 4 for node connections
+            for connection_entry in connections.split('&'):
+
+                # Split at syntax level 5 for connection details
+                connection_ip_list,cost,bandwidth,connection_type,source_port = connection_entry.split('@')
+                cost = int(cost)
+                bandwidth = int(bandwidth)
+                source_port = int(source_port)
+
+                # Split at syntax level 6 for connection's destination IP address
+                connection_ip_list = connection_ip_list.split('=')
+                connection_ip = [int(connection_ip_list[0]), int(connection_ip_list[1]), int(connection_ip_list[2]), int(connection_ip_list[3])]
+
+                ret_connections.append((connection_ip,cost,bandwidth,connection_type,source_port))
+            constructor_args = (device_type,device_ip,base_sec_level,risk_level,ret_connections, security_level)
+            ret_nodes.append(object_class(*constructor_args))
+        self.node_list = ret_nodes
+        self.sim_config_fpath = config
+        new_state_str = self.get_sim_state()
+        if new_state_str != state_string:
+            raise ValueError('New simulation state string\n{}\n does not match the given state string\n{}\n'.format(new_state_str,state_string))
+        self.sim_state_str = new_state_str

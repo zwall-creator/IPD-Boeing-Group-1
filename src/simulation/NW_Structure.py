@@ -10,13 +10,14 @@ class NW_Node:
     DEVICE_TYPES = ('PC', 'Laptop', 'Mobile','Router', 'Switch','Server')
     VALID_CONNECTION_TYPES = ('TCP','UDP')
 
-    def __init__(self, device_type, device_ip, base_sec_level, risk_level, connections = []):
+    def __init__(self, device_type, device_ip, base_sec_level, risk_level, connections = [], current_security_level = None):
         """
         :type device_type: str
         :type device_ip: list<int>
         :type base_sec_level: float
         :type risk_level: float
         :type connections: list< tuple<destination_ip:list<int>, cost:int, bandwidth:int, connection_type:str, source_port:int > >
+        :type current_security_level: float or None
 
         :param device_type: str that states what type of network-connected device is represnted by this node
         :param device_ip: a 4-element list consisting of integers between 0 and 255 (inclusive), acting as a unique identifier
@@ -47,6 +48,9 @@ class NW_Node:
             if byte < 0 or byte > 255:
                 raise ValueError('given device ip {} does not contain only integers between 0 and 255 (inclusive)'.format(device_ip))
 
+        if type(current_security_level) != float and current_security_level is not None:
+            raise TypeError('given current_security_level is not a float or None')
+
         #Input validation passed, can now instantiate object fields
         self.device_type = device_type
         self.device_ip = device_ip
@@ -54,6 +58,9 @@ class NW_Node:
         self.security_level = base_sec_level
         self.risk_level = risk_level
         self.connections = connections
+
+        if current_security_level is not None:
+            self.security_level = current_security_level
 
         #TODO: Add call to function to send update signal to simulation observer
 
