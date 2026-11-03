@@ -82,15 +82,19 @@ class Simulation_Service:
         """
         Function to get the state string of the entire simulation.
         \n example of state string syntax: \n
-        '01234567#../data/configs/01234567config.txt#[PC,255.255.255.255,0.0,1.0,2.0,[(0.0.0.0,1,1,TCP),(1.1.1.1,2,2,UDP);Server,0.0.0.0,0.0,0.0,3.0,[(255.255.255.255,30,45,UDP)];]'
+        '01234567#../data/configs/01234567config.txt#[PC,[255,255,255,255],0.0,1.0,2.0,[([0,0,0,0],1,1,TCP),([1,1,1,1],2,2,UDP)];Server,[0,0,0,0],0.0,0.0,3.0,[([255,255,255,255],30,45,UDP)];]'
         :return: a string instance of the simulation's state string
         """
         # TODO: Add implementation to replace any NONE or NULL values with null character ('\0')
         state = ''
         state += str(self.sim_id) + '#'
         state += str(self.sim_config_fpath) + '#['
-        for node in self.node_list:
+
+        for i in range(len(self.node_list)):
+            node = self.node_list[i]
             state += node.get_state_str()
+            if i != len(self.node_list) - 1:
+                state += ';'
         state += ']'
         return state
 
@@ -100,5 +104,14 @@ class Simulation_Service:
         \nNOTE: this will replace the current data for this simulation, so any unsaved changes will be lost!
         :param state_string: string instance of a simulation's state string
         """
-        
+
+        if type(state_string) != str:
+            raise TypeError('state_string must be a string')
+        sim_id, config, node_list = state_string.split('#')
+        if sim_id.isnumeric():
+            sim_id = int(sim_id)
+            # TODO: update self.sim_id with extracted id
+        node_list = node_list.split(';')
+        # for entry in node_list:
+
         raise NotImplemented

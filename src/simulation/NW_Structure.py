@@ -79,26 +79,26 @@ class NW_Node:
             connections += ']'
         for i in range(len(self.connections)):
             connection = self.connections[i]
-            connections += ('([{},{},{},{}],'#IP addr
-                            '{},'#cost
-                            '{},'#bandwidth
-                            '{},'#connection type
+            connections += ('([{}={}={}={}]@'#IP addr
+                            '{}@'#cost
+                            '{}@'#bandwidth
+                            '{}@'#connection type
                             '{})'#source port number
                             ).format(connection[0][0], connection[0][1], connection[0][2], connection[0][3],
                                      connection[1],
                                      connection[2],
                                      connection[3],connection[4])
             if i != len(self.connections) - 1:
-                connections += ','
+                connections += '&'
             else:
                 connections += ']'
         #return the state string of this node
-        return ('{},'#device type
-                '[{},{},{},{}],'#ip address
-                '{},'#base_security_level
-                '{},'#current_security_level
-                '{},'#risk_level
-                '{};'#connections list
+        return ('{}%'#device type
+                '[{}&{}&{}&{}]%'#ip address
+                '{}%'#base_security_level
+                '{}%'#current_security_level
+                '{}%'#risk_level
+                '{}'#connections list
                 ).format(self.device_type,
                          self.device_ip[0],self.device_ip[1],self.device_ip[2],self.device_ip[3],
                          self.base_sec_level,
