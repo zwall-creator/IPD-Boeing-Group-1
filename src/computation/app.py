@@ -5,6 +5,10 @@ import time
 from flask import Flask, Response, jsonify, request, stream_with_context
 from flask_cors import CORS
 from quantum_backend import get_status as qb_get_status, run_circuit, build_sample_circuit
+from network_problem import build_problem_from_dicts, build_toy_problem
+from qaoa_solver import solve_qaoa
+from classical_solver import solve_exhaustive, solve_greedy, compare_results
+from result_validator import validate_placement, format_validation_report
 import db
 
 app = Flask(__name__)
@@ -154,79 +158,203 @@ def run_simulation():
         "bandwidthWeight": body.get("bandwidthWeight", 50),
         "riskThreshold":   body.get("riskThreshold", 30),
     }
+    # Capture topology from request body (may be empty — solvers fall back to toy network)
+    req_nodes = body.get("nodes", [])
+    req_edges = body.get("edges", [])
 
     def _run_classical():
         run_id = db.insert_run("classical", opt_params)
         _broadcast("simulation.started", {"solver": "classical", "params": opt_params, "run_id": run_id})
-        steps = [
-            "Initialising problem graph…",
-            "Building constraint model…",
-            f"Applying weights — sec:{opt_params['securityWeight']} cost:{opt_params['costWeight']} bw:{opt_params['bandwidthWeight']} risk:{opt_params['riskThreshold']}…",
-            "Executing CP-SAT classical solver…",
-            "Collecting results…",
-            "Simulation complete.",
-        ]
-        for i, step in enumerate(steps):
-            time.sleep(0.8)
-            _broadcast("simulation.progress", {"step": i + 1, "total": len(steps), "message": step})
-            db.insert_log(run_id, i + 1, len(steps), step)
-        db.update_run_status(run_id, "success")
-        _broadcast("simulation.done", {"solver": "classical", "status": "success", "params": opt_params, "run_id": run_id})
+
+        # Step 1 — build the problem
+        msg = "Building network optimisation problem…"
+        _broadcast("simulation.progress", {"step": 1, "total": 7, "message": msg})
+        db.insert_log(run_id, 1, 7, msg)
+        time.sleep(0.3)
+
+        nodes = req_nodes
+        edges = req_edges
+        if not nodes:
+            problem = build_toy_problem(opt_params)
+            msg = f"No topology provided — using toy network ({problem.n} nodes, {len(problem.edges)} edges)"
+        else:
+            problem = build_problem_from_dicts(nodes, edges, opt_params)
+            msg = f"Topology loaded: {problem.n} nodes, {len(problem.edges)} edges"
+        _broadcast("simulation.progress", {"step": 2, "total": 7, "message": msg})
+        db.insert_log(run_id, 2, 7, msg)
+        time.sleep(0.3)
+
+        # Step 3 — build QUBO
+        msg = (f"QUBO matrix built ({problem.n}×{problem.n}) — "
+               f"sec:{opt_params['securityWeight']} cost:{opt_params['costWeight']} "
+               f"bw:{opt_params['bandwidthWeight']} risk:{opt_params['riskThreshold']}")
+        _broadcast("simulation.progress", {"step": 3, "total": 7, "message": msg})
+        db.insert_log(run_id, 3, 7, msg)
+        time.sleep(0.3)
+
+        # Step 4 — run classical solver
+        msg = "Running exhaustive classical solver…"
+        _broadcast("simulation.progress", {"step": 4, "total": 7, "message": msg})
+        db.insert_log(run_id, 4, 7, msg)
+        classical_result = solve_exhaustive(problem)
+        time.sleep(0.3)
+
+        placement_str = ''.join(str(x) for x in classical_result["placement"])
+        msg = (f"Classical solver done — placement: {placement_str} | "
+               f"QUBO cost: {classical_result['qubo_cost']:.4f} | "
+               f"strategy: {classical_result['strategy']}")
+        _broadcast("simulation.progress", {"step": 5, "total": 7, "message": msg})
+        db.insert_log(run_id, 5, 7, msg)
+        time.sleep(0.3)
+
+        # Step 6 — validate
+        validation = validate_placement(problem, classical_result["placement"])
+        report = format_validation_report(validation, classical_result["placement"])
+        for line in report.split("\n"):
+            _broadcast("simulation.progress", {"step": 6, "total": 7, "message": line})
+            db.insert_log(run_id, 6, 7, line)
+        time.sleep(0.3)
+
+        # Step 7 — done
+        status = "success" if validation["valid"] else "invalid"
+        msg = f"Classical simulation complete — result: {status.upper()}"
+        _broadcast("simulation.progress", {"step": 7, "total": 7, "message": msg})
+        db.insert_log(run_id, 7, 7, msg)
+
+        db.insert_result(run_id, {
+            "backend":      "classical_exhaustive",
+            "used_ibm":     False,
+            "shots":        None,
+            "counts":       {"placement": placement_str},
+            "execution_ms": None,
+        })
+        db.update_run_status(run_id, status)
+        _broadcast("simulation.done", {
+            "solver":     "classical",
+            "status":     status,
+            "placement":  classical_result["placement"],
+            "qubo_cost":  classical_result["qubo_cost"],
+            "valid":      validation["valid"],
+            "violations": validation["violations"],
+            "warnings":   validation["warnings"],
+            "params":     opt_params,
+            "run_id":     run_id,
+        })
 
     def _run_quantum():
         run_id = db.insert_run("quantum", opt_params)
         _broadcast("simulation.started", {"solver": "quantum", "params": opt_params, "run_id": run_id})
 
-        # Step 1 — check IBM connection
+        # Step 1 — IBM connection check
         qstatus = qb_get_status()
-        msg1 = "Checking IBM Quantum connection…"
-        _broadcast("simulation.progress", {"step": 1, "total": 6, "message": msg1})
-        db.insert_log(run_id, 1, 6, msg1)
-        time.sleep(0.5)
-
         if qstatus["connected"]:
-            msg2 = f"Connected to IBM backend: {qstatus['backend']} ({qstatus['qubits']} qubits)"
+            msg1 = f"IBM Quantum connected — backend: {qstatus['backend']} ({qstatus['qubits']} qubits)"
         else:
-            msg2 = f"IBM unavailable ({qstatus['error']}) — using local Aer simulator"
-        _broadcast("simulation.progress", {"step": 2, "total": 6, "message": msg2})
-        db.insert_log(run_id, 2, 6, msg2)
-        time.sleep(0.5)
-
-        msg3 = f"Applying weights — sec:{opt_params['securityWeight']} cost:{opt_params['costWeight']} bw:{opt_params['bandwidthWeight']} risk:{opt_params['riskThreshold']}…"
-        _broadcast("simulation.progress", {"step": 3, "total": 6, "message": msg3})
-        db.insert_log(run_id, 3, 6, msg3)
-        time.sleep(0.5)
-
-        msg4 = "Building QAOA/VQE circuit from network topology…"
-        _broadcast("simulation.progress", {"step": 4, "total": 6, "message": msg4})
-        db.insert_log(run_id, 4, 6, msg4)
-        time.sleep(0.5)
-
-        # Step 5 — run the circuit
-        msg5 = f"Submitting circuit to {'IBM Quantum' if qstatus['connected'] else 'Aer simulator'}…"
-        _broadcast("simulation.progress", {"step": 5, "total": 6, "message": msg5})
-        db.insert_log(run_id, 5, 6, msg5)
-        circuit = build_sample_circuit(n_qubits=2)
-        result = run_circuit(circuit, shots=1024)
-        time.sleep(0.5)
-
-        msg6 = f"Results collected from {result['backend']} — top counts: {dict(list(result['counts'].items())[:3])}"
-        _broadcast("simulation.progress", {"step": 6, "total": 6, "message": msg6})
-        db.insert_log(run_id, 6, 6, msg6)
+            msg1 = f"IBM unavailable ({qstatus['error']}) — using local Aer simulator"
+        _broadcast("simulation.progress", {"step": 1, "total": 9, "message": msg1})
+        db.insert_log(run_id, 1, 9, msg1)
         time.sleep(0.3)
 
-        final_status = "success" if not result.get("error") or result["used_ibm"] else "fallback"
-        db.insert_result(run_id, result)
-        db.update_run_status(run_id, final_status, result.get("error"))
+        # Step 2 — build problem
+        nodes = req_nodes
+        edges = req_edges
+        if not nodes:
+            problem = build_toy_problem(opt_params)
+            msg2 = f"No topology provided — using toy network ({problem.n} nodes, {len(problem.edges)} edges)"
+        else:
+            problem = build_problem_from_dicts(nodes, edges, opt_params)
+            msg2 = f"Topology loaded: {problem.n} nodes, {len(problem.edges)} edges"
+        _broadcast("simulation.progress", {"step": 2, "total": 9, "message": msg2})
+        db.insert_log(run_id, 2, 9, msg2)
+        time.sleep(0.3)
+
+        # Step 3 — QUBO
+        msg3 = (f"QUBO encoded ({problem.n} qubits) — "
+                f"sec:{opt_params['securityWeight']} cost:{opt_params['costWeight']} "
+                f"bw:{opt_params['bandwidthWeight']} risk:{opt_params['riskThreshold']}")
+        _broadcast("simulation.progress", {"step": 3, "total": 9, "message": msg3})
+        db.insert_log(run_id, 3, 9, msg3)
+        time.sleep(0.3)
+
+        # Step 4 — classical baseline (for comparison)
+        msg4 = "Computing classical baseline (exhaustive solver)…"
+        _broadcast("simulation.progress", {"step": 4, "total": 9, "message": msg4})
+        db.insert_log(run_id, 4, 9, msg4)
+        classical_result = solve_exhaustive(problem)
+        time.sleep(0.3)
+
+        # Step 5 — build & describe QAOA circuit
+        from qaoa_solver import build_qaoa_circuit
+        circuit = build_qaoa_circuit(problem, gamma=0.4, beta=0.3, p=1)
+        msg5 = (f"QAOA circuit built — depth: {circuit.depth()}, "
+                f"qubits: {circuit.num_qubits}, layers: p=1")
+        _broadcast("simulation.progress", {"step": 5, "total": 9, "message": msg5})
+        db.insert_log(run_id, 5, 9, msg5)
+        time.sleep(0.3)
+
+        # Step 6 — run QAOA
+        backend_label = "IBM Quantum" if qstatus["connected"] else "Aer simulator"
+        msg6 = f"Submitting QAOA circuit to {backend_label} (1024 shots)…"
+        _broadcast("simulation.progress", {"step": 6, "total": 9, "message": msg6})
+        db.insert_log(run_id, 6, 9, msg6)
+
+        quantum_result = solve_qaoa(problem, shots=1024)
+        time.sleep(0.3)
+
+        placement_str = ''.join(str(x) for x in quantum_result["placement"])
+        msg7 = (f"QAOA result — placement: {placement_str} | "
+                f"confidence: {quantum_result['confidence']:.1%} | "
+                f"QUBO cost: {quantum_result['qubo_cost']:.4f} | "
+                f"backend: {quantum_result['backend']}")
+        _broadcast("simulation.progress", {"step": 7, "total": 9, "message": msg7})
+        db.insert_log(run_id, 7, 9, msg7)
+        time.sleep(0.3)
+
+        # Step 8 — compare vs classical
+        comparison = compare_results(quantum_result, classical_result)
+        msg8 = (f"Comparison vs classical — {comparison['verdict']} | "
+                f"quantum cost: {comparison['quantum_cost']:.4f} | "
+                f"classical cost: {comparison['classical_cost']:.4f} | "
+                f"gap: {comparison['relative_gap']:.1%}")
+        _broadcast("simulation.progress", {"step": 8, "total": 9, "message": msg8})
+        db.insert_log(run_id, 8, 9, msg8)
+        time.sleep(0.3)
+
+        # Step 9 — validate
+        validation = validate_placement(problem, quantum_result["placement"])
+        report = format_validation_report(validation, quantum_result["placement"])
+        for line in report.split("\n"):
+            _broadcast("simulation.progress", {"step": 9, "total": 9, "message": line})
+            db.insert_log(run_id, 9, 9, line)
+
+        final_status = "success" if validation["valid"] else "invalid"
+        if quantum_result.get("error") and not quantum_result.get("used_ibm"):
+            final_status = "fallback"
+
+        db.insert_result(run_id, {
+            "backend":      quantum_result["backend"],
+            "used_ibm":     quantum_result["used_ibm"],
+            "shots":        1024,
+            "counts":       quantum_result.get("all_counts", {}),
+            "execution_ms": None,
+        })
+        db.update_run_status(run_id, final_status, quantum_result.get("error"))
 
         _broadcast("simulation.done", {
-            "solver":   "quantum",
-            "status":   final_status,
-            "backend":  result["backend"],
-            "used_ibm": result["used_ibm"],
-            "counts":   result["counts"],
-            "params":   opt_params,
-            "run_id":   run_id,
+            "solver":           "quantum",
+            "status":           final_status,
+            "placement":        quantum_result["placement"],
+            "qubo_cost":        quantum_result["qubo_cost"],
+            "confidence":       quantum_result["confidence"],
+            "backend":          quantum_result["backend"],
+            "used_ibm":         quantum_result["used_ibm"],
+            "classical_match":  comparison["match"],
+            "comparison":       comparison,
+            "valid":            validation["valid"],
+            "violations":       validation["violations"],
+            "warnings":         validation["warnings"],
+            "params":           opt_params,
+            "run_id":           run_id,
         })
 
     if solver == "quantum":
