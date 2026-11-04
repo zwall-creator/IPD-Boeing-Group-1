@@ -13,7 +13,8 @@ const BACKEND_URL = 'http://127.0.0.1:8000';
  *   status      — 'connecting' | 'connected' | 'disconnected' | 'error'
  *   clearEvents — empties the events array
  *   emitEvent   — POST { type, data } to /events/emit  (fire-and-forget)
- *   runSim      — POST { solver } to /simulation/run
+ *   runSim      — POST { solver, topology } to /simulation/run
+ *   prepareNetwork — POST a topology to /simulation/prepare
  *   backendOk   — boolean; true when /health responded 200
  */
 export function useEventSource() {
@@ -118,16 +119,29 @@ export function useEventSource() {
     }
   }, []);
 
-  const runSim = useCallback(async (solver = 'classical', optParams = {}) => {
+  const runSim = useCallback(async (solver = 'classical', optParams = {}, topology = { nodes: [], edges: [] }) => {
     try {
       const res = await fetch(`${BACKEND_URL}/simulation/run`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ solver, ...optParams }),
+        body: JSON.stringify({ solver, ...optParams, topology }),
       });
-      return res.ok;
+      return res.ok ? await res.json() : null;
     } catch {
-      return false;
+      return null;
+    }
+  }, []);
+
+  const prepareNetwork = useCallback(async (topology) => {
+    try {
+      const res = await fetch(`${BACKEND_URL}/simulation/prepare`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ topology }),
+      });
+      return res.ok ? await res.json() : null;
+    } catch {
+      return null;
     }
   }, []);
 
@@ -143,5 +157,5 @@ export function useEventSource() {
     }
   }, []);
 
-  return { events, status, backendOk, clearEvents, emitEvent, runSim, checkQuantumStatus };
+  return { events, status, backendOk, clearEvents, emitEvent, runSim, prepareNetwork, checkQuantumStatus };
 }

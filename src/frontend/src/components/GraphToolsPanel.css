@@ -25,3 +25,9 @@
   outline: 2px solid var(--vt-orange);
   outline-offset: 2px;
 }
+
+.graph-tools__hint {
+  color: #94a3b8;
+  font-size: 11px;
+  line-height: 1.35;
+}
