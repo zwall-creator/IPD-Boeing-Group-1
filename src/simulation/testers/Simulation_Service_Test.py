@@ -7,18 +7,24 @@ class Simulation_Service_Test(unittest.TestCase):
     def test_something(self):
         self.assertEqual(True, False)  # add assertion here
 
+    # Test the __init__ method
     def test_Simulation_Service__init__state_tests(self):
         # a test case is a set of two tuples - inputs, expected results
         class_type = Simulation_Service
         class_type_str = 'simulation-service'
         fpath_func = 'init'
-        function_var = class_type.__str__
+        # function_var = class_type.__str__
         test_type = 'state'
         test_cases = [
             ( #Test Case 1
-                (00000000, '', None), #constructor vals
+                (00000000), #constructor vals
                 (), #funciton args
-                (00000000, '', None)
+                (Simulation_Service, 00000000, '', None, []) #expected state vals afterwards
+            ),
+            ( #Test Case 2
+                (99999999), #constructor vals
+                (), #funciton args
+                (Simulation_Service, 99999999, '', None, []) #expected state vals afterwards
             ),
         ]
         for test_case in test_cases:
@@ -27,32 +33,81 @@ class Simulation_Service_Test(unittest.TestCase):
             inputs_1 = test_case[0]
             func_args = test_case[1]
             expected_output = test_case[2]
-            fpath, mode, id = inputs_1
-            expected_object_type, expected_fpath, expected_can_read, expected_can_write, expected_is_open, expected_id = expected_output
-            new_stream_1 = class_type(fpath, mode, id)
+            id = inputs_1
+            expected_object_type, expected_id, expected_state_str, expected_config, expected_node_list = expected_output
+            new_object_1 = class_type(id)
 
             # perform functions to be tested
-            result = function_var(new_stream_1, *func_args)
+            # result = function_var(new_object_1, *func_args)
 
             # assert that actual is expected
-            self.assertEqual(expected_object_type, type(new_stream_1),
+            self.assertEqual(expected_object_type, type(new_object_1),
                              'Failed type checking of constructed object | got: {}, expected: {} for test{}'.format(
-                                 type(new_stream_1), expected_object_type, test_no))  # add assertion here
-            self.assertEqual(expected_fpath, new_stream_1.f_path,
-                             'Failed value checking of fpath | got: {}, expected: {} for test{}'.format(
-                                 new_stream_1.f_path, expected_fpath, test_no))  # add assertion here
-            self.assertEqual(expected_can_read, new_stream_1.can_read,
-                             'Failed value checking of can_read | got: {}, expected: {} for test{}'.format(
-                                 new_stream_1.can_read, expected_can_read, test_no))  # add assertion here
-            self.assertEqual(expected_can_write, new_stream_1.can_write,
-                             'Failed value checking of can_write | got: {}, expected: {} for test{}'.format(
-                                 new_stream_1.can_write, expected_can_write, test_no))  # add assertion here
-            self.assertEqual(expected_is_open, new_stream_1.file.closed,
-                             'Failed value checking of is_open | got: {}, expected: {} for test{}'.format(
-                                 new_stream_1.file.closed, expected_is_open, test_no))  # add assertion here
-            self.assertEqual(expected_id, new_stream_1.solution_id,
-                             'Failed value checking of log_id | got: {}, expected: {} for test{}'.format(
-                                 new_stream_1.solution_id, expected_id, test_no))  # add assertion here
+                                 type(new_object_1), expected_object_type, test_no))  # add assertion here
+            self.assertEqual(expected_id, new_object_1.sim_id,
+                             'Failed value checking of sim_id | got: {}, expected: {} for test{}'.format(
+                                 new_object_1.sim_id, expected_id, test_no))  # add assertion here
+            self.assertEqual(expected_state_str, new_object_1.sim_state_str,
+                             'Failed value checking of sim_state_str | got: {}, expected: {} for test{}'.format(
+                                 new_object_1.sim_state_str, expected_state_str, test_no))  # add assertion here
+            self.assertEqual(expected_config, new_object_1.sim_config,
+                             'Failed value checking of sim_config | got: {}, expected: {} for test{}'.format(
+                                 new_object_1.sim_config, expected_config, test_no))  # add assertion here
+            self.assertEqual(expected_node_list, new_object_1.node_list,
+                             'Failed value checking of node_list | got: {}, expected: {} for test{}'.format(
+                                 new_object_1.node_list, expected_node_list, test_no))  # add assertion here
+
+    # Test the create_node method
+    def test_Simulation_Service_create_node_state_tests(self):
+        # a test case is a set of two tuples - inputs, expected results
+        class_type = Simulation_Service
+        class_type_str = 'simulation-service'
+        fpath_func = 'create_node'
+        function_var = class_type.create_node()
+        test_type = 'state'
+        node1 =NW_Node('PC',[0,0,0,0],0.0,0.0)
+        node2 =NW_Node('Server',[1,1,1,1],1.0,1.0)
+        test_cases = [
+            ( #Test Case 1
+                (00000000), #constructor vals
+                (node1,), #funciton args
+                (Simulation_Service, 00000000, '', None, [node1]) #expected state vals afterwards
+            ),
+            ( #Test Case 2
+                (99999999), #constructor vals
+                (), #funciton args
+                (Simulation_Service, 99999999, '', None, []) #expected state vals afterwards
+            ),
+        ]
+        for test_case in test_cases:
+            # test setup
+            test_no = test_cases.index(test_case) + 1
+            inputs_1 = test_case[0]
+            func_args = test_case[1]
+            expected_output = test_case[2]
+            id = inputs_1
+            expected_object_type, expected_id, expected_state_str, expected_config, expected_node_list = expected_output
+            new_object_1 = class_type(id)
+
+            # perform functions to be tested
+            result = function_var(new_object_1, *func_args)
+
+            # assert that actual is expected
+            self.assertEqual(expected_object_type, type(new_object_1),
+                             'Failed type checking of constructed object | got: {}, expected: {} for test{}'.format(
+                                 type(new_object_1), expected_object_type, test_no))  # add assertion here
+            self.assertEqual(expected_id, new_object_1.sim_id,
+                             'Failed value checking of sim_id | got: {}, expected: {} for test{}'.format(
+                                 new_object_1.sim_id, expected_id, test_no))  # add assertion here
+            self.assertEqual(expected_state_str, new_object_1.sim_state_str,
+                             'Failed value checking of sim_state_str | got: {}, expected: {} for test{}'.format(
+                                 new_object_1.sim_state_str, expected_state_str, test_no))  # add assertion here
+            self.assertEqual(expected_config, new_object_1.sim_config,
+                             'Failed value checking of sim_config | got: {}, expected: {} for test{}'.format(
+                                 new_object_1.sim_config, expected_config, test_no))  # add assertion here
+            self.assertEqual(expected_node_list, new_object_1.node_list,
+                             'Failed value checking of node_list | got: {}, expected: {} for test{}'.format(
+                                 new_object_1.node_list, expected_node_list, test_no))  # add assertion here
 
 
 if __name__ == '__main__':

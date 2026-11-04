@@ -132,6 +132,7 @@ class NW_Node:
         :param other: Another NW_Node instance object to compare against this one
         :return: True if THIS NW_Node has an equal security_level than given NW_Node. Returns False otherwise.
         """
+        #TODO: Update __eq__ to actually check to see if two Nodes are the SAME, not just equal values of security_level
         if type(other) == NW_Node:
             if self.security_level == other.security_level:
                 return True
