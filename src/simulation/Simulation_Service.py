@@ -18,9 +18,13 @@ class Simulation_Service:
 
     def __del__(self):
         self.sim_id = -1
-        self.sim_state_str = ''
         self.sim_config = None
-        self.node_list = []
+        self.clear_nodes()
+
+    def clear_nodes(self):
+        self.node_list.clear()
+        self.sim_state_str = ''
+
 
     def create_node(self, new_node):
         """
