@@ -57,7 +57,6 @@ def _broadcast(event_type: str, data: dict) -> None:
 def health():
     return jsonify(status="ok", subscribers=len(_subscribers))
 
-
 @app.get("/events/stream")
 def stream():
     """

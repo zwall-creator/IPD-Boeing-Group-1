@@ -40,8 +40,6 @@ def exec_classical(nodes, links, devices):
                 occupying.append(x[d["id"], cable])
         model.AddAtMostOne(occupying)
 
-
-
     #gap is defined as risk - security_level
     gaps = {}
 
