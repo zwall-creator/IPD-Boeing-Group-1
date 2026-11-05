@@ -118,12 +118,12 @@ export function useEventSource() {
     }
   }, []);
 
-  const runSim = useCallback(async (solver = 'classical') => {
+  const runSim = useCallback(async (solver = 'classical', optParams = {}) => {
     try {
       const res = await fetch(`${BACKEND_URL}/simulation/run`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ solver }),
+        body: JSON.stringify({ solver, ...optParams }),
       });
       return res.ok;
     } catch {
@@ -133,5 +133,15 @@ export function useEventSource() {
 
   const clearEvents = useCallback(() => setEvents([]), []);
 
-  return { events, status, backendOk, clearEvents, emitEvent, runSim };
+  const checkQuantumStatus = useCallback(async () => {
+    try {
+      const res = await fetch(`${BACKEND_URL}/quantum/status`);
+      if (!res.ok) return null;
+      return await res.json();
+    } catch {
+      return null;
+    }
+  }, []);
+
+  return { events, status, backendOk, clearEvents, emitEvent, runSim, checkQuantumStatus };
 }

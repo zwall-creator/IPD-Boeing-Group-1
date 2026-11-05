@@ -34,6 +34,8 @@ services:
       - "8000:8000"
     volumes:
       - ./src/computation:/app
+    environment:
+      DATABASE_URL: postgresql://ipd:${POSTGRES_PASSWORD}@db:5432/ipd
     depends_on:
     #wont start up until the database is healthy
       db:
