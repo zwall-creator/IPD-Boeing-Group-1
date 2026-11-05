@@ -100,6 +100,7 @@ body, html {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
+  overflow-y: auto;
 }
 
 .workspace-sidebar h3 {
@@ -107,6 +108,28 @@ body, html {
   text-transform: uppercase;
   color: #94a3b8;
   letter-spacing: 0.05em;
+}
+
+.workspace-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.workspace-nav button {
+  border: 0;
+  border-radius: 4px;
+  padding: 0.55rem 0.65rem;
+  background: transparent;
+  color: #cbd5e1;
+  text-align: left;
+  cursor: pointer;
+}
+
+.workspace-nav button:hover,
+.workspace-nav button.active {
+  background: #334155;
+  color: #fff;
 }
 
 .control-group {
@@ -169,6 +192,12 @@ body, html {
   color: #64748b;
 }
 
+.canvas-title {
+  padding: 0.65rem 1rem;
+  color: #e2e8f0;
+  font-weight: 500;
+}
+
 .canvas-viewport {
   flex: 1;
   display: flex;
@@ -183,6 +212,27 @@ body, html {
 .canvas-placeholder, .metrics-placeholder {
   text-align: center;
   color: #64748b;
+}
+
+.utility-view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  max-width: 34rem;
+  padding: 2rem;
+  text-align: center;
+  color: #94a3b8;
+}
+
+.utility-view p {
+  color: #e2e8f0;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.utility-action {
+  margin-top: 0.75rem;
 }
 
 .app-footer {
@@ -254,4 +304,38 @@ body, html {
   border-radius: 4px;
   min-width: 2rem;
   text-align: center;
+}
+
+/* IBM Quantum status panel */
+.ibm-status {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 4px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.78rem;
+}
+
+.ibm-status__row {
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
+.ibm-status__row.online     { color: #4ade80; }
+.ibm-status__row.connecting { color: #facc15; }
+.ibm-status__row.offline    { color: #f87171; }
+
+.ibm-status__detail {
+  color: #94a3b8;
+  font-family: monospace;
+  font-size: 0.75rem;
+}
+
+.ibm-status__error {
+  color: #f87171;
+  font-size: 0.7rem;
+  line-height: 1.3;
+  word-break: break-word;
 }
