@@ -3,7 +3,7 @@
 @team: Boeing Group 1
 @contributors: [Zak Wallace]
 """
-from NW_Structure import *
+from src.simulation.NW_Structure import *
 class Simulation_Service:
     """
     Class to manage the service operations of a single simulation.
@@ -27,6 +27,7 @@ class Simulation_Service:
         """
         if type(new_node) == NW_Node:
             self.node_list.append(new_node)
+            #TODO: UPDATE SIMULATION STATE STRING AFTER MODIFICATION
         else:
             raise TypeError('new_node must be a NW_Node object')
 
@@ -69,6 +70,7 @@ class Simulation_Service:
             raise IndexError('No NW_Node found in this simulation with ip address: {}'.format(destination_ip))
         #create the connection between the two nodes
         src_node.add_connection(dest_node, cost, bandwidth, connection_type)
+        #TODO: UPDATE SIMULATION STATE STR AFTER MODIFICATION
 
     def update_sim(self):
         """
