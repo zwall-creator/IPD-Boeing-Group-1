@@ -37,7 +37,6 @@ services:
       - ./src/simulation:/shared:ro
     environment:
       PYTHONPATH: /shared
-    environment:
       DATABASE_URL: postgresql://ipd:${POSTGRES_PASSWORD}@db:5432/ipd
     depends_on:
     #wont start up until the database is healthy
