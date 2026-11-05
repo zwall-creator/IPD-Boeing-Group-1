@@ -53,15 +53,17 @@ class Simulation_Service:
                 return node
         return None
 
-    def connect_via_ip(self, source_ip, destination_ip, cost = 1, bandwidth = 1, connection_type = 'TCP'):
+    def connect_via_ip(self, source_ip, src_port, destination_ip, cost = 1, bandwidth = 1, connection_type = 'TCP'):
         """
         Function to create a new one-way connection between THIS NW_Node and another node on the network. Destination target node is determined by the given IP address (destination_ip)
+        :type src_port: int
         :type source_ip: list<int>
         :type destination_ip: list<int>
         :type cost: int
         :type bandwidth: int
         :type connection_type: str
 
+        :param src_port: source port number
         :param source_ip: List of four integer values (0..255) that indicate a unique identifier for the source node
         :param destination_ip: List of four integer values (0..255, inclusive) that indicate a unique identifier for the target node
         :param cost: cost for sending data across this connection
@@ -71,6 +73,8 @@ class Simulation_Service:
         :raises: TypeError if source_ip and destination_ip do not exist in the simulation
         """
         #search the network for Nodes with given IP addresses
+        print(source_ip)
+        print(destination_ip)
         src_node = self.search_for_node(source_ip)
         dest_node = self.search_for_node(destination_ip)
         #if a given IP address is not present in the simulation, throw IndexErrors
@@ -79,7 +83,15 @@ class Simulation_Service:
         if dest_node is None:
             raise IndexError('No NW_Node found in this simulation with ip address: {}'.format(destination_ip))
         #create the connection between the two nodes
-        src_node.add_connection(dest_node, cost, bandwidth, connection_type)
+
+        print(src_node)
+        print(dest_node)
+        dest_node = None
+        print(src_node)
+        print(dest_node)
+        src_node.add_connection(destination_ip, cost, bandwidth, connection_type, src_port)
+        print(src_node)
+        print(dest_node)
         #TODO: UPDATE SIMULATION STATE STR AFTER MODIFICATION
 
     def update_sim(self):
@@ -136,10 +148,12 @@ class Simulation_Service:
         for node_entry in node_list:
 
             #TODO: Implement boolean logic to extract NW_Node and NW_Sec_Device uniquely
+            node_data = node_entry.split('%')
+            
             object_class = NW_Node
 
             # Split at syntax level 3 for node data
-            device_type,device_ip_list,base_sec_level,security_level,risk_level,connections = node_entry.split('%')
+            device_type,device_ip_list,base_sec_level,security_level,risk_level,connections = node_data
             base_sec_level = float(base_sec_level)
             security_level = float(security_level)
             risk_level = float(risk_level)

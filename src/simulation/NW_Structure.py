@@ -208,7 +208,10 @@ class NW_Node:
             raise ValueError('source_port should be a positive integer')
         if not self.is_open_port(source_port):
             raise ValueError('source_port should be a currently open port')
-        self.connections.append((destination_ip, cost, bandwidth, connection_type, source_port))
+        new_connections = self.connections.copy()
+        new_connections.append((destination_ip, cost, bandwidth, connection_type, source_port))
+        self.connections = new_connections
+        # self.connections.append((destination_ip, cost, bandwidth, connection_type, source_port))
 
     def remove_connection(self, source_port):
         if type(source_port) != int:
