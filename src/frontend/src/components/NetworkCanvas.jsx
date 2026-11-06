@@ -8,6 +8,7 @@ import {
 import cytoscape from "cytoscape";
 import { DEVICE_TYPES } from "../deviceIcons";
 import { MODES } from "../graph/networkRules";
+import { LAYOUT_PRESETS } from "../graph/layoutPresets";
 import NodePropertyPanel from "./NodePropertyPanel";
 import "./NetworkCanvas.css";
 
@@ -25,41 +26,6 @@ const TEXT = "#1f2933";
 // TODO: build derived fields (security_level, connections, destination IP) for the backend
 const NODE_FIELDS = { device_ip: null, base_sec_level: null, risk_level: null };
 const EDGE_FIELDS = { cost: null, bandwidth: null, connection_type: null };
-
-const LAYOUT_PRESETS = {
-  lan: {
-    label: 'Office LAN',
-    nodes: [
-      ['Router', 'Gateway', 220, 190],
-      ['Switch', 'Core Switch', 430, 190],
-      ['PC', 'Workstation 1', 650, 110],
-      ['PC', 'Workstation 2', 650, 270],
-      ['Server', 'File Server', 430, 360],
-    ],
-    edges: [[0, 1], [1, 2], [1, 3], [1, 4]],
-  },
-  dmz: {
-    label: 'DMZ',
-    nodes: [
-      ['Router', 'Internet Router', 150, 210],
-      ['Switch', 'DMZ Switch', 360, 210],
-      ['Server', 'Web Server', 600, 120],
-      ['Server', 'Mail Server', 600, 300],
-    ],
-    edges: [[0, 1], [1, 2], [1, 3]],
-  },
-  wan: {
-    label: 'Branch WAN',
-    nodes: [
-      ['Router', 'HQ Router', 180, 220],
-      ['Router', 'Branch Router', 520, 120],
-      ['Router', 'Remote Router', 520, 320],
-      ['Switch', 'HQ Switch', 820, 220],
-      ['Server', 'Application Server', 1030, 220],
-    ],
-    edges: [[0, 1], [0, 2], [0, 3], [3, 4]],
-  },
-}
 
 const STYLE = [
   {
@@ -204,7 +170,8 @@ export default function NetworkCanvas({
   }
 
   // App's sidebar buttons call deleteSelected(), isEmpty(), or clear()
-  useImperativeHandle(ref, () => ({ deleteSelected, isEmpty, clear }));
+  // App's layout buttons call loadPreset(presetId)
+  useImperativeHandle(ref, () => ({ deleteSelected, isEmpty, clear, loadPreset }));
 
   const resetInteraction = useEffectEvent(() => {
     cyRef.current.elements().unselect();
@@ -343,14 +310,6 @@ export default function NetworkCanvas({
         role="application"
         aria-label="Network canvas"
       />
-      <div className="network-canvas__presets" role="toolbar" aria-label="Network layout presets">
-        <span>Layouts</span>
-        {Object.entries(LAYOUT_PRESETS).map(([id, preset]) => (
-          <button key={id} type="button" onClick={() => loadPreset(id)}>
-            {preset.label}
-          </button>
-        ))}
-      </div>
       <span className="network-canvas__hint" role="status">
         {hint}
       </span>

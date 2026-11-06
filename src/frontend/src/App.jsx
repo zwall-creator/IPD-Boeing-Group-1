@@ -144,6 +144,11 @@ export default function App() {
     canvasRef.current?.deleteSelected();
   };
 
+  // Layout Preset Options: replace current canvas with preset network
+  const handleLoadPreset = (presetId) => {
+    canvasRef.current?.loadPreset(presetId);
+  }
+
   // ------------------------------------------------------------------
   // Status badge
   // ------------------------------------------------------------------
@@ -238,6 +243,7 @@ export default function App() {
               onModeChange={setGraphMode}
               onDeleteSelected={handleDeleteSelected}
               onReset={handleReset}
+              onLoadPreset={handleLoadPreset}
             />
           </div>
 

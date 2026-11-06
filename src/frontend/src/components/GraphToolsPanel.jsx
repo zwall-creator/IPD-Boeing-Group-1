@@ -1,4 +1,5 @@
 import { MODES } from "../graph/networkRules";
+import {LAYOUT_PRESETS } from "../graph/layoutPresets";
 import "./GraphToolsPanel.css";
 
 /**
@@ -10,6 +11,7 @@ export default function GraphToolsPanel({
   onModeChange,
   onDeleteSelected,
   onReset,
+  onLoadPreset
 }) {
   return (
     <div className="graph-tools" role="group" aria-label="Graph tools">
@@ -35,6 +37,19 @@ export default function GraphToolsPanel({
       <button type="button" className="btn-secondary" onClick={onReset}>
         Reset Canvas
       </button>
+      {/* Starter networks */}
+      <div className="graph-tools__presets" role="group" aria-label="Network presets">
+        <span className="graph-tools__heading">Network Presets</span>
+        {Object.entries(LAYOUT_PRESETS).map(([id, preset]) => (
+          <button type="button"
+            key={id} 
+            className="btn-secondary"
+            onClick={() => onLoadPreset(id)} 
+          >
+            {preset.label}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }

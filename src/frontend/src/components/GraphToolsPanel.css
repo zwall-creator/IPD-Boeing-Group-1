@@ -25,3 +25,16 @@
   outline: 2px solid var(--vt-orange);
   outline-offset: 2px;
 }
+
+/* Layout presets */
+.graph-tools__presets {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.graph-tools__heading {
+  font-size: 0.85rem;
+  color: #cbd5e1;
+}

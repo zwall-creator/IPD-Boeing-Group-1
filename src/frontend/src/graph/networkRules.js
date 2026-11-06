@@ -1,7 +1,8 @@
 /**
- * networkRules.js: shared network-editor constants and rules
+ * Shared network-editor constants and rules
  * only MODES lives here, shared by GraphToolsPanel (button labels)
- * and NetworkCanvas (hint text). The add/delete/edge rules move in later.
+ * and NetworkCanvas (hint text)
+ * The add/delete/edge rules move in later
  */
 export const MODES = [
   {
