@@ -292,4 +292,61 @@ class NW_Sec_Device(NW_Node):
         retstr = super().__str__() + ', sec_modifier: {}, covered_devices: {}'.format(self.sec_modifier, self.covered_devices)
         return retstr
 
+    @override
+    def get_state_str(self):
+        """
+        Creates a universally-designed string representation of the state of this NW_Sec_Device for use with external project components
+        \n example: \n'PC','255.255.255.255',0.0,1.0,2.0,[(0.0.0.0,1,1,'TCP',24),(1.1.1.1,2,2,'UDP',80)];
+        \nThe semicolon acts as the indicator of the end of this node's state string.
+        \n NOTE: any value that is NONE or NULL will be represented with the null char ('\\\\0').
+        :return: string representation of this NW_Node
+        """
+        #TODO: Implement exchanging any NONE or NULL values for the null character
+        coverages = '['
+        if len(self.covered_devices) == 0:
+            coverages += ']'
+        for i in range(len(self.covered_devices)):
+            coverage = self.covered_devices[i]
+            coverages += '[{}@{}@{}@{}]'.format(coverage[0], coverage[1], coverage[2], coverage[3])
+            if i != len(self.covered_devices) - 1:
+                coverages += '&'
+            else:
+                coverages += ']'
+        #obtaining string representation of all connections first
+        connections = '['
+        if len(self.connections) == 0:
+            connections += ']'
+        for i in range(len(self.connections)):
+            connection = self.connections[i]
+            connections += ('([{}={}={}={}]@'#IP addr
+                            '{}@'#cost
+                            '{}@'#bandwidth
+                            '{}@'#connection type
+                            '{})'#source port number
+                            ).format(connection[0][0], connection[0][1], connection[0][2], connection[0][3],
+                                     connection[1],
+                                     connection[2],
+                                     connection[3],connection[4])
+            if i != len(self.connections) - 1:
+                connections += '&'
+            else:
+                connections += ']'
+        #TODO: Implement obtaining the covered devices string part of the state str
+        #return the state string of this node
+        return ('{}%'#device type
+                '[{}&{}&{}&{}]%'#ip address
+                '{}%'#base_security_level
+                '{}%'#current_security_level
+                '{}%'#risk_level
+                '{}%'#sec_modifier
+                '{}%'#covered_devices
+                '{}'#connections list
+                ).format(self.device_type,
+                         self.device_ip[0],self.device_ip[1],self.device_ip[2],self.device_ip[3],
+                         self.base_sec_level,
+                         self.security_level,
+                         self.risk_level,
+                         self.sec_modifier,
+                         coverages,
+                         connections)
 
