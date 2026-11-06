@@ -2,10 +2,7 @@ import { MODES } from "../graph/networkRules";
 import "./GraphToolsPanel.css";
 
 /**
- * GraphToolsPanel: sidebar controls for the network canvas (issue #37).
- * Replaces the toolbar that sat on the canvas. Presentational component:
- * no state; App passes values in as props and gets clicks back via callbacks.
- * AI-assisted: drafted with Claude, reviewed by Hudson.
+ * GraphToolsPanel: sidebar controls for the network canvas
  */
 export default function GraphToolsPanel({
   mode,
