@@ -3,18 +3,28 @@
 @team: Boeing Group 1
 @contributors: [Zak Wallace]
 """
-from NW_Structure import *
+from src.simulation.NW_Structure import *
 class Simulation_Service:
     """
     Class to manage the service operations of a single simulation.
     Simulation_Service uses an Observer structure: updates occur when prompted by other classes
 
     """
-    def __init__(self, sim_id, sim_state_str = '', sim_config_fpath = None):
+    def __init__(self, sim_id, node_list = []):
         self.sim_id = sim_id
-        self.sim_state_str = sim_state_str
-        self.sim_config_fpath = sim_config_fpath
-        self.node_list = []
+        self.sim_state_str = ''
+        self.sim_config = None
+        self.node_list = node_list
+
+    def __del__(self):
+        self.sim_id = -1
+        self.sim_config = None
+        self.clear_nodes()
+
+    def clear_nodes(self):
+        self.node_list.clear()
+        self.sim_state_str = ''
+
 
     def create_node(self, new_node):
         """
@@ -27,6 +37,7 @@ class Simulation_Service:
         """
         if type(new_node) == NW_Node:
             self.node_list.append(new_node)
+            #TODO: UPDATE SIMULATION STATE STRING AFTER MODIFICATION
         else:
             raise TypeError('new_node must be a NW_Node object')
 
@@ -42,15 +53,17 @@ class Simulation_Service:
                 return node
         return None
 
-    def connect_via_ip(self, source_ip, destination_ip, cost = 1, bandwidth = 1, connection_type = 'TCP'):
+    def connect_via_ip(self, source_ip, src_port, destination_ip, cost = 1, bandwidth = 1, connection_type = 'TCP'):
         """
         Function to create a new one-way connection between THIS NW_Node and another node on the network. Destination target node is determined by the given IP address (destination_ip)
+        :type src_port: int
         :type source_ip: list<int>
         :type destination_ip: list<int>
         :type cost: int
         :type bandwidth: int
         :type connection_type: str
 
+        :param src_port: source port number
         :param source_ip: List of four integer values (0..255) that indicate a unique identifier for the source node
         :param destination_ip: List of four integer values (0..255, inclusive) that indicate a unique identifier for the target node
         :param cost: cost for sending data across this connection
@@ -60,6 +73,8 @@ class Simulation_Service:
         :raises: TypeError if source_ip and destination_ip do not exist in the simulation
         """
         #search the network for Nodes with given IP addresses
+        print(source_ip)
+        print(destination_ip)
         src_node = self.search_for_node(source_ip)
         dest_node = self.search_for_node(destination_ip)
         #if a given IP address is not present in the simulation, throw IndexErrors
@@ -68,7 +83,16 @@ class Simulation_Service:
         if dest_node is None:
             raise IndexError('No NW_Node found in this simulation with ip address: {}'.format(destination_ip))
         #create the connection between the two nodes
-        src_node.add_connection(dest_node, cost, bandwidth, connection_type)
+
+        print(src_node)
+        print(dest_node)
+        dest_node = None
+        print(src_node)
+        print(dest_node)
+        src_node.add_connection(destination_ip, cost, bandwidth, connection_type, src_port)
+        print(src_node)
+        print(dest_node)
+        #TODO: UPDATE SIMULATION STATE STR AFTER MODIFICATION
 
     def update_sim(self):
         """
@@ -82,15 +106,19 @@ class Simulation_Service:
         """
         Function to get the state string of the entire simulation.
         \n example of state string syntax: \n
-        '01234567,../data/configs/01234567config.txt,[PC,255.255.255.255,0.0,1.0,2.0,[(0.0.0.0,1,1,TCP),(1.1.1.1,2,2,UDP);Server,0.0.0.0,0.0,0.0,3.0,[(255.255.255.255,30,45,UDP)];]'
+        '01234567#../data/configs/01234567config.txt#[PC,[255,255,255,255],0.0,1.0,2.0,[([0,0,0,0],1,1,TCP),([1,1,1,1],2,2,UDP)];Server,[0,0,0,0],0.0,0.0,3.0,[([255,255,255,255],30,45,UDP)];]'
         :return: a string instance of the simulation's state string
         """
         # TODO: Add implementation to replace any NONE or NULL values with null character ('\0')
         state = ''
-        state += str(self.sim_id) + ','
-        state += str(self.sim_config_fpath) + ',['
-        for node in self.node_list:
+        state += str(self.sim_id) + '#'
+        state += str(self.sim_config_fpath) + '#['
+
+        for i in range(len(self.node_list)):
+            node = self.node_list[i]
             state += node.get_state_str()
+            if i != len(self.node_list) - 1:
+                state += ';'
         state += ']'
         return state
 
@@ -100,4 +128,77 @@ class Simulation_Service:
         \nNOTE: this will replace the current data for this simulation, so any unsaved changes will be lost!
         :param state_string: string instance of a simulation's state string
         """
-        raise NotImplemented
+
+        if type(state_string) != str:
+            raise TypeError('state_string must be a string')
+
+        # Split at syntax level 1
+        sim_id, config, node_list = state_string.split('#')
+        if sim_id.isnumeric():
+            sim_id = int(sim_id)
+            self.sim_id = sim_id
+            # TODO: update self.sim_id with extracted id
+
+        #TODO: Implement Config support
+
+        #collect formatted data for this sim's nodes
+        ret_nodes = []
+        # Split at syntax level 2 for node_list
+        node_list = node_list.split(';')
+        for node_entry in node_list:
+            # Split at syntax level 3 for node data
+            #TODO: Implement boolean logic to extract NW_Node and NW_Sec_Device uniquely
+            node_data = node_entry.split('%')
+            object_class = object
+            device_type, device_ip_list, base_sec_level, security_level, risk_level, sec_modifier, covered_devices, connections = None
+            if len(node_data) == 6:
+                object_class = NW_Node
+                device_type, device_ip_list, base_sec_level, security_level, risk_level, connections = node_data
+            if len(node_data) == 8:
+                object_class = NW_Sec_Device
+                device_type, device_ip_list, base_sec_level, security_level, risk_level, sec_modifier, covered_devices, connections = node_data
+                sec_modifier = float(sec_modifier)
+
+
+
+
+            base_sec_level = float(base_sec_level)
+            security_level = float(security_level)
+            risk_level = float(risk_level)
+
+            # Split at syntax level 4 for node IP address and coverages
+            device_ip_list = device_ip_list.split('&')
+            device_ip = [int(device_ip_list[0]), int(device_ip_list[1]), int(device_ip_list[2]), int(device_ip_list[3])]
+            covered_device_ips = None
+            for coverage_entry in covered_devices.split('&'):
+                #split at syntax level 5 for individual ips that are covered
+                coverage_entry = coverage_entry.split('@')
+                covered_ip = [int(coverage_entry[0]), int(coverage_entry[1]), int(coverage_entry[2]), int(coverage_entry[3])]
+
+            #collect formated data for this node's connections
+            ret_connections = []
+            # Split at syntax level 4 for node connections
+            for connection_entry in connections.split('&'):
+
+                # Split at syntax level 5 for connection details
+                connection_ip_list,cost,bandwidth,connection_type,source_port = connection_entry.split('@')
+                cost = int(cost)
+                bandwidth = int(bandwidth)
+                source_port = int(source_port)
+
+                # Split at syntax level 6 for connection's destination IP address
+                connection_ip_list = connection_ip_list.split('=')
+                connection_ip = [int(connection_ip_list[0]), int(connection_ip_list[1]), int(connection_ip_list[2]), int(connection_ip_list[3])]
+
+                ret_connections.append((connection_ip,cost,bandwidth,connection_type,source_port))
+            constructor_args = [device_type,device_ip,base_sec_level,risk_level,ret_connections, security_level]
+            if covered_device_ips is not None:
+                constructor_args += covered_device_ips#TODO: Fix constructor args ordering
+
+            ret_nodes.append(object_class(*constructor_args))
+        self.node_list = ret_nodes
+        self.sim_config_fpath = config
+        new_state_str = self.get_sim_state()
+        if new_state_str != state_string:
+            raise ValueError('New simulation state string\n{}\n does not match the given state string\n{}\n'.format(new_state_str,state_string))
+        self.sim_state_str = new_state_str
