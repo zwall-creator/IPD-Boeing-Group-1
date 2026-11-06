@@ -112,7 +112,7 @@ class Simulation_Service:
         # TODO: Add implementation to replace any NONE or NULL values with null character ('\0')
         state = ''
         state += str(self.sim_id) + '#'
-        state += str(self.sim_config_fpath) + '#['
+        state += str(self.sim_config) + '#['
 
         for i in range(len(self.node_list)):
             node = self.node_list[i]
@@ -147,7 +147,7 @@ class Simulation_Service:
         node_list = node_list.split(';')
         for node_entry in node_list:
             # Split at syntax level 3 for node data
-            #TODO: Implement boolean logic to extract NW_Node and NW_Sec_Device uniquely
+            #Implement boolean logic to extract NW_Node and NW_Sec_Device uniquely
             node_data = node_entry.split('%')
             object_class = object
             device_type, device_ip_list, base_sec_level, security_level, risk_level, sec_modifier, covered_devices, connections = None
@@ -192,12 +192,12 @@ class Simulation_Service:
 
                 ret_connections.append((connection_ip,cost,bandwidth,connection_type,source_port))
             constructor_args = [device_type,device_ip,base_sec_level,risk_level,ret_connections, security_level]
-            if covered_device_ips is not None:
-                constructor_args += covered_device_ips#TODO: Fix constructor args ordering
+            if covered_device_ips is not None and sec_modifier is not None:
+                constructor_args = [device_type,device_ip,base_sec_level,risk_level,sec_modifier,covered_device_ips,ret_connections, security_level]
 
             ret_nodes.append(object_class(*constructor_args))
         self.node_list = ret_nodes
-        self.sim_config_fpath = config
+        self.sim_config = config
         new_state_str = self.get_sim_state()
         if new_state_str != state_string:
             raise ValueError('New simulation state string\n{}\n does not match the given state string\n{}\n'.format(new_state_str,state_string))
