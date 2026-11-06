@@ -234,7 +234,7 @@ class NW_Node:
 
 class NW_Sec_Device(NW_Node):
 
-    def __init__(self, device_type, device_ip, base_sec_level, risk_level, sec_modifier, covered_devices = [], connections = []):
+    def __init__(self, device_type, device_ip, base_sec_level, risk_level, sec_modifier, covered_devices = [], connections = [], current_security_level = None):
         """
         :type device_type: str
         :type device_ip: list<int>
@@ -249,7 +249,7 @@ class NW_Sec_Device(NW_Node):
         :param base_sec_level: a float that acts as the default value for this node's security_level field
         :param risk_level: a float that acts as the target value that this node's security_level should be
         :param sec_modifier: a float value that is added to the security_level of all nodes covered by this security device
-        :param covered_devices: a list of tuples that contain the memory address and ip address of another node covered by this security device
+        :param covered_devices: a list of tuples that contain the ip  address of another node covered by this security device
         :param connections: a list of tuples that contain all info regarding a connection from this node to another node on the network
         """
         if type(device_type) != str:
@@ -279,7 +279,7 @@ class NW_Sec_Device(NW_Node):
             raise TypeError('connections should be a list')
 
 
-        NW_Node.__init__(self, device_type, device_ip, base_sec_level, risk_level, connections)
+        NW_Node.__init__(self, device_type, device_ip, base_sec_level, risk_level, connections,current_security_level)
         self.sec_modifier = sec_modifier
         self.covered_devices = covered_devices
 

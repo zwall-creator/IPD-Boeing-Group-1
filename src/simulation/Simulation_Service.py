@@ -146,21 +146,34 @@ class Simulation_Service:
         # Split at syntax level 2 for node_list
         node_list = node_list.split(';')
         for node_entry in node_list:
-
+            # Split at syntax level 3 for node data
             #TODO: Implement boolean logic to extract NW_Node and NW_Sec_Device uniquely
             node_data = node_entry.split('%')
-            
-            object_class = NW_Node
+            object_class = object
+            device_type, device_ip_list, base_sec_level, security_level, risk_level, sec_modifier, covered_devices, connections = None
+            if len(node_data) == 6:
+                object_class = NW_Node
+                device_type, device_ip_list, base_sec_level, security_level, risk_level, connections = node_data
+            if len(node_data) == 8:
+                object_class = NW_Sec_Device
+                device_type, device_ip_list, base_sec_level, security_level, risk_level, sec_modifier, covered_devices, connections = node_data
+                sec_modifier = float(sec_modifier)
 
-            # Split at syntax level 3 for node data
-            device_type,device_ip_list,base_sec_level,security_level,risk_level,connections = node_data
+
+
+
             base_sec_level = float(base_sec_level)
             security_level = float(security_level)
             risk_level = float(risk_level)
 
-            # Split at syntax level 4 for node IP address
+            # Split at syntax level 4 for node IP address and coverages
             device_ip_list = device_ip_list.split('&')
             device_ip = [int(device_ip_list[0]), int(device_ip_list[1]), int(device_ip_list[2]), int(device_ip_list[3])]
+            covered_device_ips = None
+            for coverage_entry in covered_devices.split('&'):
+                #split at syntax level 5 for individual ips that are covered
+                coverage_entry = coverage_entry.split('@')
+                covered_ip = [int(coverage_entry[0]), int(coverage_entry[1]), int(coverage_entry[2]), int(coverage_entry[3])]
 
             #collect formated data for this node's connections
             ret_connections = []
@@ -178,7 +191,10 @@ class Simulation_Service:
                 connection_ip = [int(connection_ip_list[0]), int(connection_ip_list[1]), int(connection_ip_list[2]), int(connection_ip_list[3])]
 
                 ret_connections.append((connection_ip,cost,bandwidth,connection_type,source_port))
-            constructor_args = (device_type,device_ip,base_sec_level,risk_level,ret_connections, security_level)
+            constructor_args = [device_type,device_ip,base_sec_level,risk_level,ret_connections, security_level]
+            if covered_device_ips is not None:
+                constructor_args += covered_device_ips#TODO: Fix constructor args ordering
+
             ret_nodes.append(object_class(*constructor_args))
         self.node_list = ret_nodes
         self.sim_config_fpath = config
