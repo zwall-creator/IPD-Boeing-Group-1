@@ -185,6 +185,18 @@ export default function NetworkCanvas({
     cyRef.current.reset();
   }
 
+  // Plain copy of a node for the panel, plus its connections
+  function snapshotNode(node) {
+    const connections = node.neighborhood("node").map((other) => ({
+      id: other.id(),
+      label: other.data("label"),
+      outgoing: node.edgesTo(other).nonempty(), // edge from this node to the other
+      incoming: other.edgesTo(node).nonempty(), // edge from the other node to this one
+    }));
+    return { ...node.data(), connections };
+  }
+
+
   // Panel close button
   function closePanel() {
     cyRef.current.elements().unselect();
@@ -205,7 +217,7 @@ export default function NetworkCanvas({
     label: autoLabel && typeChanged ? nextDefaultLabel(values.device_type) : values.label,
   });
     // Refresh panel's copy
-    setSelectedNode({ ...node.data() });
+    setSelectedNode(snapshotNode(node));
   }
 
   // App's sidebar buttons call deleteSelected(), isEmpty(), or clear()
@@ -225,7 +237,7 @@ export default function NetworkCanvas({
     // Check if only one node is selected
     const isOneNode = selected.length === 1 && selected[0].isNode();
     // Panel shows only if one node is selected
-    setSelectedNode(isOneNode ? { ...selected.data() } : null);
+    setSelectedNode(isOneNode ? snapshotNode(selected[0]): null);
   });
 
   const handleTap = useEffectEvent((evt) => {

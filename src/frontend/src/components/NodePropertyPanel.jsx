@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Pencil, X } from "lucide-react";
-import { formatFieldValue, checkNodeName } from "../graph/networkRules";
+import { formatFieldValue, checkNodeName, describeConnection } from "../graph/networkRules";
 import { DEVICE_TYPES } from "../deviceIcons";
 import "./NodePropertyPanel.css";
 
@@ -115,9 +115,30 @@ export default function NodePropertyPanel({ node, onClose, onSave }) {
                 node.device_type
               )}
             </dd>
+            <dt>IP address:</dt>
+            <dd>{formatFieldValue(node.device_ip)}</dd>
             <dt>Security level:</dt>
             {/* TODO: make editable */}
             <dd>{formatFieldValue(node.base_sec_level)}</dd>
+            <dt>Risk level:</dt>
+            <dd>{formatFieldValue(node.risk_level)}</dd>
+            <dt>Connections:</dt>
+            <dd>{node.connections.length === 0 ? (
+              "None"
+            ) : ( 
+              <ul className="node-panel__connections">
+                { node.connections.map((connection) => {
+                  const { arrow, words } = describeConnection(connection);
+                  return (
+                    <li key={connection.id}>
+                      <span className="node-panel__arrow" aria-hidden="true">{arrow}</span>
+                      <span className="visually-hidden">{words}</span> {connection.label}
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+            </dd>
           </dl>
           {isEditing && (
             <div className="node-panel__actions">

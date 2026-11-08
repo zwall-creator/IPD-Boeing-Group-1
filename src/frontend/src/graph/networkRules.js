@@ -2,7 +2,8 @@
  * Shared network-editor constants and rules
  * MODES: shared by GraphToolsPanel (button labels) and NetworkCanvas (hint text)
  * isNotSet / formatFieldValue: shared by NodePropertyPanel and EdgePropertyPanel
- * checkNodeName: shared by NodePropertyPanel
+ * checkNodeName: shared with NodePropertyPanel
+ * describeConnection: used by NodePropertyPanel
  */
 export const MODES = [
   {
@@ -35,4 +36,15 @@ export function checkNodeName(name) {
     return "Name can't be empty";
   }
   return null;
+}
+
+// Display connection and direction
+export function describeConnection({ outgoing, incoming }) {
+  if (outgoing && incoming) {
+    return { arrow: "↔", words: "both ways with" };
+  }
+  if (outgoing) {
+    return { arrow: "→", words: "to" };
+  }
+  return { arrow: "←", words: "from" };
 }
