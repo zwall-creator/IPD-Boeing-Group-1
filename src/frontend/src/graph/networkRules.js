@@ -2,6 +2,7 @@
  * Shared network-editor constants and rules
  * MODES: shared by GraphToolsPanel (button labels) and NetworkCanvas (hint text)
  * isNotSet / formatFieldValue: shared by NodePropertyPanel and EdgePropertyPanel
+ * checkNodeName: shared by NodePropertyPanel
  */
 export const MODES = [
   {
@@ -25,4 +26,13 @@ export function isNotSet(value) {
 // Text for property panels: "Not set" if not set, else value as text
 export function formatFieldValue(value) {
   return isNotSet(value) ? "Not set" : String(value);
+}
+
+// Error message for node name being empty
+// Null = valid name
+export function checkNodeName(name) {
+  if (name.trim() === "") {
+    return "Name can't be empty";
+  }
+  return null;
 }

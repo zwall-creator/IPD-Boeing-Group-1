@@ -29,6 +29,12 @@
   gap: 4px;
 }
 
+.node-panel__error {
+  margin: 0;
+  color: var(--error);
+  font-size: 12px;
+}
+
 .node-panel__name-input {
   flex: 1;
   min-width: 0;
@@ -39,6 +45,10 @@
   font: inherit;
   font-size: 16px;
   font-weight: 600;
+}
+
+.node-panel__name-input[aria-invalid="true"] {
+  border-color: var(--error);
 }
 
 .node-panel__icon-button {
@@ -53,7 +63,7 @@
 }
 
 .node-panel__icon-button:hover {
-  background: #f3e8ec;
+  background: var(--vt-maroon-tint);
   color: var(--vt-maroon);
 }
 
@@ -124,7 +134,7 @@
 }
 
 .node-panel__actions button[type="submit"]:hover {
-  background: #6e1935;
+  background: var(--vt-maroon-dark);
 }
 
 .node-panel__actions button:focus-visible,

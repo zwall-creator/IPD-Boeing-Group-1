@@ -181,6 +181,14 @@ export default function NetworkCanvas({
     cyRef.current.elements().unselect();
   }
 
+  // Panel Save Changes button: writes new values onto cytoscape node
+  function saveNode(nodeId, values) {
+    const node = cyRef.current.getElementById(nodeId);
+    node.data(values);
+    // Refresh panel's copy
+    setSelectedNode({ ...node.data() });
+  }
+
   // App's sidebar buttons call deleteSelected(), isEmpty(), or clear()
   // App's layout buttons call loadPreset(presetId)
   useImperativeHandle(ref, () => ({ deleteSelected, isEmpty, clear, loadPreset }));
@@ -330,6 +338,7 @@ export default function NetworkCanvas({
           key={selectedNode.id}
           node={selectedNode}
           onClose={closePanel}
+          onSave={(values) => saveNode(selectedNode.id, values)}
         />
       )}
       {typeMenu && (

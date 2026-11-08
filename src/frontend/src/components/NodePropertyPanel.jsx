@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Pencil, X } from "lucide-react";
-import { formatFieldValue } from "../graph/networkRules";
+import { formatFieldValue, checkNodeName } from "../graph/networkRules";
 import { DEVICE_TYPES } from "../deviceIcons";
 import "./NodePropertyPanel.css";
 
@@ -17,17 +17,25 @@ export default function NodePropertyPanel({ node, onClose, onSave }) {
   const [draftType, setDraftType] = useState(node.device_type);
   // Draft name for editing mode
   const [draftLabel, setDraftLabel] = useState(node.label);
+  // Error message for name field
+  const [nameError, setNameError] = useState(null);
 
   // Edit: start the form from node's current value
   function startEditing() {
     setDraftType(node.device_type);
     setDraftLabel(node.label);
+    setNameError(null);
     setIsEditing(true);
   }
 
   // Save change: sned the new value to NetworkCanvas, back to view mode
   function handleSubmit(event) {
     event.preventDefault();
+    const error = checkNodeName(draftLabel);
+    if (error) {
+      setNameError(error);
+      return
+    }
     onSave({ device_type: draftType, label: draftLabel.trim() });
     setIsEditing(false);
   }
@@ -42,7 +50,12 @@ export default function NodePropertyPanel({ node, onClose, onSave }) {
               aria-label="Node name"
               autoFocus
               value={draftLabel}
-              onChange={(event) => setDraftLabel(event.target.value)}
+              aria-invalid={nameError !== null}
+              aria-describedby={nameError ? "node-name-error" : undefined}
+              onChange={(event) => {
+                setDraftLabel(event.target.value);
+                setNameError(null); // hide error when typing
+              }}
             />
           ) : (
             <h3 className="node-panel__title">{node.label}</h3>
@@ -67,6 +80,11 @@ export default function NodePropertyPanel({ node, onClose, onSave }) {
             <X size={16} aria-hidden="true" />
           </button>
         </div>
+        {nameError && (
+          <p id="node-name-error" className="node-panel__error" role="alert">
+            {nameError}
+          </p>
+        )}
           <dl className="node-panel__fields">
             <dt>Device type:</dt>
             <dd>
