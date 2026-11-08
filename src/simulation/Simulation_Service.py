@@ -41,6 +41,21 @@ class Simulation_Service:
         else:
             raise TypeError('new_node must be a NW_Node object')
 
+    def create_security_node(self, new_node):
+        """
+        Given a NW_Sec_Device object, add that node to the simulation
+        :type new_node: NW_Node
+
+        :param new_node: NW_Sec_Device object to add to simulation
+        :return: True if successful, False otherwise
+        :raises: TypeError
+        """
+        if type(new_node) == NW_Sec_Device:
+            self.node_list.append(new_node)
+            #TODO: UPDATE SIMULATION STATE STRING AFTER MODIFICATION
+        else:
+            raise TypeError('new_node must be a NW_Sec_Device object')
+
     def search_for_node(self, node_ip):
         """
         Searches for the first instance of a NW_Node object in the simulation with the given IP address
