@@ -170,6 +170,16 @@ def run_simulation():
         "bandwidthWeight": body.get("bandwidthWeight", 50),
         "riskThreshold":   body.get("riskThreshold", 30),
     }
+    sim = None
+
+    if solver == "classical":
+        if not network_payload["topology"]["nodes"]:
+            return jsonify(ok=False, error="topology has no nodes"), 400
+        try:
+            sim = Simulation_Service("frontend")
+            sim.extract_from_state_string(network_payload["state_string"])
+        except Exception as exc:
+            return jsonify(ok=False, error=f"could not load network: {exc}"), 500
 
     def _run_classical():
         run_id = db.insert_run("classical", opt_params)
@@ -178,20 +188,31 @@ def run_simulation():
             "topology": network_payload["topology"],
             "state_string": network_payload["state_string"],
         })
-        steps = [
-            "Initialising problem graph…",
-            "Building constraint model…",
-            f"Applying weights — sec:{opt_params['securityWeight']} cost:{opt_params['costWeight']} bw:{opt_params['bandwidthWeight']} risk:{opt_params['riskThreshold']}…",
-            "Executing CP-SAT classical solver…",
-            "Collecting results…",
-            "Simulation complete.",
-        ]
-        for i, step in enumerate(steps):
-            time.sleep(0.8)
-            _broadcast("simulation.progress", {"step": i + 1, "total": len(steps), "message": step})
-            db.insert_log(run_id, i + 1, len(steps), step)
+
+        total = 
+
+        def step(i, msg):
+            _broadcast("simulation.progress", {"step": i, "total": total, "message": msg})
+            db.insert_log(run_id, i, total, msg)
+
+        try:
+            step(1, "Initialising problem graph…")
+            sec_devices = sample_devices()  # TODO: take available devices from the request
+            step(2, f"Applying weights — sec:{opt_params['securityWeight']} cost:{opt_params['costWeight']} bw:{opt_params['bandwidthWeight']} risk:{opt_params['riskThreshold']}…")
+            step(3, "Executing CP-SAT classical solver…")
+            result = run_classical(sim, sec_devices)
+            step(4, "Collecting results…")
+            step(5, "Simulation complete.")
+        except Exception as exc:
+            db.update_run_status(run_id, "error", str(exc))
+            _broadcast("simulation.done", {"solver": "classical", "status": "error", "error": str(exc),
+                                           "params": opt_params, "run_id": run_id})
+            return
+        
         db.update_run_status(run_id, "success")
-        _broadcast("simulation.done", {"solver": "classical", "status": "success", "params": opt_params, "run_id": run_id})
+        _broadcast("simulation.done", {"solver": "classical", "status": "success",
+                                       "params": opt_params, "run_id": run_id, **result})
+
 
     def _run_quantum():
         run_id = db.insert_run("quantum", opt_params)
