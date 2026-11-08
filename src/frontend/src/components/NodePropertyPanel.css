@@ -15,9 +15,54 @@
 }
 
 .node-panel__title {
-  margin-bottom: 6px;
+  margin: 0;
   font-size: 14px;
   font-weight: 600;
   color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.node-panel__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.node-panel__close {
+  flex: none;
+  display: flex;
+  padding: 2px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.node-panel__close:hover {
+  background: #f3e8ec;
+  color: var(--vt-maroon);
+}
+
+.node-panel__close:focus-visible {
+  outline: 2px solid var(--vt-orange);
+  outline-offset: 1px;
+}
+
+.node-panel__fields {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 12px;
+  margin: 0;
+}
+
+.node-panel__fields dt {
+  color: var(--text-muted);
+}
+
+.node-panel__fields dd {
+  margin: 0;
   overflow-wrap: anywhere;
 }

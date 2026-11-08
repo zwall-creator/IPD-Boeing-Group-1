@@ -1,8 +1,7 @@
 /**
  * Shared network-editor constants and rules
- * only MODES lives here, shared by GraphToolsPanel (button labels)
- * and NetworkCanvas (hint text)
- * The add/delete/edge rules move in later
+ * MODES: shared by GraphToolsPanel (button labels) and NetworkCanvas (hint text)
+ * isNotSet / formatFieldValue: shared by NodePropertyPanel and EdgePropertyPanel
  */
 export const MODES = [
   {
@@ -17,3 +16,13 @@ export const MODES = [
   },
   { id: "add-edge", label: "Add edge", hint: "Click the source node" },
 ];
+
+// True if field has no value (null or undefined)
+export function isNotSet(value) {
+  return value === null || value === undefined;
+}
+
+// Text for property panels: "Not set" if not set, else value as text
+export function formatFieldValue(value) {
+  return isNotSet(value) ? "Not set" : String(value);
+}

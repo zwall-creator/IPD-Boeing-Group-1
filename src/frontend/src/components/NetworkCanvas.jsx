@@ -27,6 +27,9 @@ const TEXT = "#1f2933";
 const NODE_FIELDS = { device_ip: null, base_sec_level: null, risk_level: null };
 const EDGE_FIELDS = { cost: null, bandwidth: null, connection_type: null };
 
+// Zoom used for preset loads
+const PRESET_ZOOM = 1.0;
+
 const STYLE = [
   {
     selector: "node",
@@ -146,6 +149,10 @@ export default function NetworkCanvas({
     }))
     cyRef.current.add([...nodes, ...edges])
     cyRef.current.layout({ name: 'preset', fit: true, padding: 50 }).run()
+    if (cyRef.current.zoom() > PRESET_ZOOM) {
+      cyRef.current.zoom(PRESET_ZOOM) // set the zoom level
+      cyRef.current.center()          // pan so the network is in the middle
+    }
   }
 
   function deleteSelected() {
@@ -167,6 +174,11 @@ export default function NetworkCanvas({
     setNotice(null);
     setTypeMenu(null);
     cyRef.current.reset();
+  }
+
+  // Panel close button
+  function closePanel() {
+    cyRef.current.elements().unselect();
   }
 
   // App's sidebar buttons call deleteSelected(), isEmpty(), or clear()
@@ -313,6 +325,13 @@ export default function NetworkCanvas({
       <span className="network-canvas__hint" role="status">
         {hint}
       </span>
+      {selectedNode && (
+        <NodePropertyPanel
+          key={selectedNode.id}
+          node={selectedNode}
+          onClose={closePanel}
+        />
+      )}
       {typeMenu && (
         <div
           ref={typeMenuRef}
