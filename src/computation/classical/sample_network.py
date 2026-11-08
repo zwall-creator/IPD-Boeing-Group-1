@@ -37,7 +37,6 @@ def sample_network():
 def sample_devices():
     """Temporary hardcoded security devices until the frontend can send them."""
     # device_type must currently be one of NW_Node.DEVICE_TYPES, so 'Router' stands in for a firewall/IDS.
-    # The 192.0.2.x IPs avoid colliding with whatever IPs the user gives their own nodes.
     return [
         NW_Sec_Device('Router', [192, 0, 2, 1], 0.0, 0.0, 1.5, covered_devices=[], connections=[]),
         NW_Sec_Device('Router', [192, 0, 2, 2], 0.0, 0.0, 2.0, covered_devices=[], connections=[]),

@@ -103,16 +103,19 @@ def build_api_response(new_sim, result):
         "placement": {dev_id: list(spot) for dev_id, spot in result["placement"].items()},
     }
     
-def run_classical(sim):
+def run_classical(sim, sec_devices=None):
     nodes, links = network_to_solver_input(sim)
-    ###STILL NEED SOME WAY TO GET DEVICES
+  
     
-    sec_devices = sim.get_sec_devices()
+    ###STILL NEED SOME WAY TO GET DEVICES SO THIS SHOULD NEVER ACTUALLY RUN RIGHT NOW
+    if sec_devices is None:
+        sec_devices = sim.get_sec_devices()
+
     devices = devices_to_solver_input(sec_devices)
 
     result = exec_classical(nodes, links, devices)
     if result["placement"] is None:
-            raise RuntimeError("solver returned no placement (status: {})".format(result["status"]))
+        raise RuntimeError("solver returned no placement (status: {})".format(result["status"]))
     
     new_sim = solver_output_to_network(sim, sec_devices, devices, result)
     payload = build_api_response(new_sim, result)
