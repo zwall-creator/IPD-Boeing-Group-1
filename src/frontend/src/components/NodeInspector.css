@@ -1,0 +1,46 @@
+.node-inspector {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  background: #1e293b;
+  color: #e2e8f0;
+}
+
+.node-inspector--empty {
+  color: #94a3b8;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.node-inspector__heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.node-inspector__heading span {
+  color: #94a3b8;
+  font-family: monospace;
+}
+
+.node-inspector label {
+  display: grid;
+  gap: 4px;
+  color: #94a3b8;
+  font-size: 11px;
+}
+
+.node-inspector input,
+.node-inspector select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 6px 7px;
+  border: 1px solid #475569;
+  border-radius: 4px;
+  background: #0f172a;
+  color: #e2e8f0;
+  font: inherit;
+}

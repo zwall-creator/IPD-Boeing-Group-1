@@ -6,6 +6,7 @@ from flask import Flask, Response, jsonify, request, stream_with_context
 from flask_cors import CORS
 from quantum_backend import get_status as qb_get_status, run_circuit, build_sample_circuit
 import db
+from network_adapter import prepare_network
 
 app = Flask(__name__)
 CORS(app)
@@ -135,6 +136,17 @@ def emit():
     return jsonify(ok=True, type=event_type, subscribers=len(_subscribers))
 
 
+@app.post("/simulation/prepare")
+def prepare_simulation_network():
+    """Validate a frontend topology and translate it to the simulation state string."""
+    body = request.get_json(silent=True) or {}
+    try:
+        payload = prepare_network(body.get("topology", body), body.get("sim_id", "frontend"))
+    except ValueError as exc:
+        return jsonify(ok=False, error=str(exc)), 400
+    return jsonify(ok=True, **payload)
+
+
 @app.post("/simulation/run")
 def run_simulation():
     """
@@ -148,6 +160,10 @@ def run_simulation():
     """
     body = request.get_json(silent=True) or {}
     solver = body.get("solver", "classical")
+    try:
+        network_payload = prepare_network(body.get("topology", {"nodes": [], "edges": []}))
+    except ValueError as exc:
+        return jsonify(ok=False, error=str(exc)), 400
     opt_params = {
         "securityWeight":  body.get("securityWeight", 50),
         "costWeight":      body.get("costWeight", 50),
@@ -157,7 +173,11 @@ def run_simulation():
 
     def _run_classical():
         run_id = db.insert_run("classical", opt_params)
-        _broadcast("simulation.started", {"solver": "classical", "params": opt_params, "run_id": run_id})
+        _broadcast("simulation.started", {
+            "solver": "classical", "params": opt_params, "run_id": run_id,
+            "topology": network_payload["topology"],
+            "state_string": network_payload["state_string"],
+        })
         steps = [
             "Initialising problem graph…",
             "Building constraint model…",
@@ -175,7 +195,11 @@ def run_simulation():
 
     def _run_quantum():
         run_id = db.insert_run("quantum", opt_params)
-        _broadcast("simulation.started", {"solver": "quantum", "params": opt_params, "run_id": run_id})
+        _broadcast("simulation.started", {
+            "solver": "quantum", "params": opt_params, "run_id": run_id,
+            "topology": network_payload["topology"],
+            "state_string": network_payload["state_string"],
+        })
 
         # Step 1 — check IBM connection
         qstatus = qb_get_status()
@@ -234,4 +258,10 @@ def run_simulation():
     else:
         threading.Thread(target=_run_classical, daemon=True).start()
 
-    return jsonify(ok=True, solver=solver, params=opt_params)
+    return jsonify(
+        ok=True,
+        solver=solver,
+        params=opt_params,
+        topology=network_payload["topology"],
+        state_string=network_payload["state_string"],
+    )

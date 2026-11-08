@@ -38,6 +38,7 @@ export default function GraphToolsPanel({
       <button type="button" className="btn-secondary" onClick={onReset}>
         Reset Canvas
       </button>
+      <span className="graph-tools__hint">Tab to move · Enter or Space to activate</span>
     </div>
   );
 }

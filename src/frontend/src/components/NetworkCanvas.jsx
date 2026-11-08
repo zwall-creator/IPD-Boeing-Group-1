@@ -8,6 +8,7 @@ import {
 import cytoscape from "cytoscape";
 import { DEVICE_TYPES } from "../deviceIcons";
 import { MODES } from "../graph/networkRules";
+import { serializeNetwork, serializeNode } from "../graph/networkSerializer";
 import "./NetworkCanvas.css";
 
 // Color Codings
@@ -24,7 +25,7 @@ const TEXT = "#1f2933";
 // TODO: security devices (NW_Sec_Device) not supported yet
 // TODO: build derived fields (security_level, connections, destination IP) for the backend
 const NODE_FIELDS = { device_ip: null, base_sec_level: null, risk_level: null };
-const EDGE_FIELDS = { cost: null, bandwidth: null, connection_type: null };
+const EDGE_FIELDS = { cost: 0, bandwidth: 0, connection_type: "TCP", source_port: null };
 
 const LAYOUT_PRESETS = {
   lan: {
@@ -185,6 +186,22 @@ export default function NetworkCanvas({
     cyRef.current.$(":selected").remove();
   }
 
+  function updateSelectedNode(patch) {
+    const selected = cyRef.current.$("node:selected").first();
+    if (!selected || selected.empty()) return false;
+    selected.data({
+      ...patch,
+      base_sec_level: Number(patch.base_sec_level) || 0,
+      risk_level: Number(patch.risk_level) || 0,
+    });
+    reportSelection();
+    return true;
+  }
+
+  function getTopology() {
+    return serializeNetwork(cyRef.current);
+  }
+
   // Check if canvas is empty
   function isEmpty() {
     return cyRef.current.elements().length === 0;
@@ -203,7 +220,13 @@ export default function NetworkCanvas({
   }
 
   // App's sidebar buttons call deleteSelected(), isEmpty(), or clear()
-  useImperativeHandle(ref, () => ({ deleteSelected, isEmpty, clear }));
+  useImperativeHandle(ref, () => ({
+    deleteSelected,
+    getTopology,
+    isEmpty,
+    clear,
+    updateSelectedNode,
+  }));
 
   const resetInteraction = useEffectEvent(() => {
     cyRef.current.elements().unselect();
@@ -213,7 +236,11 @@ export default function NetworkCanvas({
   });
 
   const reportSelection = useEffectEvent(() => {
-    onSelectionChange(cyRef.current.$(":selected").length);
+    const selectedNodes = cyRef.current.$("node:selected");
+    onSelectionChange({
+      count: selectedNodes.length,
+      node: selectedNodes.length === 1 ? serializeNode(selectedNodes[0]) : null,
+    });
   });
 
   const handleTap = useEffectEvent((evt) => {
@@ -271,6 +298,11 @@ export default function NetworkCanvas({
       setEdgeSourceId(null);
       setNotice(null);
       cyRef.current.elements().unselect();
+    } else if (
+      (e.key === "Delete" || e.key === "Backspace") &&
+      !e.target.closest("input, textarea, select, [contenteditable]")
+    ) {
+      deleteSelected();
     }
   });
 
@@ -336,6 +368,8 @@ export default function NetworkCanvas({
         data-mode={mode}
         role="application"
         aria-label="Network canvas"
+        aria-keyshortcuts="Delete Backspace Escape"
+        tabIndex="0"
       />
       <div className="network-canvas__presets" role="toolbar" aria-label="Network layout presets">
         <span>Layouts</span>
