@@ -49,7 +49,6 @@ def devices_to_solver_input(sec_devices, modes=None, default_mode="both"):
     ]
 
 
-# ---------------------------------------------------------------- solver -> network
 
 def solver_output_to_network(sim, sec_devices, devices, result):
     """
@@ -104,9 +103,7 @@ def build_api_response(new_sim, result):
         "placement": {dev_id: list(spot) for dev_id, spot in result["placement"].items()},
     }
     
-def run_classical(state_str):
-    sim = Simulation_Service("id")
-    sim.extract_from_state_string(state_str)
+def run_classical(sim):
     nodes, links = network_to_solver_input(sim)
     ###STILL NEED SOME WAY TO GET DEVICES
     

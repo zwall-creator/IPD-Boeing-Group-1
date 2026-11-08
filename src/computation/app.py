@@ -7,6 +7,10 @@ from flask_cors import CORS
 from quantum_backend import get_status as qb_get_status, run_circuit, build_sample_circuit
 import db
 from network_adapter import prepare_network
+from classical.classical_backend import run_classical 
+from Simulation_Service import Simulation_Service
+
+
 
 app = Flask(__name__)
 CORS(app)
@@ -189,7 +193,7 @@ def run_simulation():
             "state_string": network_payload["state_string"],
         })
 
-        total = 
+        total = 5
 
         def step(i, msg):
             _broadcast("simulation.progress", {"step": i, "total": total, "message": msg})
@@ -200,7 +204,7 @@ def run_simulation():
             sec_devices = sample_devices()  # TODO: take available devices from the request
             step(2, f"Applying weights — sec:{opt_params['securityWeight']} cost:{opt_params['costWeight']} bw:{opt_params['bandwidthWeight']} risk:{opt_params['riskThreshold']}…")
             step(3, "Executing CP-SAT classical solver…")
-            result = run_classical(sim, sec_devices)
+            result = run_classical(sim)
             step(4, "Collecting results…")
             step(5, "Simulation complete.")
         except Exception as exc:
