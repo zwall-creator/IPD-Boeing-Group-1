@@ -336,6 +336,107 @@ class Simulation_Service_Test(unittest.TestCase):
                 self.assertEqual(expected_node_risk_level, act_node.risk_level, 'Failed value checking of risk_level | got: {}, expected: {} for test{} on entry {}'.format(act_node.risk_level, expected_node_risk_level, test_no,str(expected_node_state_list.index(entry)+1)))
                 self.assertEqual(expected_node_connections, act_node.connections, 'Failed value checking of connections | got: {}, expected: {} for test{} on entry {}'.format(act_node.connections, expected_node_connections, test_no,str(expected_node_state_list.index(entry)+1)))
 
+    # TESTS BELOW ARE CREATED WITH HELP OF GITHUB COPILOT (lines 340-438)
+    def test_Simulation_Service_create_security_node_state_tests(self):
+        security_node = NW_Sec_Device('Router', [10, 0, 0, 1], 1.0, 2.0, 0.5)
+        simulation = Simulation_Service(123, [])
+
+        simulation.create_security_node(security_node)
+
+        self.assertEqual([security_node], simulation.node_list)
+        self.assertIs(simulation.node_list[0], security_node)
+
+    def test_Simulation_Service_create_security_node_error_tests(self):
+        simulation = Simulation_Service(123, [])
+
+        for invalid_node in ('node', NW_Node('PC', [0, 0, 0, 0], 0.0, 0.0)):
+            with self.subTest(invalid_node=invalid_node):
+                with self.assertRaises(TypeError):
+                    simulation.create_security_node(invalid_node)
+
+    def test_Simulation_Service_clear_nodes_state_tests(self):
+        node = NW_Node('PC', [0, 0, 0, 0], 0.0, 0.0)
+        nodes = [node]
+        simulation = Simulation_Service(123, nodes)
+        simulation.sim_state_str = 'previous state'
+
+        simulation.clear_nodes()
+
+        self.assertEqual([], simulation.node_list)
+        self.assertIs(simulation.node_list, nodes)
+        self.assertEqual('', simulation.sim_state_str)
+
+    def test_Simulation_Service___del___state_tests(self):
+        simulation = Simulation_Service(123, [NW_Node('PC', [0, 0, 0, 0], 0.0, 0.0)])
+        simulation.sim_config = 'config'
+        simulation.sim_state_str = 'previous state'
+
+        simulation.__del__()
+
+        self.assertEqual(-1, simulation.sim_id)
+        self.assertIsNone(simulation.sim_config)
+        self.assertEqual([], simulation.node_list)
+        self.assertEqual('', simulation.sim_state_str)
+
+    def test_Simulation_Service_get_sim_state_value_tests(self):
+        node = NW_Node('PC', [1, 2, 3, 4], 0.0, 1.0)
+        security_node = NW_Sec_Device('Router', [5, 6, 7, 8], 2.0, 3.0, 0.5)
+        simulation = Simulation_Service(321, [node, security_node])
+        simulation.sim_config = 'sample-config'
+
+        self.assertEqual(
+            '321#sample-config#[{};{}]'.format(
+                node.get_state_str(), security_node.get_state_str()
+            ),
+            simulation.get_sim_state()
+        )
+        self.assertEqual('321#None#[]', Simulation_Service(321, []).get_sim_state())
+
+    def test_Simulation_Service_connect_via_ip_missing_node_error_tests(self):
+        source_ip = [0, 0, 0, 0]
+        destination_ip = [1, 1, 1, 1]
+        node = NW_Node('PC', source_ip, 0.0, 0.0)
+
+        with self.subTest(missing='source'):
+            simulation = Simulation_Service(1, [node])
+            with self.assertRaises(IndexError):
+                simulation.connect_via_ip([2, 2, 2, 2], 80, destination_ip)
+
+        with self.subTest(missing='destination'):
+            simulation = Simulation_Service(1, [node])
+            with self.assertRaises(IndexError):
+                simulation.connect_via_ip(source_ip, 80, destination_ip)
+
+    def test_Simulation_Service_connect_via_ip_default_arguments_tests(self):
+        source_ip = [0, 0, 0, 0]
+        destination_ip = [1, 1, 1, 1]
+        source = NW_Node('PC', source_ip, 0.0, 0.0)
+        destination = NW_Node('Server', destination_ip, 0.0, 0.0)
+        simulation = Simulation_Service(1, [source, destination])
+
+        simulation.connect_via_ip(source_ip, 80, destination_ip)
+
+        self.assertEqual([(destination_ip, 1, 1, 'TCP', 80)], source.connections)
+        self.assertEqual([], destination.connections)
+
+    def test_Simulation_Service_update_sim_error_test(self):
+        with self.assertRaises(TypeError):
+            Simulation_Service(1, []).update_sim()
+
+    def test_Simulation_Service_extract_from_state_string_error_tests(self):
+        simulation = Simulation_Service(1, [])
+
+        with self.assertRaises(TypeError):
+            simulation.extract_from_state_string(None)
+
+        with self.assertRaises(ValueError):
+            simulation.extract_from_state_string('1#config')
+
+        # TODO: Current implementation fails before parsing any state fields because it
+        # attempts to unpack None. Keep this explicit until the parser is fixed.
+        with self.assertRaises(TypeError):
+            simulation.extract_from_state_string('1#config#[]')
+    #END OF AI-ASSISTED CODE
 
 if __name__ == '__main__':
     unittest.main()
