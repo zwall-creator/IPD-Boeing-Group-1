@@ -68,6 +68,14 @@ class Simulation_Service:
                 return node
         return None
 
+    def get_neighbors(self, node):
+        ret_list = []
+        for connection in node.connections:
+            temp_node = self.search_for_node(connection[0])
+            if temp_node is not None:
+                ret_list.append(temp_node)
+        return ret_list
+
     def connect_via_ip(self, source_ip, src_port, destination_ip, cost = 1, bandwidth = 1, connection_type = 'TCP'):
         """
         Function to create a new one-way connection between THIS NW_Node and another node on the network. Destination target node is determined by the given IP address (destination_ip)
@@ -239,3 +247,20 @@ class Simulation_Service:
         self.node_list = ret_nodes
         self.sim_config = config
         self.sim_state_str = new_state_str
+
+
+    def find_connected_nodes(self, target, searched_nodes):
+        """
+        Function to get a list of nodes that are connected from the given target node, NOT inlcuding any security nodes
+        :return: list of connected nodes
+        """
+        if searched_nodes is None:
+            searched_nodes = ()
+        if target in searched_nodes:
+            return searched_nodes
+        searched_nodes.add(target)
+        for neighbor in self.get_neighbors(target):
+            if type(neighbor) == NW_Sec_Device:
+                continue
+            self.find_connected_nodes(neighbor, searched_nodes)
+        return searched_nodes
