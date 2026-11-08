@@ -4,6 +4,7 @@
 @contributors: [Zak Wallace]
 """
 from src.simulation.NW_Structure import *
+from src.data.IO.IOStream import *
 class Simulation_Service:
     """
     Class to manage the service operations of a single simulation.
@@ -96,8 +97,6 @@ class Simulation_Service:
         :raises: TypeError if source_ip and destination_ip do not exist in the simulation
         """
         #search the network for Nodes with given IP addresses
-        print(source_ip)
-        print(destination_ip)
         src_node = self.search_for_node(source_ip)
         dest_node = self.search_for_node(destination_ip)
         #if a given IP address is not present in the simulation, throw IndexErrors
@@ -106,15 +105,10 @@ class Simulation_Service:
         if dest_node is None:
             raise IndexError('No NW_Node found in this simulation with ip address: {}'.format(destination_ip))
         #create the connection between the two nodes
-
-        print(src_node)
-        print(dest_node)
         dest_node = None
-        print(src_node)
-        print(dest_node)
+
         src_node.add_connection(destination_ip, cost, bandwidth, connection_type, src_port)
-        print(src_node)
-        print(dest_node)
+
         #TODO: UPDATE SIMULATION STATE STR AFTER MODIFICATION
 
     def update_sim(self):
