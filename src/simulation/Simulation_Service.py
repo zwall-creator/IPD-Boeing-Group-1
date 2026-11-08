@@ -249,16 +249,18 @@ class Simulation_Service:
         self.sim_state_str = new_state_str
 
 
-    def find_connected_nodes(self, target, searched_nodes):
+    def find_connected_nodes(self, target, searched_nodes=None):
         """
         Function to get a list of nodes that are connected from the given target node, NOT inlcuding any security nodes
         :return: list of connected nodes
         """
+        if type(target) is NW_Node or type(target) is NW_Sec_Device:
+            raise TypeError('target param must be NW_Node or NW_Sec_Device')
         if searched_nodes is None:
-            searched_nodes = ()
+            searched_nodes = []
         if target in searched_nodes:
             return searched_nodes
-        searched_nodes.add(target)
+        searched_nodes.append(target)
         for neighbor in self.get_neighbors(target):
             if type(neighbor) == NW_Sec_Device:
                 continue
