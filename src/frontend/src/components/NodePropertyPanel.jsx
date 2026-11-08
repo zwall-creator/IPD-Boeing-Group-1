@@ -40,9 +40,20 @@ export default function NodePropertyPanel({ node, onClose, onSave }) {
     setIsEditing(false);
   }
 
+  function handleKeyDown(event) {
+    if (event.key === "Escape" && isEditing) {
+      event.stopPropagation();
+      setIsEditing(false);
+    }
+  }
+
   return (
     <section className="node-panel" aria-label="Node properties">
-      <form className="node-panel__form" onSubmit={handleSubmit}>
+      <form 
+        className="node-panel__form" 
+        onSubmit={handleSubmit} 
+        onKeyDown={handleKeyDown}
+      >
         <div className="node-panel__header">
           {isEditing ? (
             <input

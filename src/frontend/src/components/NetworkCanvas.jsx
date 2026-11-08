@@ -97,15 +97,23 @@ export default function NetworkCanvas({
   const [typeMenu, setTypeMenu] = useState(null);
   const [selectedNode, setSelectedNode] = useState(null);
 
-  function addNode(type) {
+  // Next default name for a device
+  // Increments type count
+  // Count only goes up, never repeats a previously used number
+  function nextDefaultLabel(type) {
     const count = (typeCountsRef.current[type] ?? 0) + 1;
     typeCountsRef.current[type] = count;
+    return `${type} ${count}`;
+  }
+
+  function addNode(type) {
     cyRef.current.add({
       group: "nodes",
       data: {
         id: `n${++nodeCountRef.current}`,
-        label: `${type} ${count}`,
+        label: nextDefaultLabel(type),
         device_type: type,
+        autoLabel: true,
         ...NODE_FIELDS,
       },
       position: typeMenu.position,
@@ -133,6 +141,7 @@ export default function NetworkCanvas({
           id: `n${++nodeCountRef.current}`,
           label,
           device_type: type,
+          autoLabel: false,
           ...NODE_FIELDS,
         },
         position: { x, y },
@@ -184,7 +193,17 @@ export default function NetworkCanvas({
   // Panel Save Changes button: writes new values onto cytoscape node
   function saveNode(nodeId, values) {
     const node = cyRef.current.getElementById(nodeId);
-    node.data(values);
+    const nameEdited = values.label !== node.data("label");
+    const typeChanged = values.device_type !== node.data("device_type");
+    // Still a default name if it was before and user hasn't updated it manually
+    const autoLabel = node.data("autoLabel") && !nameEdited;
+
+    node.data({
+      ...values,
+    autoLabel,
+    // Default name + new type
+    label: autoLabel && typeChanged ? nextDefaultLabel(values.device_type) : values.label,
+  });
     // Refresh panel's copy
     setSelectedNode({ ...node.data() });
   }
