@@ -142,13 +142,15 @@ class Simulation_Service:
         Function to extract data from a given state string and update the simulation service object with the extracted data
         \nNOTE: this will replace the current data for this simulation, so any unsaved changes will be lost!
         :param state_string: string instance of a simulation's state string
+        \nNote: The following lines were modified with GitHub Copilot to resolve errors: 152,164,170,178-179,190-191,193-203,208-209,212,216-220,229-231,234-236
         """
-
         if type(state_string) != str:
             raise TypeError('state_string must be a string')
 
         # Split at syntax level 1
         sim_id, config, node_list = state_string.split('#')
+        if node_list[0] == '[' and node_list[-1] == ']':
+            node_list = node_list[1:-1]
         if sim_id.isnumeric():
             sim_id = int(sim_id)
             self.sim_id = sim_id
@@ -165,14 +167,16 @@ class Simulation_Service:
             #Implement boolean logic to extract NW_Node and NW_Sec_Device uniquely
             node_data = node_entry.split('%')
             object_class = object
-            device_type, device_ip_list, base_sec_level, security_level, risk_level, sec_modifier, covered_devices, connections = None
+            device_type, device_ip_list, base_sec_level, security_level, risk_level, sec_modifier, covered_devices, connections = 'INVALID', [], -99.0, -99.0, -99.0, None, None, []
             if len(node_data) == 6:
                 object_class = NW_Node
                 device_type, device_ip_list, base_sec_level, security_level, risk_level, connections = node_data
-            if len(node_data) == 8:
+            elif len(node_data) == 8:
                 object_class = NW_Sec_Device
                 device_type, device_ip_list, base_sec_level, security_level, risk_level, sec_modifier, covered_devices, connections = node_data
                 sec_modifier = float(sec_modifier)
+            else:
+                raise ValueError('Node state must contain 6 or 8 fields')
 
 
 
@@ -182,27 +186,38 @@ class Simulation_Service:
             risk_level = float(risk_level)
 
             # Split at syntax level 4 for node IP address and coverages
-            device_ip_list = device_ip_list.split('&')
+            device_ip_list = device_ip_list[1:-1].split('&')
+            if len(device_ip_list) != 4:
+                raise ValueError('Node IP address must contain 4 bytes')
             device_ip = [int(device_ip_list[0]), int(device_ip_list[1]), int(device_ip_list[2]), int(device_ip_list[3])]
             covered_device_ips = None
-            for coverage_entry in covered_devices.split('&'):
-                #split at syntax level 5 for individual ips that are covered
-                coverage_entry = coverage_entry.split('@')
-                covered_ip = [int(coverage_entry[0]), int(coverage_entry[1]), int(coverage_entry[2]), int(coverage_entry[3])]
+            if covered_devices is not None:
+                covered_device_ips = []
+                coverage_data = covered_devices[1:-1]
+                for coverage_entry in coverage_data.split('&') if coverage_data else []:
+                    #split at syntax level 5 for individual ips that are covered
+                    coverage_entry = coverage_entry.strip('[]').split('@')
+                    if len(coverage_entry) != 4:
+                        raise ValueError('Covered device IP address must contain 4 bytes')
+                    covered_ip = [int(coverage_entry[0]), int(coverage_entry[1]), int(coverage_entry[2]), int(coverage_entry[3])]
+                    covered_device_ips.append(covered_ip)
 
             #collect formated data for this node's connections
             ret_connections = []
             # Split at syntax level 4 for node connections
-            for connection_entry in connections.split('&'):
+            connection_data = connections[1:-1]
+            for connection_entry in connection_data.split('&') if connection_data else []:
 
                 # Split at syntax level 5 for connection details
-                connection_ip_list,cost,bandwidth,connection_type,source_port = connection_entry.split('@')
+                connection_ip_list,cost,bandwidth,connection_type,source_port = connection_entry.strip('()').split('@')
                 cost = int(cost)
                 bandwidth = int(bandwidth)
                 source_port = int(source_port)
 
                 # Split at syntax level 6 for connection's destination IP address
-                connection_ip_list = connection_ip_list.split('=')
+                connection_ip_list = connection_ip_list.strip('[]').split('=')
+                if len(connection_ip_list) != 4:
+                    raise ValueError('Connection IP address must contain 4 bytes')
                 connection_ip = [int(connection_ip_list[0]), int(connection_ip_list[1]), int(connection_ip_list[2]), int(connection_ip_list[3])]
 
                 ret_connections.append((connection_ip,cost,bandwidth,connection_type,source_port))
@@ -211,9 +226,12 @@ class Simulation_Service:
                 constructor_args = [device_type,device_ip,base_sec_level,risk_level,sec_modifier,covered_device_ips,ret_connections, security_level]
 
             ret_nodes.append(object_class(*constructor_args))
-        self.node_list = ret_nodes
-        self.sim_config = config
-        new_state_str = self.get_sim_state()
+        new_state_str = '{}#{}#[{}]'.format(
+            sim_id, config, ';'.join(node.get_state_str() for node in ret_nodes)
+        )
         if new_state_str != state_string:
             raise ValueError('New simulation state string\n{}\n does not match the given state string\n{}\n'.format(new_state_str,state_string))
+        self.sim_id = sim_id
+        self.node_list = ret_nodes
+        self.sim_config = config
         self.sim_state_str = new_state_str

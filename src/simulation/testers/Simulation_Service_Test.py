@@ -432,10 +432,76 @@ class Simulation_Service_Test(unittest.TestCase):
         with self.assertRaises(ValueError):
             simulation.extract_from_state_string('1#config')
 
-        # TODO: Current implementation fails before parsing any state fields because it
-        # attempts to unpack None. Keep this explicit until the parser is fixed.
-        with self.assertRaises(TypeError):
-            simulation.extract_from_state_string('1#config#[]')
+        with self.assertRaises(ValueError):
+            simulation.extract_from_state_string('1#config#[invalid]')
+
+        for malformed_state in (
+            'not-numeric#config#[]',
+            '1#config#[PC%[1&2&3]%0.0%0.0%0.0%[]]',
+            '1#config#[PC%[1&2&3&4]%0.0%0.0%0.0%[([1=2=3]@1@1@TCP@80)]]',
+        ):
+            with self.subTest(state=malformed_state):
+                with self.assertRaises(ValueError):
+                    simulation.extract_from_state_string(malformed_state)
+
+    def test_Simulation_Service_extract_from_state_string_error_preserves_state_test(self):
+        node = NW_Node('PC', [0, 0, 0, 0], 0.0, 0.0)
+        simulation = Simulation_Service(1, [node])
+        simulation.sim_config = 'existing-config'
+        simulation.sim_state_str = 'existing-state'
+
+        with self.assertRaises(ValueError):
+            simulation.extract_from_state_string('2#new-config#[invalid]')
+
+        self.assertEqual(1, simulation.sim_id)
+        self.assertEqual([node], simulation.node_list)
+        self.assertEqual('existing-config', simulation.sim_config)
+        self.assertEqual('existing-state', simulation.sim_state_str)
+
+    def test_Simulation_Service_extract_from_state_string_empty_state_tests(self):
+        state = '123#config#[]'
+        simulation = Simulation_Service(0, [])
+
+        simulation.extract_from_state_string(state)
+
+        self.assertEqual(123, simulation.sim_id)
+        self.assertEqual('config', simulation.sim_config)
+        self.assertEqual([], simulation.node_list)
+        self.assertEqual(state, simulation.sim_state_str)
+
+    def test_Simulation_Service_extract_from_state_string_round_trip_tests(self):
+        connection = ([9, 8, 7, 6], 4, 5, 'UDP', 1234)
+        second_connection = ([8, 7, 6, 5], 6, 7, 'TCP', 4321)
+        node = NW_Node(
+            'PC', [1, 2, 3, 4], 0.5, 1.5,
+            [connection, second_connection], current_security_level=0.75
+        )
+        security_node = NW_Sec_Device(
+            'Router', [5, 6, 7, 8], 2.0, 3.0, 0.25,
+            [[1, 2, 3, 4], [4, 3, 2, 1]],
+            [connection, second_connection], current_security_level=2.5
+        )
+        original = Simulation_Service(456, [node, security_node])
+        original.sim_config = 'config/path'
+        state = original.get_sim_state()
+        restored = Simulation_Service(0, [])
+
+        restored.extract_from_state_string(state)
+
+        self.assertEqual(state, restored.sim_state_str)
+        self.assertEqual(456, restored.sim_id)
+        self.assertEqual('config/path', restored.sim_config)
+        self.assertEqual(2, len(restored.node_list))
+        self.assertIs(type(restored.node_list[0]), NW_Node)
+        self.assertEqual(node.device_ip, restored.node_list[0].device_ip)
+        self.assertEqual(node.security_level, restored.node_list[0].security_level)
+        self.assertEqual([connection, second_connection], restored.node_list[0].connections)
+        self.assertIs(type(restored.node_list[1]), NW_Sec_Device)
+        self.assertEqual(security_node.sec_modifier, restored.node_list[1].sec_modifier)
+        self.assertEqual(security_node.covered_devices, restored.node_list[1].covered_devices)
+        self.assertEqual(
+            [connection, second_connection], restored.node_list[1].connections
+        )
     #END OF AI-ASSISTED CODE
 
 if __name__ == '__main__':
