@@ -10,13 +10,14 @@ class NW_Node:
     DEVICE_TYPES = ('PC', 'Laptop', 'Mobile','Router', 'Switch','Server')
     VALID_CONNECTION_TYPES = ('TCP','UDP')
 
-    def __init__(self, device_type, device_ip, base_sec_level, risk_level, connections = []):
+    def __init__(self, device_type, device_ip, base_sec_level, risk_level, connections = [], current_security_level = None):
         """
         :type device_type: str
         :type device_ip: list<int>
         :type base_sec_level: float
         :type risk_level: float
         :type connections: list< tuple<destination_ip:list<int>, cost:int, bandwidth:int, connection_type:str, source_port:int > >
+        :type current_security_level: float or None
 
         :param device_type: str that states what type of network-connected device is represnted by this node
         :param device_ip: a 4-element list consisting of integers between 0 and 255 (inclusive), acting as a unique identifier
@@ -47,6 +48,9 @@ class NW_Node:
             if byte < 0 or byte > 255:
                 raise ValueError('given device ip {} does not contain only integers between 0 and 255 (inclusive)'.format(device_ip))
 
+        if type(current_security_level) != float and current_security_level is not None:
+            raise TypeError('given current_security_level is not a float or None')
+
         #Input validation passed, can now instantiate object fields
         self.device_type = device_type
         self.device_ip = device_ip
@@ -54,6 +58,9 @@ class NW_Node:
         self.security_level = base_sec_level
         self.risk_level = risk_level
         self.connections = connections
+
+        if current_security_level is not None:
+            self.security_level = current_security_level
 
         #TODO: Add call to function to send update signal to simulation observer
 
@@ -79,26 +86,26 @@ class NW_Node:
             connections += ']'
         for i in range(len(self.connections)):
             connection = self.connections[i]
-            connections += ('([{},{},{},{}],'#IP addr
-                            '{},'#cost
-                            '{},'#bandwidth
-                            '{},'#connection type
+            connections += ('([{}={}={}={}]@'#IP addr
+                            '{}@'#cost
+                            '{}@'#bandwidth
+                            '{}@'#connection type
                             '{})'#source port number
                             ).format(connection[0][0], connection[0][1], connection[0][2], connection[0][3],
                                      connection[1],
                                      connection[2],
                                      connection[3],connection[4])
             if i != len(self.connections) - 1:
-                connections += ','
+                connections += '&'
             else:
                 connections += ']'
         #return the state string of this node
-        return ('{},'#device type
-                '[{},{},{},{}],'#ip address
-                '{},'#base_security_level
-                '{},'#current_security_level
-                '{},'#risk_level
-                '{};'#connections list
+        return ('{}%'#device type
+                '[{}&{}&{}&{}]%'#ip address
+                '{}%'#base_security_level
+                '{}%'#current_security_level
+                '{}%'#risk_level
+                '{}'#connections list
                 ).format(self.device_type,
                          self.device_ip[0],self.device_ip[1],self.device_ip[2],self.device_ip[3],
                          self.base_sec_level,
@@ -125,6 +132,7 @@ class NW_Node:
         :param other: Another NW_Node instance object to compare against this one
         :return: True if THIS NW_Node has an equal security_level than given NW_Node. Returns False otherwise.
         """
+        #TODO: Update __eq__ to actually check to see if two Nodes are the SAME, not just equal values of security_level
         if type(other) == NW_Node:
             if self.security_level == other.security_level:
                 return True
@@ -200,7 +208,10 @@ class NW_Node:
             raise ValueError('source_port should be a positive integer')
         if not self.is_open_port(source_port):
             raise ValueError('source_port should be a currently open port')
-        self.connections.append((destination_ip, cost, bandwidth, connection_type, source_port))
+        new_connections = self.connections.copy()
+        new_connections.append((destination_ip, cost, bandwidth, connection_type, source_port))
+        self.connections = new_connections
+        # self.connections.append((destination_ip, cost, bandwidth, connection_type, source_port))
 
     def remove_connection(self, source_port):
         if type(source_port) != int:
@@ -223,7 +234,7 @@ class NW_Node:
 
 class NW_Sec_Device(NW_Node):
 
-    def __init__(self, device_type, device_ip, base_sec_level, risk_level, sec_modifier, covered_devices = [], connections = []):
+    def __init__(self, device_type, device_ip, base_sec_level, risk_level, sec_modifier, covered_devices = [], connections = [], current_security_level = None):
         """
         :type device_type: str
         :type device_ip: list<int>
@@ -238,7 +249,7 @@ class NW_Sec_Device(NW_Node):
         :param base_sec_level: a float that acts as the default value for this node's security_level field
         :param risk_level: a float that acts as the target value that this node's security_level should be
         :param sec_modifier: a float value that is added to the security_level of all nodes covered by this security device
-        :param covered_devices: a list of tuples that contain the memory address and ip address of another node covered by this security device
+        :param covered_devices: a list of tuples that contain the ip  address of another node covered by this security device
         :param connections: a list of tuples that contain all info regarding a connection from this node to another node on the network
         """
         if type(device_type) != str:
@@ -268,7 +279,7 @@ class NW_Sec_Device(NW_Node):
             raise TypeError('connections should be a list')
 
 
-        NW_Node.__init__(self, device_type, device_ip, base_sec_level, risk_level, connections)
+        NW_Node.__init__(self, device_type, device_ip, base_sec_level, risk_level, connections,current_security_level)
         self.sec_modifier = sec_modifier
         self.covered_devices = covered_devices
 
@@ -281,4 +292,61 @@ class NW_Sec_Device(NW_Node):
         retstr = super().__str__() + ', sec_modifier: {}, covered_devices: {}'.format(self.sec_modifier, self.covered_devices)
         return retstr
 
+    @override
+    def get_state_str(self):
+        """
+        Creates a universally-designed string representation of the state of this NW_Sec_Device for use with external project components
+        \n example: \n'PC','255.255.255.255',0.0,1.0,2.0,[(0.0.0.0,1,1,'TCP',24),(1.1.1.1,2,2,'UDP',80)];
+        \nThe semicolon acts as the indicator of the end of this node's state string.
+        \n NOTE: any value that is NONE or NULL will be represented with the null char ('\\\\0').
+        :return: string representation of this NW_Node
+        """
+        #TODO: Implement exchanging any NONE or NULL values for the null character
+        coverages = '['
+        if len(self.covered_devices) == 0:
+            coverages += ']'
+        for i in range(len(self.covered_devices)):
+            coverage = self.covered_devices[i]
+            coverages += '[{}@{}@{}@{}]'.format(coverage[0], coverage[1], coverage[2], coverage[3])
+            if i != len(self.covered_devices) - 1:
+                coverages += '&'
+            else:
+                coverages += ']'
+        #obtaining string representation of all connections first
+        connections = '['
+        if len(self.connections) == 0:
+            connections += ']'
+        for i in range(len(self.connections)):
+            connection = self.connections[i]
+            connections += ('([{}={}={}={}]@'#IP addr
+                            '{}@'#cost
+                            '{}@'#bandwidth
+                            '{}@'#connection type
+                            '{})'#source port number
+                            ).format(connection[0][0], connection[0][1], connection[0][2], connection[0][3],
+                                     connection[1],
+                                     connection[2],
+                                     connection[3],connection[4])
+            if i != len(self.connections) - 1:
+                connections += '&'
+            else:
+                connections += ']'
+        #TODO: Implement obtaining the covered devices string part of the state str
+        #return the state string of this node
+        return ('{}%'#device type
+                '[{}&{}&{}&{}]%'#ip address
+                '{}%'#base_security_level
+                '{}%'#current_security_level
+                '{}%'#risk_level
+                '{}%'#sec_modifier
+                '{}%'#covered_devices
+                '{}'#connections list
+                ).format(self.device_type,
+                         self.device_ip[0],self.device_ip[1],self.device_ip[2],self.device_ip[3],
+                         self.base_sec_level,
+                         self.security_level,
+                         self.risk_level,
+                         self.sec_modifier,
+                         coverages,
+                         connections)
 
