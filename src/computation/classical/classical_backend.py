@@ -84,7 +84,9 @@ def solver_output_to_network(sim, sec_devices, devices, result):
             covered_devices=[(node, list(node.device_ip)) for node in covered],
             connections=[],
         )
-        new_sim.create_device(placed) #UNIMPLEMENTED
+        #UNIMPLEMENTED  
+        #new_sim.create_device(placed) 
+        #TEMPORARY SOLUTION
         new_sim.node_list.append(placed)
 
     return new_sim
@@ -96,18 +98,27 @@ def build_api_response(new_sim, result):
     (or sec_modifier/covered_devices), so the placement travels next to it.
     """
     return {
-        "status": result["status"],
+        "solver_status": result["status"],
         "objective": result["objective"],
         "state": new_sim.get_sim_state(),
         "placement": {dev_id: list(spot) for dev_id, spot in result["placement"].items()},
     }
-
+    
 def run_classical(state_str):
     sim = Simulation_Service("id")
+    sim.extract_from_state_string(state_str)
     nodes, links = network_to_solver_input(sim)
-    
     ###STILL NEED SOME WAY TO GET DEVICES
-    devices = devices_to_solver_input()
+    
+    sec_devices = sim.get_sec_devices()
+    devices = devices_to_solver_input(sec_devices)
 
-    results = exec_classical(nodes, links, devices)
+    result = exec_classical(nodes, links, devices)
+    if result["placement"] is None:
+            raise RuntimeError("solver returned no placement (status: {})".format(result["status"]))
+    
+    new_sim = solver_output_to_network(sim, sec_devices, devices, result)
+    payload = build_api_response(new_sim, result)
+    payload["levels"] = result["levels"]
+    return payload
 
