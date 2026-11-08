@@ -8,7 +8,7 @@ from quantum_backend import get_status as qb_get_status, run_circuit, build_samp
 import db
 from network_adapter import prepare_network
 from classical.classical_backend import run_classical 
-from Simulation_Service import Simulation_Service
+from src.simulation.Simulation_Service import Simulation_Service
 from classical.sample_network import sample_devices
 import traceback
 

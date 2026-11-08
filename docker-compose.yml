@@ -34,7 +34,7 @@ services:
       - "8000:8000"
     volumes:
       - ./src/computation:/app
-      - ./src/simulation:/shared:ro
+      - ./src/simulation:/shared/src/simulation:ro
     environment:
       PYTHONPATH: /shared
       DATABASE_URL: postgresql://ipd:${POSTGRES_PASSWORD}@db:5432/ipd

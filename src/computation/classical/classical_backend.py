@@ -11,8 +11,8 @@ and returns:
      "levels": {ip: float} | None, "objective": int | None}
 """
 
-from NW_Structure import NW_Node, NW_Sec_Device
-from Simulation_Service import Simulation_Service
+from src.simulation.NW_Structure import NW_Node, NW_Sec_Device
+from src.simulation.Simulation_Service import Simulation_Service
 from .solver_utils import covered_by
 from .classical import exec_classical
 

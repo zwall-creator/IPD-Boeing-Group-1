@@ -1,8 +1,8 @@
 """
 Hardcoded network + available security devices, used until the frontend/simulation layer
 """
-from NW_Structure import NW_Node, NW_Sec_Device
-from Simulation_Service import Simulation_Service
+from src.simulation.NW_Structure import NW_Node, NW_Sec_Device
+from src.simulation.Simulation_Service import Simulation_Service
 
 
 def sample_network():
