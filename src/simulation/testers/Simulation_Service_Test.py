@@ -502,6 +502,69 @@ class Simulation_Service_Test(unittest.TestCase):
         self.assertEqual(
             [connection, second_connection], restored.node_list[1].connections
         )
+
+    def test_Simulation_Service_get_neighbors_state_tests(self):
+        destination = [1, 1, 1, 1]
+        security_ip = [2, 2, 2, 2]
+        missing_ip = [3, 3, 3, 3]
+        source = NW_Node(
+            'PC', [0, 0, 0, 0], 0.0, 0.0,
+            [
+                (destination, 1, 1, 'TCP', 80),
+                (security_ip, 1, 1, 'TCP', 81),
+                (missing_ip, 1, 1, 'TCP', 82),
+            ]
+        )
+        destination_node = NW_Node('Server', destination, 0.0, 0.0)
+        security_node = NW_Sec_Device('Router', security_ip, 0.0, 0.0, 0.5)
+        simulation = Simulation_Service(1, [source, destination_node, security_node])
+
+        self.assertEqual([destination_node, security_node], simulation.get_neighbors(source))
+
+    def test_Simulation_Service_find_connected_nodes_state_tests(self):
+        class TraversableNode(NW_Node):
+            def __eq__(self, other):
+                return self is other
+
+        first_ip = [0, 0, 0, 0]
+        second_ip = [1, 1, 1, 1]
+        security_ip = [2, 2, 2, 2]
+        first = TraversableNode(
+            'PC', first_ip, 0.0, 0.0,
+            [(second_ip, 1, 1, 'TCP', 80), (security_ip, 1, 1, 'TCP', 81)]
+        )
+        second = TraversableNode(
+            'Server', second_ip, 0.0, 0.0,
+            [(first_ip, 1, 1, 'TCP', 80)]
+        )
+        security_node = NW_Sec_Device('Router', security_ip, 0.0, 0.0, 0.5)
+        simulation = Simulation_Service(1, [first, second, security_node])
+
+        connected_nodes = simulation.find_connected_nodes(first)
+
+        self.assertEqual([first, second], connected_nodes)
+        self.assertTrue(all(node is not security_node for node in connected_nodes))
+
+    def test_Simulation_Service_find_connected_nodes_existing_search_state_test(self):
+        class TraversableNode(NW_Node):
+            pass
+
+        target = TraversableNode('PC', [0, 0, 0, 0], 0.0, 0.0)
+        searched_nodes = [target]
+        simulation = Simulation_Service(1, [target])
+
+        self.assertIs(searched_nodes, simulation.find_connected_nodes(target, searched_nodes))
+
+    def test_Simulation_Service_find_connected_nodes_error_tests(self):
+        simulation = Simulation_Service(1, [])
+
+        for target in (
+            NW_Node('PC', [0, 0, 0, 0], 0.0, 0.0),
+            NW_Sec_Device('Router', [1, 1, 1, 1], 0.0, 0.0, 0.5),
+        ):
+            with self.subTest(target=type(target).__name__):
+                with self.assertRaises(TypeError):
+                    simulation.find_connected_nodes(target)
     #END OF AI-ASSISTED CODE
 
 if __name__ == '__main__':
