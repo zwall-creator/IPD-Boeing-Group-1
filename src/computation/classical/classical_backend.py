@@ -41,9 +41,10 @@ def devices_to_solver_input(sec_devices, modes=None, default_mode="both"):
     NW_Sec_Device has no one-way/both-directions attribute, so mode comes from
     `modes` ({device_type: "one_way" | "both"}) or default_mode.
     """
-    modes = modes or {}
+
+    #for now just assuming all devices are both until we get passthrough working
     return [
-        {"id": d.get_ip_str(), "mode": modes.get(d.device_type, default_mode), "modifier": d.sec_modifier}
+        {"id": d.get_ip_str(), "mode": "both", "modifier": d.sec_modifier}
         for d in sec_devices
     ]
 
