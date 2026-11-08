@@ -6,7 +6,7 @@ This is an implementation of the classical solver using hardcoded networks,
 network input from the frontend/simulation layer will be implemented in future sprints.
 """
 from ortools.sat.python import cp_model
-from solver_utils import scale_float, covered_by
+from .solver_utils import scale_float, covered_by
 
 
 def exec_classical(nodes, links, devices):

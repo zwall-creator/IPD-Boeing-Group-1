@@ -13,8 +13,8 @@ and returns:
 
 from NW_Structure import NW_Node, NW_Sec_Device
 from Simulation_Service import Simulation_Service
-from solver_utils import covered_by
-from classical import exec_classical
+from .solver_utils import covered_by
+from .classical import exec_classical
 
 
 def _ip_str(ip_list):

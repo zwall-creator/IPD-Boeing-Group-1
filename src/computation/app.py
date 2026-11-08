@@ -10,6 +10,7 @@ from network_adapter import prepare_network
 from classical.classical_backend import run_classical 
 from Simulation_Service import Simulation_Service
 from classical.sample_network import sample_devices
+import traceback
 
 
 
@@ -292,3 +293,9 @@ def run_simulation():
         topology=network_payload["topology"],
         state_string=network_payload["state_string"],
     )
+
+def _report_error(source: str, exc: Exception, **extra) -> None:
+    """Log the traceback and push a structured error event to the frontend console."""
+    detail = traceback.format_exc()
+    app.logger.error("%s failed: %s\n%s", source, exc, detail)
+    _broadcast("error", {"source": source, "message": str(exc), "detail": detail, **extra})

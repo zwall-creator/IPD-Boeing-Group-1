@@ -12,7 +12,7 @@ function eventToLogVariant(type) {
   if (type === 'connected')              return 'info';
   if (type === 'simulation.started')     return 'info';
   if (type === 'simulation.progress')    return 'default';
-  if (type === 'simulation.done')        return 'success';
+  if (type === 'simulation.done') return data?.status === 'error' ? 'error' : 'success';
   if (type === 'error')                  return 'error';
   if (type === 'warn')                   return 'warn';
   return 'default';
