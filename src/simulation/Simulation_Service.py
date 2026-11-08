@@ -142,7 +142,7 @@ class Simulation_Service:
         Function to extract data from a given state string and update the simulation service object with the extracted data
         \nNOTE: this will replace the current data for this simulation, so any unsaved changes will be lost!
         :param state_string: string instance of a simulation's state string
-        \nNote: The following lines were modified with GitHub Copilot to resolve errors: 152,164,170,178-179,190-191,193-203,208-209,212,216-220,229-231,234-236
+        \nNote: at 11/8/2026 at 1:04 PM, The following lines were modified with GitHub Copilot to resolve errors: 152,164,170,178-179,190-191,193-203,208-209,212,216-220,229-231,234-236
         """
         if type(state_string) != str:
             raise TypeError('state_string must be a string')
@@ -153,7 +153,8 @@ class Simulation_Service:
             node_list = node_list[1:-1]
         if sim_id.isnumeric():
             sim_id = int(sim_id)
-            self.sim_id = sim_id
+        else:
+            raise ValueError('sim_id must be an integer')
             # TODO: update self.sim_id with extracted id
 
         #TODO: Implement Config support
@@ -161,7 +162,10 @@ class Simulation_Service:
         #collect formatted data for this sim's nodes
         ret_nodes = []
         # Split at syntax level 2 for node_list
-        node_list = node_list.split(';')
+        if node_list:
+            node_list = node_list.split(';')
+        else:
+            node_list = []
         for node_entry in node_list:
             # Split at syntax level 3 for node data
             #Implement boolean logic to extract NW_Node and NW_Sec_Device uniquely
