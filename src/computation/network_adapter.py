@@ -124,8 +124,9 @@ def to_state_string(topology: dict[str, list[dict[str, Any]]], sim_id: str = "fr
                 f"([{ip}],{connection['cost']},{connection['bandwidth']},"
                 f"{connection['connection_type']},{connection['source_port']})"
             )
+        node_ip = ",".join(node["device_ip"].split("."))
         node_strings.append(
-            f"{node['device_type']},[{node['device_ip']}],{node['base_sec_level']},"
+            f"{node['device_type']},[{node_ip}],{node['base_sec_level']},"
             f"{node['base_sec_level']},{node['risk_level']},[{','.join(connections)}];"
         )
     return f"{sim_id},frontend,[{''.join(node_strings)}]"
