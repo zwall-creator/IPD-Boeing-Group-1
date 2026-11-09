@@ -80,7 +80,7 @@ def solver_output_to_network(sim, sec_devices, devices, result):
         covered = [by_ip[ip] for ip in covered_by(dev_specs[dev_id], spot)]
         placed = NW_Sec_Device(
             src.device_type, list(src.device_ip), src.base_sec_level, src.risk_level, src.sec_modifier,
-            covered_devices=[(node, list(node.device_ip)) for node in covered],
+            covered_devices=[list(node.device_ip) for node in covered],
             connections=[],
         )
         #UNIMPLEMENTED  

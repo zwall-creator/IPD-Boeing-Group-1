@@ -6,11 +6,12 @@ from flask import Flask, Response, jsonify, request, stream_with_context
 from flask_cors import CORS
 from quantum_backend import get_status as qb_get_status, run_circuit, build_sample_circuit
 import db
-from network_adapter import prepare_network
+from network_adapter import prepare_network, build_simulation
 from classical.classical_backend import run_classical 
 from src.simulation.Simulation_Service import Simulation_Service
 from classical.sample_network import sample_devices
 import traceback
+
 
 
 
@@ -182,13 +183,14 @@ def run_simulation():
         if not network_payload["topology"]["nodes"]:
             return jsonify(ok=False, error="topology has no nodes"), 400
         try:
-            sim = Simulation_Service("frontend")
-            sim.extract_from_state_string(network_payload["state_string"])
+            sim = build_simulation(network_payload["topology"])
         except Exception as exc:
             return jsonify(ok=False, error=f"could not load network: {exc}"), 500
 
     def _run_classical():
-        run_id = db.insert_run("classical", opt_params)
+        #This doesn't work rn so commented out
+        #run_id = db.insert_run("classical", opt_params)
+        run_id = 1
         _broadcast("simulation.started", {
             "solver": "classical", "params": opt_params, "run_id": run_id,
             "topology": network_payload["topology"],
@@ -199,24 +201,29 @@ def run_simulation():
 
         def step(i, msg):
             _broadcast("simulation.progress", {"step": i, "total": total, "message": msg})
-            db.insert_log(run_id, i, total, msg)
+            #db.insert_log(run_id, i, total, msg)
 
         try:
             step(1, "Initialising problem graph…")
             sec_devices = sample_devices()  # TODO: take available devices from the request
             step(2, f"Applying weights — sec:{opt_params['securityWeight']} cost:{opt_params['costWeight']} bw:{opt_params['bandwidthWeight']} risk:{opt_params['riskThreshold']}…")
-            step(3, "Executing CP-SAT classical solver…")
             #use temporary sample devices
+            step(3, "Executing CP-SAT classical solver…")
+
             result = run_classical(sim, sample_devices())
+
             step(4, "Collecting results…")
             step(5, "Simulation complete.")
         except Exception as exc:
+            app.logger.exception("classical run failed")   # full traceback in the container logs
+            _broadcast("error", {"source": "classical_run", "message": str(exc),
+                                 "detail": traceback.format_exc()})
             db.update_run_status(run_id, "error", str(exc))
             _broadcast("simulation.done", {"solver": "classical", "status": "error", "error": str(exc),
                                            "params": opt_params, "run_id": run_id})
             return
         
-        db.update_run_status(run_id, "success")
+        #db.update_run_status(run_id, "success")
         _broadcast("simulation.done", {"solver": "classical", "status": "success",
                                        "params": opt_params, "run_id": run_id, **result})
 
@@ -293,9 +300,3 @@ def run_simulation():
         topology=network_payload["topology"],
         state_string=network_payload["state_string"],
     )
-
-def _report_error(source: str, exc: Exception, **extra) -> None:
-    """Log the traceback and push a structured error event to the frontend console."""
-    detail = traceback.format_exc()
-    app.logger.error("%s failed: %s\n%s", source, exc, detail)
-    _broadcast("error", {"source": source, "message": str(exc), "detail": detail, **extra})

@@ -10,7 +10,7 @@ class NW_Node:
     DEVICE_TYPES = ('PC', 'Laptop', 'Mobile','Router', 'Switch','Server')
     VALID_CONNECTION_TYPES = ('TCP','UDP')
 
-    def __init__(self, device_type, device_ip, base_sec_level, risk_level, connections = [], current_security_level = None):
+    def __init__(self, device_type, device_ip, base_sec_level, risk_level, connections = None, current_security_level = None):
         """
         :type device_type: str
         :type device_ip: list<int>
@@ -36,8 +36,6 @@ class NW_Node:
         if type(risk_level) != float:
             raise TypeError('given risk_level is not a float')
         #it is okay if None is given for connections; assume empty connections list is needed
-        if connections is None:
-            connections = []
         if type(connections) != list:
             raise TypeError('given connections is not a list')
 
@@ -57,7 +55,7 @@ class NW_Node:
         self.base_sec_level = base_sec_level
         self.security_level = base_sec_level
         self.risk_level = risk_level
-        self.connections = connections
+        self.connections = [] if connections == None else connections
 
         if current_security_level is not None:
             self.security_level = current_security_level

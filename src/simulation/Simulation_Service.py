@@ -10,11 +10,11 @@ class Simulation_Service:
     Simulation_Service uses an Observer structure: updates occur when prompted by other classes
 
     """
-    def __init__(self, sim_id, node_list = []):
+    def __init__(self, sim_id, node_list = None):
         self.sim_id = sim_id
         self.sim_state_str = ''
         self.sim_config = None
-        self.node_list = node_list
+        self.node_list = [] if node_list == None else node_list
 
     def __del__(self):
         self.sim_id = -1
