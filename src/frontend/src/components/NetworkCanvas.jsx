@@ -20,12 +20,6 @@ const VT_ORANGE = "#E5751F";
 const HOKIE_STONE = "#75787B";
 const TEXT = "#1f2933";
 
-// Backend fields from src/simulation/NW_Structure.py, all null for now.
-// TODO: IP format (string vs list of ints)
-// TODO: default values for base_sec_level, risk_level, cost and bandwidth
-// TODO: allowed values for connection_type
-// TODO: security devices not supported yet
-// TODO: build derived fields (security_level, connections, destination IP) for the backend
 const NODE_FIELDS = { device_ip: null, base_sec_level: null, risk_level: null };
 const EDGE_FIELDS = { cost: 0, bandwidth: 0, connection_type: "TCP", source_port: null };
 
