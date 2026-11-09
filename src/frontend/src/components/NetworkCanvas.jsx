@@ -8,7 +8,10 @@ import {
 import cytoscape from "cytoscape";
 import { DEVICE_TYPES } from "../deviceIcons";
 import { MODES } from "../graph/networkRules";
-import { serializeNetwork, serializeNode } from "../graph/networkSerializer";
+import { LAYOUT_PRESETS } from "../graph/layoutPresets";
+import NodePropertyPanel from "./NodePropertyPanel";
+import EdgePropertyPanel from "./EdgePropertyPanel";
+import { serializeNetwork } from "../graph/networkSerializer";
 import "./NetworkCanvas.css";
 
 // Color Codings
@@ -17,50 +20,11 @@ const VT_ORANGE = "#E5751F";
 const HOKIE_STONE = "#75787B";
 const TEXT = "#1f2933";
 
-// Backend fields from src/simulation/NW_Structure.py, all null for now.
-// TODO: IP format (string vs list of ints)
-// TODO: default values for base_sec_level, risk_level, cost and bandwidth
-// TODO: allowed values for connection_type
-// TODO: NW_Structure.py doesn't list device types (they come from deviceIcons.jsx)
-// TODO: security devices (NW_Sec_Device) not supported yet
-// TODO: build derived fields (security_level, connections, destination IP) for the backend
 const NODE_FIELDS = { device_ip: null, base_sec_level: null, risk_level: null };
 const EDGE_FIELDS = { cost: 0, bandwidth: 0, connection_type: "TCP", source_port: null };
 
-const LAYOUT_PRESETS = {
-  lan: {
-    label: 'Office LAN',
-    nodes: [
-      ['Router', 'Gateway', 220, 190],
-      ['Switch', 'Core Switch', 430, 190],
-      ['PC', 'Workstation 1', 650, 110],
-      ['PC', 'Workstation 2', 650, 270],
-      ['Server', 'File Server', 430, 360],
-    ],
-    edges: [[0, 1], [1, 2], [1, 3], [1, 4]],
-  },
-  dmz: {
-    label: 'DMZ',
-    nodes: [
-      ['Router', 'Internet Router', 150, 210],
-      ['Switch', 'DMZ Switch', 360, 210],
-      ['Server', 'Web Server', 600, 120],
-      ['Server', 'Mail Server', 600, 300],
-    ],
-    edges: [[0, 1], [1, 2], [1, 3]],
-  },
-  wan: {
-    label: 'Branch WAN',
-    nodes: [
-      ['Router', 'HQ Router', 180, 220],
-      ['Router', 'Branch Router', 520, 120],
-      ['Router', 'Remote Router', 520, 320],
-      ['Switch', 'HQ Switch', 820, 220],
-      ['Server', 'Application Server', 1030, 220],
-    ],
-    edges: [[0, 1], [0, 2], [0, 3], [3, 4]],
-  },
-}
+// Zoom used for preset loads
+const PRESET_ZOOM = 1.0;
 
 const STYLE = [
   {
@@ -127,16 +91,26 @@ export default function NetworkCanvas({
   const [edgeSourceId, setEdgeSourceId] = useState(null);
   const [notice, setNotice] = useState(null);
   const [typeMenu, setTypeMenu] = useState(null);
+  const [selectedNode, setSelectedNode] = useState(null);
+  const [selectedEdge, setSelectedEdge] = useState(null);
 
-  function addNode(type) {
+  // Next default name for a device
+  // Increments type count
+  // Count only goes up, never repeats a previously used number
+  function nextDefaultLabel(type) {
     const count = (typeCountsRef.current[type] ?? 0) + 1;
     typeCountsRef.current[type] = count;
+    return `${type} ${count}`;
+  }
+
+  function addNode(type) {
     cyRef.current.add({
       group: "nodes",
       data: {
         id: `n${++nodeCountRef.current}`,
-        label: `${type} ${count}`,
+        label: nextDefaultLabel(type),
         device_type: type,
+        autoLabel: true,
         ...NODE_FIELDS,
       },
       position: typeMenu.position,
@@ -164,6 +138,7 @@ export default function NetworkCanvas({
           id: `n${++nodeCountRef.current}`,
           label,
           device_type: type,
+          autoLabel: false,
           ...NODE_FIELDS,
         },
         position: { x, y },
@@ -180,22 +155,14 @@ export default function NetworkCanvas({
     }))
     cyRef.current.add([...nodes, ...edges])
     cyRef.current.layout({ name: 'preset', fit: true, padding: 50 }).run()
+    if (cyRef.current.zoom() > PRESET_ZOOM) {
+      cyRef.current.zoom(PRESET_ZOOM) // set the zoom level
+      cyRef.current.center()          // pan so the network is in the middle
+    }
   }
 
   function deleteSelected() {
     cyRef.current.$(":selected").remove();
-  }
-
-  function updateSelectedNode(patch) {
-    const selected = cyRef.current.$("node:selected").first();
-    if (!selected || selected.empty()) return false;
-    selected.data({
-      ...patch,
-      base_sec_level: Number(patch.base_sec_level) || 0,
-      risk_level: Number(patch.risk_level) || 0,
-    });
-    reportSelection();
-    return true;
   }
 
   function getTopology() {
@@ -219,13 +186,65 @@ export default function NetworkCanvas({
     cyRef.current.reset();
   }
 
+  // Plain copy of a node for the panel, plus its connections
+  function snapshotNode(node) {
+    const connections = node.neighborhood("node").map((other) => ({
+      id: other.id(),
+      label: other.data("label"),
+      outgoing: node.edgesTo(other).nonempty(), // edge from this node to the other
+      incoming: other.edgesTo(node).nonempty(), // edge from the other node to this one
+    }));
+    return { ...node.data(), connections };
+  }
+
+  // Plain copy of an edge for the panel, plus the nodes it connects
+  function snapshotEdge(edge) {
+    return {
+      ...edge.data(),
+      sourceLabel: edge.source().data("label"),
+      targetLabel: edge.target().data("label"),
+    };
+  }
+
+  // Panel close button
+  function closePanel() {
+    cyRef.current.elements().unselect();
+  }
+
+  // Panel Save Changes button: writes new values onto cytoscape node
+  function saveNode(nodeId, values) {
+    const node = cyRef.current.getElementById(nodeId);
+    const nameEdited = values.label !== node.data("label");
+    const typeChanged = values.device_type !== node.data("device_type");
+    // Still a default name if it was before and user hasn't updated it manually
+    const autoLabel = node.data("autoLabel") && !nameEdited;
+
+    node.data({
+      ...values,
+    autoLabel,
+    // Default name + new type
+    label: autoLabel && typeChanged ? nextDefaultLabel(values.device_type) : values.label,
+  });
+    // Refresh panel's copy
+    setSelectedNode(snapshotNode(node));
+  }
+
+  // Edge panel's save changes
+  function saveEdge(edgeId, values) {
+    const edge = cyRef.current.getElementById(edgeId);
+    edge.data(values);
+    // Data changes don't fire select/unselect, so refresh the panel's copy here
+    setSelectedEdge(snapshotEdge(edge));
+  }
+
   // App's sidebar buttons call deleteSelected(), isEmpty(), or clear()
+  // App's layout buttons call loadPreset(presetId)
   useImperativeHandle(ref, () => ({
     deleteSelected,
     getTopology,
     isEmpty,
     clear,
-    updateSelectedNode,
+    loadPreset,
   }));
 
   const resetInteraction = useEffectEvent(() => {
@@ -236,11 +255,15 @@ export default function NetworkCanvas({
   });
 
   const reportSelection = useEffectEvent(() => {
-    const selectedNodes = cyRef.current.$("node:selected");
-    onSelectionChange({
-      count: selectedNodes.length,
-      node: selectedNodes.length === 1 ? serializeNode(selectedNodes[0]) : null,
-    });
+    const selected = cyRef.current.$(":selected");
+    onSelectionChange(selected.length);
+    // Check if only one node is selected
+    const isOneNode = selected.length === 1 && selected[0].isNode();
+    // Node panel shows only if one node is selected
+    setSelectedNode(isOneNode ? snapshotNode(selected[0]) : null);
+    // Edge panel shows only if one edge is selected
+    const isOneEdge = selected.length === 1 && selected[0].isEdge();
+    setSelectedEdge(isOneEdge ? snapshotEdge(selected[0]) : null);
   });
 
   const handleTap = useEffectEvent((evt) => {
@@ -300,7 +323,7 @@ export default function NetworkCanvas({
       cyRef.current.elements().unselect();
     } else if (
       (e.key === "Delete" || e.key === "Backspace") &&
-      !e.target.closest("input, textarea, select, [contenteditable]")
+      !e.target.closest("input, textarea, select, [contenteditable], .property-panel")
     ) {
       deleteSelected();
     }
@@ -371,17 +394,25 @@ export default function NetworkCanvas({
         aria-keyshortcuts="Delete Backspace Escape"
         tabIndex="0"
       />
-      <div className="network-canvas__presets" role="toolbar" aria-label="Network layout presets">
-        <span>Layouts</span>
-        {Object.entries(LAYOUT_PRESETS).map(([id, preset]) => (
-          <button key={id} type="button" onClick={() => loadPreset(id)}>
-            {preset.label}
-          </button>
-        ))}
-      </div>
       <span className="network-canvas__hint" role="status">
         {hint}
       </span>
+      {selectedNode && (
+        <NodePropertyPanel
+          key={selectedNode.id}
+          node={selectedNode}
+          onClose={closePanel}
+          onSave={(values) => saveNode(selectedNode.id, values)}
+        />
+      )}
+      {selectedEdge && (
+        <EdgePropertyPanel
+          key={selectedEdge.id}
+          edge={selectedEdge}
+          onClose={closePanel}
+          onSave={(values) => saveEdge(selectedEdge.id, values)}
+        />
+      )}
       {typeMenu && (
         <div
           ref={typeMenuRef}

@@ -26,6 +26,19 @@
   outline-offset: 2px;
 }
 
+/* Layout presets */
+.graph-tools__presets {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.graph-tools__heading {
+  font-size: 0.85rem;
+  color: #cbd5e1;
+}
+
 .graph-tools__hint {
   color: #94a3b8;
   font-size: 11px;
