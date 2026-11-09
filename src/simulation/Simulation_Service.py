@@ -11,7 +11,7 @@ class Simulation_Service:
     Simulation_Service uses an Observer structure: updates occur when prompted by other classes
 
     """
-    def __init__(self, sim_id, node_list = []):
+    def __init__(self, sim_id, node_list = list()):
         self.sim_id = sim_id
         self.sim_state_str = ''
         self.sim_config = None
@@ -56,6 +56,21 @@ class Simulation_Service:
             #TODO: UPDATE SIMULATION STATE STRING AFTER MODIFICATION
         else:
             raise TypeError('new_node must be a NW_Sec_Device object')
+
+    def get_security_device_list(self):
+        ret_list = []
+        for node in self.node_list:
+            if type(node) == NW_Sec_Device:
+                ret_list.append(node)
+        return ret_list
+
+    def get_standard_device_list(self):
+        ret_list = []
+        for node in self.node_list:
+            if type(node) == NW_Node:
+                ret_list.append(node)
+        return ret_list
+
 
     def search_for_node(self, node_ip):
         """
