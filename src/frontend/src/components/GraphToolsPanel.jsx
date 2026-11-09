@@ -41,7 +41,8 @@ export default function GraphToolsPanel({
       <div className="graph-tools__presets" role="group" aria-label="Network presets">
         <span className="graph-tools__heading">Network Presets</span>
         {Object.entries(LAYOUT_PRESETS).map(([id, preset]) => (
-          <button type="button"
+          <button 
+            type="button"
             key={id} 
             className="btn-secondary"
             onClick={() => onLoadPreset(id)} 
@@ -50,6 +51,7 @@ export default function GraphToolsPanel({
           </button>
         ))}
       </div>
+      <span className="graph-tools__hint">Tab to move · Enter or Space to activate</span>
     </div>
   );
 }

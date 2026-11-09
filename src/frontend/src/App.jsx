@@ -44,6 +44,7 @@ export default function App() {
     riskThreshold:   30,
   });
   const [quantumStatus, setQuantumStatus] = useState(null);
+  const [preparedState, setPreparedState] = useState('');
 
   // Local UI logs (seed entries shown before the SSE connection is ready)
   const [localLogs, setLocalLogs] = useState([
@@ -51,7 +52,7 @@ export default function App() {
     { text: '[Backend] Computation API mapped at :8000.', variant: 'info' },
   ]);
 
-  const { events, status, backendOk, clearEvents, runSim, checkQuantumStatus } = useEventSource();
+  const { events, status, backendOk, clearEvents, runSim, prepareNetwork, checkQuantumStatus } = useEventSource();
 
   // When user switches to quantum solver, fetch IBM status from backend
   useEffect(() => {
@@ -96,12 +97,23 @@ export default function App() {
       ...prev,
       { text: `[Run] Triggering ${solverType} solver… (sec:${optParams.securityWeight} cost:${optParams.costWeight} bw:${optParams.bandwidthWeight} risk:${optParams.riskThreshold})`, variant: 'info' },
     ]);
-    const ok = await runSim(solverType, optParams);
-    if (!ok) {
+    const result = await runSim(solverType, optParams, canvasRef.current?.getTopology());
+    if (!result) {
       setLocalLogs(prev => [
         ...prev,
         { text: '[Error] Could not reach backend — is Flask running on :8000?', variant: 'error' },
       ]);
+    }
+    if (result?.state_string) setPreparedState(result.state_string);
+  };
+
+  const handlePrepareNetwork = async () => {
+    const result = await prepareNetwork(canvasRef.current?.getTopology());
+    if (result?.state_string) {
+      setPreparedState(result.state_string);
+      setLocalLogs((prev) => [...prev, { text: '[API] Network translated for simulation.', variant: 'success' }]);
+    } else {
+      setLocalLogs((prev) => [...prev, { text: '[API] Could not translate network.', variant: 'error' }]);
     }
   };
 
@@ -274,17 +286,27 @@ export default function App() {
           </div>
 
           <div className="canvas-viewport">
-            {activeView === 'topology' ? (
+            <div
+              className={`network-canvas-layer ${activeView === 'topology' ? '' : 'network-canvas-layer--hidden'}`}
+              aria-hidden={activeView !== 'topology'}
+            >
               <NetworkCanvas
                 ref={canvasRef}
                 mode={graphMode}
                 onSelectionChange={setSelectedCount}
               />
-            ) : (
+            </div>
+            {activeView !== 'topology' && (
               <div className="utility-view">
                 <p>{utilityViews[activeView][0]}</p>
                 <small>{utilityViews[activeView][1]}</small>
-                {activeView === 'simulation' && <button type="button" className="btn-primary utility-action" onClick={handleRunSimulation}>Run current scenario</button>}
+                {activeView === 'simulation' && (
+                  <>
+                    <button type="button" className="btn-secondary utility-action" onClick={handlePrepareNetwork}>Prepare network API payload</button>
+                    <button type="button" className="btn-primary utility-action" onClick={handleRunSimulation}>Run current scenario</button>
+                    {preparedState && <pre className="state-preview" aria-label="Prepared simulation state">{preparedState}</pre>}
+                  </>
+                )}
               </div>
             )}
           </div>

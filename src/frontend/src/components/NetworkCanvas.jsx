@@ -11,6 +11,7 @@ import { MODES } from "../graph/networkRules";
 import { LAYOUT_PRESETS } from "../graph/layoutPresets";
 import NodePropertyPanel from "./NodePropertyPanel";
 import EdgePropertyPanel from "./EdgePropertyPanel";
+import { serializeNetwork } from "../graph/networkSerializer";
 import "./NetworkCanvas.css";
 
 // Color Codings
@@ -26,7 +27,7 @@ const TEXT = "#1f2933";
 // TODO: security devices not supported yet
 // TODO: build derived fields (security_level, connections, destination IP) for the backend
 const NODE_FIELDS = { device_ip: null, base_sec_level: null, risk_level: null };
-const EDGE_FIELDS = { cost: null, bandwidth: null, connection_type: null };
+const EDGE_FIELDS = { cost: 0, bandwidth: 0, connection_type: "TCP", source_port: null };
 
 // Zoom used for preset loads
 const PRESET_ZOOM = 1.0;
@@ -170,6 +171,10 @@ export default function NetworkCanvas({
     cyRef.current.$(":selected").remove();
   }
 
+  function getTopology() {
+    return serializeNetwork(cyRef.current);
+  }
+
   // Check if canvas is empty
   function isEmpty() {
     return cyRef.current.elements().length === 0;
@@ -240,7 +245,13 @@ export default function NetworkCanvas({
 
   // App's sidebar buttons call deleteSelected(), isEmpty(), or clear()
   // App's layout buttons call loadPreset(presetId)
-  useImperativeHandle(ref, () => ({ deleteSelected, isEmpty, clear, loadPreset }));
+  useImperativeHandle(ref, () => ({
+    deleteSelected,
+    getTopology,
+    isEmpty,
+    clear,
+    loadPreset,
+  }));
 
   const resetInteraction = useEffectEvent(() => {
     cyRef.current.elements().unselect();
@@ -316,6 +327,11 @@ export default function NetworkCanvas({
       setEdgeSourceId(null);
       setNotice(null);
       cyRef.current.elements().unselect();
+    } else if (
+      (e.key === "Delete" || e.key === "Backspace") &&
+      !e.target.closest("input, textarea, select, [contenteditable], .property-panel")
+    ) {
+      deleteSelected();
     }
   });
 
@@ -381,6 +397,8 @@ export default function NetworkCanvas({
         data-mode={mode}
         role="application"
         aria-label="Network canvas"
+        aria-keyshortcuts="Delete Backspace Escape"
+        tabIndex="0"
       />
       <span className="network-canvas__hint" role="status">
         {hint}
