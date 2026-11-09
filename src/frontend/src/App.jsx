@@ -5,6 +5,7 @@ import NetworkCanvas from './components/NetworkCanvas';
 import OptimizationControls from './components/OptimizationControls';
 import GraphToolsPanel from './components/GraphToolsPanel';
 import ConfirmDialog from './components/ConfirmDialog';
+import { LAYOUT_PRESETS } from './graph/layoutPresets';
 
 // Map SSE event types to a log-entry CSS variant for colour coding
 function eventToLogVariant(type) {
@@ -145,9 +146,17 @@ export default function App() {
   };
 
   // Layout Preset Options: replace current canvas with preset network
+  // A non-empty canvas confirms
   const handleLoadPreset = (presetId) => {
-    canvasRef.current?.loadPreset(presetId);
-  }
+    if (canvasRef.current?.isEmpty() ?? true) {
+      canvasRef.current?.loadPreset(presetId);
+      return;
+    }
+    setConfirmRequest({
+      message: `Loading ${LAYOUT_PRESETS[presetId].label} will replace everything in the current network`,
+      onConfirm: () => canvasRef.current?.loadPreset(presetId),
+    });
+  };
 
   // ------------------------------------------------------------------
   // Status badge

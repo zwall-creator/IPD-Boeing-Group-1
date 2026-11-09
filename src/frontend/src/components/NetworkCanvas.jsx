@@ -10,6 +10,7 @@ import { DEVICE_TYPES } from "../deviceIcons";
 import { MODES } from "../graph/networkRules";
 import { LAYOUT_PRESETS } from "../graph/layoutPresets";
 import NodePropertyPanel from "./NodePropertyPanel";
+import EdgePropertyPanel from "./EdgePropertyPanel";
 import "./NetworkCanvas.css";
 
 // Color Codings
@@ -96,6 +97,7 @@ export default function NetworkCanvas({
   const [notice, setNotice] = useState(null);
   const [typeMenu, setTypeMenu] = useState(null);
   const [selectedNode, setSelectedNode] = useState(null);
+  const [selectedEdge, setSelectedEdge] = useState(null);
 
   // Next default name for a device
   // Increments type count
@@ -196,6 +198,14 @@ export default function NetworkCanvas({
     return { ...node.data(), connections };
   }
 
+  // Plain copy of an edge for the panel, plus the nodes it connects
+  function snapshotEdge(edge) {
+    return {
+      ...edge.data(),
+      sourceLabel: edge.source().data("label"),
+      targetLabel: edge.target().data("label"),
+    };
+  }
 
   // Panel close button
   function closePanel() {
@@ -220,6 +230,14 @@ export default function NetworkCanvas({
     setSelectedNode(snapshotNode(node));
   }
 
+  // Edge panel's save changes
+  function saveEdge(edgeId, values) {
+    const edge = cyRef.current.getElementById(edgeId);
+    edge.data(values);
+    // Data changes don't fire select/unselect, so refresh the panel's copy here
+    setSelectedEdge(snapshotEdge(edge));
+  }
+
   // App's sidebar buttons call deleteSelected(), isEmpty(), or clear()
   // App's layout buttons call loadPreset(presetId)
   useImperativeHandle(ref, () => ({ deleteSelected, isEmpty, clear, loadPreset }));
@@ -236,8 +254,11 @@ export default function NetworkCanvas({
     onSelectionChange(selected.length);
     // Check if only one node is selected
     const isOneNode = selected.length === 1 && selected[0].isNode();
-    // Panel shows only if one node is selected
-    setSelectedNode(isOneNode ? snapshotNode(selected[0]): null);
+    // Node panel shows only if one node is selected
+    setSelectedNode(isOneNode ? snapshotNode(selected[0]) : null);
+    // Edge panel shows only if one edge is selected
+    const isOneEdge = selected.length === 1 && selected[0].isEdge();
+    setSelectedEdge(isOneEdge ? snapshotEdge(selected[0]) : null);
   });
 
   const handleTap = useEffectEvent((evt) => {
@@ -370,6 +391,14 @@ export default function NetworkCanvas({
           node={selectedNode}
           onClose={closePanel}
           onSave={(values) => saveNode(selectedNode.id, values)}
+        />
+      )}
+      {selectedEdge && (
+        <EdgePropertyPanel
+          key={selectedEdge.id}
+          edge={selectedEdge}
+          onClose={closePanel}
+          onSave={(values) => saveEdge(selectedEdge.id, values)}
         />
       )}
       {typeMenu && (

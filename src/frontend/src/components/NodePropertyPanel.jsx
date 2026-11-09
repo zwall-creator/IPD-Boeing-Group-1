@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Pencil, X } from "lucide-react";
 import { formatFieldValue, checkNodeName, describeConnection } from "../graph/networkRules";
 import { DEVICE_TYPES } from "../deviceIcons";
-import "./NodePropertyPanel.css";
+import "./PropertyPanel.css";
 
 /**
  * Properties of selected node
@@ -48,16 +48,16 @@ export default function NodePropertyPanel({ node, onClose, onSave }) {
   }
 
   return (
-    <section className="node-panel" aria-label="Node properties">
+    <section className="property-panel" aria-label="Node properties">
       <form 
-        className="node-panel__form" 
+        className="property-panel__form" 
         onSubmit={handleSubmit} 
         onKeyDown={handleKeyDown}
       >
-        <div className="node-panel__header">
+        <div className="property-panel__header">
           {isEditing ? (
             <input
-              className="node-panel__name-input"
+              className="property-panel__name-input"
               aria-label="Node name"
               autoFocus
               value={draftLabel}
@@ -69,13 +69,13 @@ export default function NodePropertyPanel({ node, onClose, onSave }) {
               }}
             />
           ) : (
-            <h3 className="node-panel__title">{node.label}</h3>
+            <h3 className="property-panel__title">{node.label}</h3>
           )}
           {/* Pencil only shows in view mode. While editing, Save/Cancel take over */}
           {!isEditing && (
             <button
               type="button"
-              className="node-panel__icon-button"
+              className="property-panel__icon-button"
               aria-label="Edit node properties"
               onClick={startEditing}
             >
@@ -84,7 +84,7 @@ export default function NodePropertyPanel({ node, onClose, onSave }) {
           )}
           <button
             type="button"
-            className="node-panel__icon-button"
+            className="property-panel__icon-button"
             aria-label="Close node properties"
             onClick={onClose}
           >
@@ -92,11 +92,11 @@ export default function NodePropertyPanel({ node, onClose, onSave }) {
           </button>
         </div>
         {nameError && (
-          <p id="node-name-error" className="node-panel__error" role="alert">
+          <p id="node-name-error" className="property-panel__error" role="alert">
             {nameError}
           </p>
         )}
-          <dl className="node-panel__fields">
+          <dl className="property-panel__fields">
             <dt>Device type:</dt>
             <dd>
               {isEditing ? (
@@ -126,12 +126,12 @@ export default function NodePropertyPanel({ node, onClose, onSave }) {
             <dd>{node.connections.length === 0 ? (
               "None"
             ) : ( 
-              <ul className="node-panel__connections">
+              <ul className="property-panel__connections">
                 { node.connections.map((connection) => {
                   const { arrow, words } = describeConnection(connection);
                   return (
                     <li key={connection.id}>
-                      <span className="node-panel__arrow" aria-hidden="true">{arrow}</span>
+                      <span className="property-panel__arrow" aria-hidden="true">{arrow}</span>
                       <span className="visually-hidden">{words}</span> {connection.label}
                     </li>
                   );
@@ -141,7 +141,7 @@ export default function NodePropertyPanel({ node, onClose, onSave }) {
             </dd>
           </dl>
           {isEditing && (
-            <div className="node-panel__actions">
+            <div className="property-panel__actions">
               <button type="submit">Save changes</button>
               <button type="button" onClick={() => setIsEditing(false)}>
                 Cancel
