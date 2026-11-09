@@ -1,6 +1,7 @@
 """
 @team: Boeing Group 1
 @contributors: [Zach Merkel]
+Written with assistance from Claude Sonnet 5.5
 
 This is an implementation of the classical solver using hardcoded networks,
 network input from the frontend/simulation layer will be implemented in future sprints.

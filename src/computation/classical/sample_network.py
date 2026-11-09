@@ -1,4 +1,8 @@
 """
+@team: Boeing Group 1
+@contributors: [Zach Merkel]
+Written with assistance from Claude Sonnet 5.5
+
 Hardcoded network + available security devices, used until the frontend/simulation layer
 """
 from src.simulation.NW_Structure import NW_Node, NW_Sec_Device

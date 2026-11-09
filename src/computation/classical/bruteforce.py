@@ -1,6 +1,7 @@
 """
 @team: Boeing Group 1
 @contributors: [Zach Merkel]
+Written with assistance from Claude Sonnet 5.5
 
 Brute force reference solver. It tries every possible placement of the devices
 and keeps the best one, so it is only usable on very small networks. It takes the

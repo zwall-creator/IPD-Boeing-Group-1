@@ -1,4 +1,8 @@
 """
+@team: Boeing Group 1
+@contributors: [Zach Merkel]
+Written with assistance from Claude Sonnet 5.5
+
 Translators between the simulation layer (NW_Structure / Simulation_Service)
 and the classical solver (exec_classical).
 

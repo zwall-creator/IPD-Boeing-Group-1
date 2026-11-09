@@ -83,6 +83,9 @@ export default function App() {
     variant: eventToLogVariant(ev.type),
   }));
   const allLogs = [...localLogs, ...liveEntries];
+  // Newest solver result state string (from the simulation.done event), if there is one
+  const resultState = [...events].reverse()
+    .find(ev => ev.type === 'simulation.done' && ev.data?.state)?.data.state;
 
   const utilityViews = {
     simulation: ['Simulation Runs', 'Configure a solver, run the current scenario, and monitor progress in the execution log below.'],
@@ -304,7 +307,18 @@ export default function App() {
                   <>
                     <button type="button" className="btn-secondary utility-action" onClick={handlePrepareNetwork}>Prepare network API payload</button>
                     <button type="button" className="btn-primary utility-action" onClick={handleRunSimulation}>Run current scenario</button>
-                    {preparedState && <pre className="state-preview" aria-label="Prepared simulation state">{preparedState}</pre>}
+                    {preparedState && (
+                      <>
+                        <small>Input network</small>
+                        <pre className="state-preview" aria-label="Input simulation state">{preparedState}</pre>
+                      </>
+                    )}
+                    {resultState && (
+                      <>
+                        <small>Solver result (security devices placed)</small>
+                        <pre className="state-preview" aria-label="Result simulation state">{resultState}</pre>
+                      </>
+                    )}
                   </>
                 )}
               </div>
