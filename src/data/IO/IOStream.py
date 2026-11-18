@@ -1,5 +1,6 @@
 import os
 import time
+from src.simulation.Simulation_Service import Simulation_Service
 
 class IOStream:
 
@@ -52,7 +53,7 @@ class IOStream:
         :return: True if permission exists, False otherwise
         :raise: ValueError if access_type is an invalid mode
         """
-        if access_type == 'r' or access_type == 'read':
+        if access_type == 'r'    or access_type == 'read':
             return self.can_read
         if access_type == 'w'  or access_type == 'write':
             return self.can_write
@@ -354,4 +355,41 @@ class SolutionStream(IOStream):
         runtime = lines[3][19:].strip()
         return '{}, {}, {}, {}'.format(solution_id, problem_state, solution_state, runtime)
 
+class SimStream(IOStream):
+    def __init__(self, f_path = '', read_write_type = 'rw', stream_sim_id = -1, sim = Simulation_Service(), sim_name = ''):
+        #TODO: Implement type checking and error raising
+        super(SimStream, self).__init__(f_path, read_write_type)
+        self.stream_sim_id = stream_sim_id
+        self.sim = sim
+        self.sim_name = sim_name
 
+    def write_save(self):
+        """
+        Function to write SimStream data to a file
+        """
+        if not self.can_write:
+            raise PermissionError('Permission to write data is invalid')
+        sim_entry = '{simID}\n{simName}\n{simStateStr}\n'.format(simID = self.stream_sim_id, simName = self.sim_name,simStateStr = self.sim.get_sim_state())
+        self.file.write(sim_entry)
+
+    def read_save(self):
+        """
+        Function to read SimStream data from a file
+        """
+        if not self.can_read:
+            raise PermissionError('Permission to read data is invalid')
+        lines = self.read()
+        self.stream_sim_id = lines[0].strip()
+        self.sim_name = lines[1].strip()
+        self.sim.extract_from_state_string(lines[2].strip())
+
+    def check_for_existing_save(self):
+        """
+        Function to check if a file with the same contents already exists. This is to avoid writing over existing saves.
+        :return: True if a save with the same contents (id) already exists, False otherwise
+        """
+        #TODO: Implement a checking method that does not rely on read/write permissions to check other files
+        return NotImplemented
+
+
+        
