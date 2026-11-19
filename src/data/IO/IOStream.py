@@ -356,6 +356,11 @@ class SolutionStream(IOStream):
         return '{}, {}, {}, {}'.format(solution_id, problem_state, solution_state, runtime)
 
 class SimStream(IOStream):
+    """
+    The `SimStream` class inherits from the `IOStream` parent class. Its main purpose is to **store instances of simulations**. This enables **saving simulations** to be **brought back later** without re-constructing from scratch.
+
+    This class relies on the **simulation state strings** for storing the state of the simulations, and can be uniquely identified by a `stream_sim_id` and a `sim_name`. Only the `sim_name` will be visible to and intractable by the user.
+    """
     def __init__(self, f_path = '', read_write_type = 'rw', stream_sim_id = -1, sim = Simulation_Service(), sim_name = ''):
         #TODO: Implement type checking and error raising
         super(SimStream, self).__init__(f_path, read_write_type)
@@ -393,6 +398,11 @@ class SimStream(IOStream):
 
 
 class TemplateStream(SimStream):
+    """
+    The `TemplateStream` class inherits from the `SimStream` parent class. Its main purpose is to **store unsolved instances of simulations**. This enables **quickly bringing preset example networks into the simulation**. This allows the user to run general simulations without building the networks from scratch.
+
+    Much like its parent class `SimStream`, `TemplateStream` relies on **simulation state strings** for storing template simulations. The primary difference between these two object types is that **templates are not user-defined**, and **cannot be modified**.
+    """
     def __init__(self, f_path = '', read_write_type = 'rw', stream_sim_id = -1, sim = Simulation_Service(), sim_name = '', template_id = -1):
         super(TemplateStream, self).__init__(f_path, read_write_type, stream_sim_id, sim, sim_name)
         #TODO: Add type checking and error raising
