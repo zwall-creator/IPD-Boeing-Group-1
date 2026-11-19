@@ -392,4 +392,28 @@ class SimStream(IOStream):
         return NotImplemented
 
 
-        
+class TemplateStream(SimStream):
+    def __init__(self, f_path = '', read_write_type = 'rw', stream_sim_id = -1, sim = Simulation_Service(), sim_name = '', template_id = -1):
+        super(TemplateStream, self).__init__(f_path, read_write_type, stream_sim_id, sim, sim_name)
+        #TODO: Add type checking and error raising
+        self.template_id = template_id
+
+    def save_template(self):
+        """
+        Function to write TemplateStream data to a file
+        """
+        return NotImplemented
+
+    def read_template(self):
+        """
+        Function to read TemplateStream data from a file
+        """
+        return NotImplemented
+
+    def check_for_existing_template(self):
+        """
+        Function to check if a file with the same contents already exists. This is to avoid writing over existing template saves
+        :return: True if a template file with the same contents (id) already exists, False otherwise
+        """
+        return NotImplemented
+
