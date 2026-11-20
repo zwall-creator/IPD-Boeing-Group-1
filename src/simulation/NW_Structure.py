@@ -350,3 +350,4 @@ class NW_Sec_Device(NW_Node):
                          coverages,
                          connections)
 
+    #TODO: Add method to add a covered device's ip to self.covered_devices

@@ -275,3 +275,197 @@ class Simulation_Service:
                 continue
             self.find_connected_nodes(neighbor, searched_nodes)
         return searched_nodes
+
+    @staticmethod
+    def state_str_to_JSON(state_string):
+        """
+        Function to convert a given state string into a JSON-serializable dict
+        :param state_string: a str-type state of a simulation
+        :return: JSON-serializable dict containing the same state
+        """
+        if type(state_string) != str:
+            raise TypeError('state_str must be a string')
+
+        # Split at syntax level 1
+        sim_id, config, node_list = state_string.split('#')
+        if node_list[0] == '[' and node_list[-1] == ']':
+            node_list = node_list[1:-1]
+        if sim_id.isnumeric():
+            sim_id = int(sim_id)
+        else:
+            raise ValueError('sim_id must be an integer')
+
+        # TODO: Implement Config support
+
+        # collect formatted data for this sim's nodes
+        ret_nodes = []
+        # Split at syntax level 2 for node_list
+        if node_list:
+            node_list = node_list.split(';')
+        else:
+            node_list = []
+        for node_entry in node_list:
+            # Split at syntax level 3 for node data
+            # Implement boolean logic to extract NW_Node and NW_Sec_Device uniquely
+            node_data = node_entry.split('%')
+            object_class = object
+            device_type, device_ip_list, base_sec_level, security_level, risk_level, sec_modifier, covered_devices, connections = 'INVALID', [], -99.0, -99.0, -99.0, None, None, []
+            if len(node_data) == 6:
+                object_class = NW_Node
+                device_type, device_ip_list, base_sec_level, security_level, risk_level, connections = node_data
+            elif len(node_data) == 8:
+                object_class = NW_Sec_Device
+                device_type, device_ip_list, base_sec_level, security_level, risk_level, sec_modifier, covered_devices, connections = node_data
+                sec_modifier = float(sec_modifier)
+            else:
+                raise ValueError('Node state must contain 6 or 8 fields')
+
+            base_sec_level = float(base_sec_level)
+            security_level = float(security_level)
+            risk_level = float(risk_level)
+
+            # Split at syntax level 4 for node IP address and coverages
+            device_ip_list = device_ip_list[1:-1].split('&')
+            if len(device_ip_list) != 4:
+                raise ValueError('Node IP address must contain 4 bytes')
+            device_ip = [int(device_ip_list[0]), int(device_ip_list[1]), int(device_ip_list[2]), int(device_ip_list[3])]
+            covered_device_ips = None
+            if covered_devices is not None:
+                covered_device_ips = []
+                coverage_data = covered_devices[1:-1]
+                for coverage_entry in coverage_data.split('&') if coverage_data else []:
+                    # split at syntax level 5 for individual ips that are covered
+                    coverage_entry = coverage_entry.strip('[]').split('@')
+                    if len(coverage_entry) != 4:
+                        raise ValueError('Covered device IP address must contain 4 bytes')
+                    covered_ip = [int(coverage_entry[0]), int(coverage_entry[1]), int(coverage_entry[2]),
+                                  int(coverage_entry[3])]
+                    covered_device_ips.append(covered_ip)
+
+            # collect formated data for this node's connections
+            ret_connections = []
+            # Split at syntax level 4 for node connections
+            connection_data = connections[1:-1]
+            for connection_entry in connection_data.split('&') if connection_data else []:
+
+                # Split at syntax level 5 for connection details
+                connection_ip_list, cost, bandwidth, connection_type, source_port = connection_entry.strip('()').split('@')
+                cost = int(cost)
+                bandwidth = int(bandwidth)
+                source_port = int(source_port)
+
+                # Split at syntax level 6 for connection's destination IP address
+                connection_ip_list = connection_ip_list.strip('[]').split('=')
+                if len(connection_ip_list) != 4:
+                    raise ValueError('Connection IP address must contain 4 bytes')
+                connection_ip = [int(connection_ip_list[0]), int(connection_ip_list[1]), int(connection_ip_list[2]),
+                                 int(connection_ip_list[3])]
+
+                ret_connections.append((connection_ip, cost, bandwidth, connection_type, source_port))
+            constructor_args = [device_type, device_ip, base_sec_level, risk_level, ret_connections, security_level]
+            if covered_device_ips is not None and sec_modifier is not None:
+                constructor_args = [device_type, device_ip, base_sec_level, risk_level, sec_modifier, covered_device_ips,
+                                    ret_connections, security_level]
+
+            ret_nodes.append(object_class(*constructor_args))
+        new_state_str = '{}#{}#[{}]'.format(
+            sim_id, config, ';'.join(node.get_state_str() for node in ret_nodes)
+        )
+        if new_state_str != state_string:
+            raise ValueError(
+                'New simulation state string\n{}\n does not match the given state string\n{}\n'.format(new_state_str,
+                                                                                                       state_string))
+
+        JSON_sim_id = sim_id
+        JSON_node_list = ret_nodes
+        JSON_sim_config = config
+        JSON_sim_state_str = new_state_str
+        nodes_data = []
+        # parse and convert data for each node in the simulation
+        for node in JSON_node_list:
+            node_type = type(node)
+            device_type = node.device_type
+            device_ip = node.device_ip
+            base_sec_level = node.base_sec_level
+            security_level = node.security_level
+            risk_level = node.risk_level
+            sec_modifier = None
+            covered_devices = None
+            if type(node) == NW_Sec_Device:
+                covered_devices = Simulation_Service.get_JSON_covered_devices(node.covered_devices)
+                sec_modifier = node.sec_modifier
+            connections = Simulation_Service.get_JSON_connections(node.connections)
+
+            # add the JSON-formated data to the nodes list
+            if type(node) == NW_Sec_Device:
+                nodes_data.append(
+                    {
+                        "node_type": node_type,
+                        "device_type": device_type,
+                        "device_ip": device_ip,
+                        "base_sec_level": base_sec_level,
+                        "security_level": security_level,
+                        "risk_level": risk_level,
+                        "sec_modifier": sec_modifier,
+                        "covered_devices": covered_devices,
+                        "connections": connections
+                    }
+                )
+            elif type(node) == NW_Node:
+                nodes_data.append(
+                    {
+                        "node_type": node_type,
+                        "device_type": device_type,
+                        "device_ip": device_ip,
+                        "base_sec_level": base_sec_level,
+                        "security_level": security_level,
+                        "risk_level": risk_level,
+                        "connections": connections
+                    }
+                )
+
+
+        sim_JSON_data = {
+            "sim_id": JSON_sim_id,
+            "sim_config": JSON_sim_config,
+            "nodes_data": nodes_data
+        }
+        return sim_JSON_data
+
+    @staticmethod
+    def get_JSON_connections(connections):
+        """
+        Function to convert a list of connections into a JSON-formatted list
+        :param connections: list of connections
+        :return: JSON-formatted list of connections
+        """
+        con_list = []
+        for connection in connections:
+            con_ip = connection[0]
+            con_cost = connection[1]
+            con_bandwidth = connection[2]
+            con_type = connection[3]
+            con_source_port = connection[4]
+            con_list.append(
+                {
+                    "ip": con_ip,
+                    "cost": con_cost,
+                    "bandwidth": con_bandwidth,
+                    "connection type": con_type,
+                    "source port": con_source_port
+                }
+            )
+        return con_list
+
+    @staticmethod
+    def get_JSON_covered_devices(covered_devices):
+        """
+        Function to convert a list of ip addresses (type list< list<int> >) to a JSON-formatted list
+        :param covered_devices: a list<list<int>> containing the ip addresses of each covered node
+        :return: JSON-formatted list
+        """
+        cov_list = []
+        # Since the covered_devices should be the NW_Sec_Device.covered_devices attribute, it is just a list of the ip addresses
+        for covered_device in covered_devices:
+            cov_list.append({"ip" : covered_device})
+        return cov_list
