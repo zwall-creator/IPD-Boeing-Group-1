@@ -109,7 +109,8 @@ export default function App() {
     ]);
     const result = await runSim(solverType, optParams, canvasRef.current?.getTopology());
     if (!result?.ok) {
-      setApiFeedback({ type: 'error', message: result?.error || 'Could not reach the computation service.' });
+      const errorMessage = result?.error || 'Could not reach the computation service.';
+      setApiFeedback({ type: 'error', message: errorMessage });
       setLocalLogs(prev => [
         ...prev,
         { text: '[Error] Could not reach backend — is Flask running on :8000?', variant: 'error' },
@@ -129,8 +130,9 @@ export default function App() {
       setApiFeedback({ type: 'success', message: 'Network validated and translated for simulation.' });
       setLocalLogs((prev) => [...prev, { text: '[API] Network translated for simulation.', variant: 'success' }]);
     } else {
-      setApiFeedback({ type: 'error', message: result?.error || 'Could not translate network.' });
-      setLocalLogs((prev) => [...prev, { text: '[API] Could not translate network.', variant: 'error' }]);
+      const errorMessage = result?.error || 'Could not translate network.';
+      setApiFeedback({ type: 'error', message: errorMessage });
+      setLocalLogs((prev) => [...prev, { text: `[API] ${errorMessage}`, variant: 'error' }]);
     }
   };
 
