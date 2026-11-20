@@ -62,7 +62,8 @@ function parseLevel(text, label) {
   return { value: Number(trimmed) };
 }
 
-// Checks the node form. form: { label, device_type, device_ip, base_sec_level, risk_level } as text.
+// Checks the node form. form: { label, device_type, device_ip, base_sec_level, risk_level } as text
+// custom_image (data URL from shrinkImageFile)
 // Returns { values, errors } like checkEdgeForm: values is null if any field is wrong
 export function checkNodeForm(form) {
   const errors = {};
@@ -83,6 +84,7 @@ export function checkNodeForm(form) {
       device_ip: ip.value,
       base_sec_level: security.value,
       risk_level: risk.value,
+      custom_image: form.custom_image,
     },
     errors,
   };
@@ -96,6 +98,7 @@ export function toNodeFormValues(node) {
     device_ip: node.device_ip ?? "",
     base_sec_level: isNotSet(node.base_sec_level) ? "" : String(node.base_sec_level),
     risk_level: isNotSet(node.risk_level) ? "" : String(node.risk_level),
+    custom_image: node.custom_image ?? null,
   };
 }
 
