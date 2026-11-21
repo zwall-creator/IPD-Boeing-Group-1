@@ -6,14 +6,14 @@ import {
   checkNodeForm,
   toNodeFormValues,
 } from "../graph/networkRules";
-import { DEVICE_TYPES } from "../deviceIcons";
+import { DEVICE_TYPES, shrinkImageFile } from "../deviceIcons";
 import "./PropertyPanel.css";
 
 /**
  * NodePropertyPanel: shows and edits the selected node's properties
  * node: plain copy of the node's data plus its connections (selectedNode from NetworkCanvas)
  * onClose: called when the close button is clicked
- * onSave: called with { label, device_type, device_ip, base_sec_level, risk_level }
+ * onSave: called with { label, device_type, device_ip, base_sec_level, risk_level, custom_image }
  *         once Save changes passes the checks
  */
 export default function NodePropertyPanel({ node, onClose, onSave }) {
@@ -34,6 +34,18 @@ export default function NodePropertyPanel({ node, onClose, onSave }) {
   function updateField(key, value) {
     setDraft({ ...draft, [key]: value });
     setErrors({ ...errors, [key]: undefined });
+  }
+
+  // Image picked: shrink then store the result
+  function handleImageChange(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    event.target.value = ""; // reset so picking the same file again still fires onChange
+    shrinkImageFile(
+      file,
+      (imageUrl) => updateField("custom_image", imageUrl), // onDone
+      (message) => setErrors({ ...errors, custom_image: message }), // onError
+    );
   }
 
   // Save changes: check every field; any bad field blocks the whole save
@@ -144,6 +156,42 @@ export default function NodePropertyPanel({ node, onClose, onSave }) {
               </select>
             ) : (
               node.device_type
+            )}
+          </dd>
+          <dt>Image:</dt>
+          <dd>
+            {isEditing ? (
+              <>
+                {draft.custom_image && (
+                  <div className="property-panel__image-row">
+                    <img
+                      className="property-panel__image"
+                      src={draft.custom_image}
+                      alt="Custom image preview"
+                    />
+                    <button type="button" onClick={() => updateField("custom_image", null)}>
+                      Remove image
+                    </button>
+                  </div>
+                )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  aria-label="Custom image"
+                  aria-invalid={Boolean(errors.custom_image)}
+                  aria-describedby={errors.custom_image ? "node-custom_image-error" : undefined}
+                  onChange={handleImageChange}
+                />
+                {errors.custom_image && (
+                  <p id="node-custom_image-error" className="property-panel__error" role="alert">
+                    {errors.custom_image}
+                  </p>
+                )}
+              </> 
+            ) : node.custom_image ? (
+              <img className="property-panel__image" src={node.custom_image} alt="Custom image" />
+            ) : (
+              "Device icon"
             )}
           </dd>
           <dt>IP address:</dt>

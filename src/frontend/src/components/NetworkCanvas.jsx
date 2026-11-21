@@ -6,7 +6,7 @@ import {
   useState,
 } from "react";
 import cytoscape from "cytoscape";
-import { DEVICE_TYPES } from "../deviceIcons";
+import { DEVICE_TYPES, getDeviceIconUrl } from "../deviceIcons";
 import { MODES } from "../graph/networkRules";
 import { LAYOUT_PRESETS } from "../graph/layoutPresets";
 import NodePropertyPanel from "./NodePropertyPanel";
@@ -20,7 +20,7 @@ const VT_ORANGE = "#E5751F";
 const HOKIE_STONE = "#75787B";
 const TEXT = "#1f2933";
 
-const NODE_FIELDS = { device_ip: null, base_sec_level: null, risk_level: null };
+const NODE_FIELDS = { device_ip: null, base_sec_level: null, risk_level: null, custom_image: null };
 const EDGE_FIELDS = { cost: 0, bandwidth: 0, connection_type: "TCP", source_port: null };
 
 // Zoom used for preset loads
@@ -31,6 +31,10 @@ const STYLE = [
     selector: "node",
     style: {
       "background-color": VT_MAROON,
+      width: 42,
+      height: 42,
+      "background-image": (node) =>
+        node.data("custom_image") || getDeviceIconUrl(node.data("device_type")),
       "background-width": "58%",
       "background-height": "58%",
       label: "data(label)",
@@ -46,7 +50,6 @@ const STYLE = [
       shape: d.shape,
       width: d.width,
       height: d.height,
-      "background-image": d.iconUrl,
       ...(d.shape === "round-diamond" && {
         "background-width": "44%",
         "background-height": "44%",
@@ -65,7 +68,12 @@ const STYLE = [
   },
   {
     selector: "node:selected, node.edge-source",
-    style: { "background-color": VT_ORANGE },
+    style: {
+      "background-color": VT_ORANGE,
+      "outline-width": 3,
+      "outline-color": VT_ORANGE,
+      "outline-offset": 2,
+    },
   },
   {
     selector: "edge:selected",

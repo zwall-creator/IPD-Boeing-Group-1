@@ -1,5 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import {
+  CircleQuestionMark,
   Laptop,
   Monitor,
   Network,
@@ -46,3 +47,51 @@ export const DEVICE_TYPES = [
   { type: 'Switch', Icon: Network, shape: 'hexagon', width: 50, height: 44 },
   { type: 'Server', Icon: Server, shape: 'rectangle', width: 40, height: 40 },
 ].map((device) => ({ ...device, iconUrl: toDataUrl(device.Icon) }))
+
+// Generic icon for nodes with invalid or missing device type
+export const FALLBACK_ICON_URL = toDataUrl(CircleQuestionMark)
+
+// Icon URL for a node's device_type, unknown gives fallback icon
+export const getDeviceIconUrl = (type) => {
+  const device = DEVICE_TYPES.find((d) => d.type === type)
+  return device ? device.iconUrl : FALLBACK_ICON_URL
+}
+
+// Uploaded images redrawn to this size to keep data size small
+const CUSTOM_IMAGE_SIZE = 128
+
+export const shrinkImageFile = (file, onDone, onError) => {
+  if (!file.type.startsWith('image/')) {
+    onError('Please choose an image file')
+    return
+  }
+  const fileUrl = URL.createObjectURL(file) 
+  const img = new Image()
+
+  img.onload = () => {
+    const width = img.naturalWidth || CUSTOM_IMAGE_SIZE
+    const height = img.naturalHeight || CUSTOM_IMAGE_SIZE
+    const scale = Math.min(CUSTOM_IMAGE_SIZE / width, CUSTOM_IMAGE_SIZE / height)
+    const drawWidth = width * scale
+    const drawHeight = height * scale
+
+    const canvas = document.createElement('canvas')
+    canvas.width = CUSTOM_IMAGE_SIZE
+    canvas.height = CUSTOM_IMAGE_SIZE
+
+    canvas.getContext('2d').drawImage(
+      img,
+      (CUSTOM_IMAGE_SIZE - drawWidth) / 2,
+      (CUSTOM_IMAGE_SIZE - drawHeight) / 2,
+      drawWidth,
+      drawHeight,
+    )
+    URL.revokeObjectURL(fileUrl)
+    onDone(canvas.toDataURL('image/png'))
+  }
+  img.onerror = () => {
+    URL.revokeObjectURL(fileUrl)
+    onError('That image could not be read')
+  }
+  img.src = fileUrl
+}
