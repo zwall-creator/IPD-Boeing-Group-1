@@ -5,6 +5,7 @@
 """
 from src.simulation.NW_Structure import *
 from src.data.IO.IOStream import *
+import json
 class Simulation_Service:
     """
     Class to manage the service operations of a single simulation.
@@ -257,6 +258,71 @@ class Simulation_Service:
         self.sim_config = config
         self.sim_state_str = new_state_str
 
+    def extract_from_JSON_dict(self, data:dict):
+        """
+        Function to extract simulation state data from a JSON-serializable dict
+        :param data: JSON-serializable dict
+        """
+        # get initial JSON data
+        sim_id = data["sim_id"]
+        config = data["config"]
+        node_list = data["node_list"] # will need to extract from this dict after type checking
+
+        # check types of initial data
+        if type(sim_id) is not int:
+            raise TypeError('extracted sim_id was not of type int')
+        if type(config) is not dict:
+            raise TypeError('extracted config was not of type dict')
+        if type(node_list) is not list:
+            raise TypeError('extracted node_list was not of type list')
+
+        # Begin secondary layer of data extraction
+        for node_data in node_list:
+            node_type = node_data["node_type"]
+            device_type = node_data["device_type"]
+            device_ip = node_data["device_ip"]
+            base_sec_level = node_data["base_sec_level"]
+            security_level = node_data["security_level"]
+            risk_level = node_data["risk_level"]
+            sec_modifier = None
+            covered_devices = None
+            if node_type is NW_Sec_Device:
+                sec_modifier = node_data["sec_modifier"]
+                covered_devices = node_data["covered_devices"] #will need to extract further
+            connections = node_data["connections"] # will need to extract further
+
+            # type check secondary layer
+            if node_type is not NW_Node and node_type is not NW_Sec_Device:
+                raise ValueError('extracted node_type was not NW_Node or NW_Sec_Device')
+            if type(device_type) is not str:
+                raise TypeError('extracted device_type was not of type str')
+            if type(device_ip) is not list:
+                raise TypeError('extracted device_ip was not of type list')
+            if type(base_sec_level) is not float:
+                raise TypeError('extracted base_sec_level was not of type float')
+            if type(security_level) is not float:
+                raise TypeError('extracted security_level was not of type float')
+            if type(risk_level) is not float :
+                raise TypeError('extracted risk_level was not of type float')
+            if type(sec_modifier) is not float and node_type is NW_Sec_Device:
+                raise TypeError('extracted sec_modifier was not of type float')
+            if type(covered_devices) is not list and node_type is NW_Sec_Device:
+                raise TypeError('extracted covered_devices was not of type list')
+            if type(connections) is not list:
+                raise TypeError('extracted connections was not of type list')
+
+            # begin third layer of extraction
+            for connection_data in connections:
+                continue
+
+            if covered_devices is not None:
+                for covered_device_data in covered_devices:
+                    continue
+
+
+
+
+
 
     def find_connected_nodes(self, target, searched_nodes=None):
         """
@@ -283,6 +349,7 @@ class Simulation_Service:
         :param state_string: a str-type state of a simulation
         :return: JSON-serializable dict containing the same state
         """
+        # Begin with str data extraction
         if type(state_string) != str:
             raise TypeError('state_str must be a string')
 
@@ -375,7 +442,7 @@ class Simulation_Service:
             raise ValueError(
                 'New simulation state string\n{}\n does not match the given state string\n{}\n'.format(new_state_str,
                                                                                                        state_string))
-
+        # Begin JSON dict formatting
         JSON_sim_id = sim_id
         JSON_node_list = ret_nodes
         JSON_sim_config = config
@@ -428,7 +495,7 @@ class Simulation_Service:
         sim_JSON_data = {
             "sim_id": JSON_sim_id,
             "sim_config": JSON_sim_config,
-            "nodes_data": nodes_data
+            "node_list": nodes_data
         }
         return sim_JSON_data
 
@@ -448,11 +515,11 @@ class Simulation_Service:
             con_source_port = connection[4]
             con_list.append(
                 {
-                    "ip": con_ip,
+                    "destination_ip": con_ip,
                     "cost": con_cost,
                     "bandwidth": con_bandwidth,
-                    "connection type": con_type,
-                    "source port": con_source_port
+                    "connection_type": con_type,
+                    "source_port": con_source_port
                 }
             )
         return con_list
@@ -467,5 +534,14 @@ class Simulation_Service:
         cov_list = []
         # Since the covered_devices should be the NW_Sec_Device.covered_devices attribute, it is just a list of the ip addresses
         for covered_device in covered_devices:
-            cov_list.append({"ip" : covered_device})
+            cov_list.append({"covered_ip" : covered_device})
         return cov_list
+
+    @staticmethod
+    def JSON_to_state_str(data: dict):
+        """
+        Function to convert a JSON-serializable dict to a state string
+        :param data: a JSON-serializable dict
+        :return: str representing the state string
+        """
+        return NotImplemented
