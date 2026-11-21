@@ -394,6 +394,7 @@ class SimStream(IOStream):
         :return: True if a save with the same contents (id) already exists, False otherwise
         """
         #TODO: Implement a checking method that does not rely on read/write permissions to check other files
+        #TODO: Implement checking for existing saves (QoL)
         return NotImplemented
 
 
@@ -412,18 +413,26 @@ class TemplateStream(SimStream):
         """
         Function to write TemplateStream data to a file
         """
-        return NotImplemented
+        self.write_save()
+        self.file.write("\n{templateID}".format(templateID = self.template_id))
 
     def read_template(self):
         """
         Function to read TemplateStream data from a file
         """
-        return NotImplemented
+        if not self.can_read:
+            raise PermissionError('Permission to read data is invalid')
+        lines = self.read()
+        self.stream_sim_id = lines[0].strip()
+        self.sim_name = lines[1].strip()
+        self.sim.extract_from_state_string(lines[2].strip())
+        self.template_id = lines[3].strip()
 
     def check_for_existing_template(self):
         """
         Function to check if a file with the same contents already exists. This is to avoid writing over existing template saves
         :return: True if a template file with the same contents (id) already exists, False otherwise
         """
+        #TODO: Implement checking for existing templates (QoL)
         return NotImplemented
 
