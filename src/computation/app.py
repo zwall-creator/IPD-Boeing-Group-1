@@ -298,7 +298,8 @@ def run_simulation():
         _broadcast("simulation.progress", {"step": 6, "total": 9, "message": msg6})
         db.insert_log(run_id, 6, 9, msg6)
 
-        quantum_result = solve_qaoa(problem, shots=1024)
+        quantum_result = solve_qaoa(problem, shots=1024, gamma=0.8, beta=0.4,
+                                    run_circuit_fn=lambda c, shots: __import__('quantum_backend').run_circuit(c, shots, force_simulator=True))
         time.sleep(0.3)
 
         placement_str = ''.join(str(x) for x in quantum_result["placement"])
