@@ -101,6 +101,8 @@ export default function NetworkCanvas({
   const [typeMenu, setTypeMenu] = useState(null);
   const [selectedNode, setSelectedNode] = useState(null);
   const [selectedEdge, setSelectedEdge] = useState(null);
+  // Live text description of canvas state for screen readers
+  const [canvasDescription, setCanvasDescription] = useState('Network canvas is empty.');
 
   // Next default name for a device
   // Increments type count
@@ -272,6 +274,38 @@ export default function NetworkCanvas({
     // Edge panel shows only if one edge is selected
     const isOneEdge = selected.length === 1 && selected[0].isEdge();
     setSelectedEdge(isOneEdge ? snapshotEdge(selected[0]) : null);
+
+    // Update accessible description of canvas state
+    const cy = cyRef.current;
+    const nodeCount = cy.nodes().length;
+    const edgeCount = cy.edges().length;
+    if (nodeCount === 0) {
+      setCanvasDescription('Network canvas is empty.');
+    } else if (selected.length === 0) {
+      setCanvasDescription(
+        `Network canvas contains ${nodeCount} ${nodeCount === 1 ? 'device' : 'devices'} and ${edgeCount} ${edgeCount === 1 ? 'connection' : 'connections'}. Nothing selected.`
+      );
+    } else if (isOneNode) {
+      const node = selected[0];
+      const d = node.data();
+      const ip = d.device_ip ? `, IP ${d.device_ip}` : '';
+      const sec = d.base_sec_level != null ? `, security level ${d.base_sec_level}` : '';
+      const risk = d.risk_level != null ? `, risk level ${d.risk_level}` : '';
+      setCanvasDescription(
+        `Selected device: ${d.label}, type ${d.device_type}${ip}${sec}${risk}.`
+      );
+    } else if (isOneEdge) {
+      const edge = selected[0];
+      const d = edge.data();
+      const cost = d.cost != null ? `, cost ${d.cost}` : '';
+      const bw = d.bandwidth != null ? `, bandwidth ${d.bandwidth}` : '';
+      const ct = d.connection_type ? `, ${d.connection_type}` : '';
+      setCanvasDescription(
+        `Selected connection from ${edge.source().data('label')} to ${edge.target().data('label')}${cost}${bw}${ct}.`
+      );
+    } else {
+      setCanvasDescription(`${selected.length} elements selected.`);
+    }
   });
 
   const handleTap = useEffectEvent((evt) => {
@@ -359,6 +393,10 @@ export default function NetworkCanvas({
 
     cy.on("tap", (evt) => handleTap(evt));
     cy.on("select unselect remove", () => reportSelection());
+    cy.on("add remove", () => {
+      // Update node/edge counts in the accessible description whenever the graph changes
+      reportSelection();
+    });
 
     const onKeyDown = (e) => handleKeyDown(e);
     const onPointerDown = (e) => handlePointerDown(e);
@@ -393,12 +431,22 @@ export default function NetworkCanvas({
 
   return (
     <div className="network-canvas">
+      {/* Visually hidden live region — announces canvas state to screen readers */}
+      <span
+        className="visually-hidden"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+      >
+        {canvasDescription}
+      </span>
       <div
         ref={containerRef}
         className="network-canvas__graph"
         data-mode={mode}
         role="application"
         aria-label="Network canvas"
+        aria-description={canvasDescription}
         aria-keyshortcuts="Delete Backspace Escape"
         tabIndex="0"
       />
