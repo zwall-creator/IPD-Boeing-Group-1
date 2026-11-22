@@ -1,11 +1,9 @@
 import { MODES } from "../graph/networkRules";
+import {LAYOUT_PRESETS } from "../graph/layoutPresets";
 import "./GraphToolsPanel.css";
 
 /**
- * GraphToolsPanel: sidebar controls for the network canvas (issue #37).
- * Replaces the toolbar that sat on the canvas. Presentational component:
- * no state; App passes values in as props and gets clicks back via callbacks.
- * AI-assisted: drafted with Claude, reviewed by Hudson.
+ * GraphToolsPanel: sidebar controls for the network canvas
  */
 export default function GraphToolsPanel({
   mode,
@@ -13,6 +11,7 @@ export default function GraphToolsPanel({
   onModeChange,
   onDeleteSelected,
   onReset,
+  onLoadPreset
 }) {
   return (
     <div className="graph-tools" role="group" aria-label="Graph tools">
@@ -38,6 +37,20 @@ export default function GraphToolsPanel({
       <button type="button" className="btn-secondary" onClick={onReset}>
         Reset Canvas
       </button>
+      {/* Starter networks */}
+      <div className="graph-tools__presets" role="group" aria-label="Network presets">
+        <span className="graph-tools__heading">Network Presets</span>
+        {Object.entries(LAYOUT_PRESETS).map(([id, preset]) => (
+          <button 
+            type="button"
+            key={id} 
+            className="btn-secondary"
+            onClick={() => onLoadPreset(id)} 
+          >
+            {preset.label}
+          </button>
+        ))}
+      </div>
       <span className="graph-tools__hint">Tab to move · Enter or Space to activate</span>
     </div>
   );

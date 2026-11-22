@@ -7,6 +7,7 @@ function toIpString(value, index) {
 }
 
 function numberOrDefault(value, fallback = 0) {
+  if (value === null || value === undefined || value === '') return fallback;
   const parsed = Number(value);
   return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback;
 }
