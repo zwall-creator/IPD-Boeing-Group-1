@@ -54,6 +54,31 @@ body, html {
   gap: 1rem;
 }
 
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.65rem;
+  border: 1px solid #475569;
+  border-radius: 4px;
+  background: transparent;
+  color: #e2e8f0;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.8rem;
+}
+
+.theme-toggle:hover,
+.theme-toggle:focus-visible {
+  background: #334155;
+}
+
+.accessibility-notice {
+  color: #94a3b8;
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
 .status-indicator {
   font-size: 0.85rem;
   color: #4ade80;
@@ -200,6 +225,7 @@ body, html {
 
 .canvas-viewport {
   flex: 1;
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -207,6 +233,16 @@ body, html {
   margin: 1rem;
   border-radius: 6px;
   background: #090d16;
+}
+
+.network-canvas-layer {
+  position: absolute;
+  inset: 0;
+}
+
+.network-canvas-layer--hidden {
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .canvas-placeholder, .metrics-placeholder {
@@ -223,6 +259,95 @@ body, html {
   padding: 2rem;
   text-align: center;
   color: #94a3b8;
+}
+
+.api-feedback {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  width: 100%;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid;
+  border-radius: 4px;
+  text-align: left;
+  font-size: 0.85rem;
+}
+
+.api-feedback--success {
+  border-color: #16a34a;
+  background: #052e16;
+  color: #bbf7d0;
+}
+
+.api-feedback--error {
+  border-color: #dc2626;
+  background: #450a0a;
+  color: #fecaca;
+}
+
+.light-theme {
+  background: #f8fafc;
+  color: #1e293b;
+}
+
+.light-theme .app-header,
+.light-theme .workspace-sidebar,
+.light-theme .canvas-header,
+.light-theme .footer-title {
+  background: #ffffff;
+  border-color: #cbd5e1;
+}
+
+.light-theme .workspace-canvas,
+.light-theme .app-footer {
+  background: #e2e8f0;
+  border-color: #cbd5e1;
+}
+
+.light-theme .canvas-viewport {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.light-theme .canvas-title,
+.light-theme .utility-view p,
+.light-theme .header-brand h2 {
+  color: #1e293b;
+}
+
+.light-theme .workspace-nav button,
+.light-theme .control-group label,
+.light-theme .theme-toggle {
+  color: #334155;
+}
+
+.light-theme .workspace-nav button:hover,
+.light-theme .workspace-nav button.active,
+.light-theme .theme-toggle:hover,
+.light-theme .theme-toggle:focus-visible {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.light-theme .theme-toggle {
+  border-color: #94a3b8;
+}
+
+.light-theme .accessibility-notice,
+.light-theme .utility-view,
+.light-theme .canvas-meta,
+.light-theme .footer-title {
+  color: #475569;
+}
+
+.light-theme .api-feedback--success {
+  background: #f0fdf4;
+  color: #166534;
+}
+
+.light-theme .api-feedback--error {
+  background: #fef2f2;
+  color: #991b1b;
 }
 
 .utility-view p {
@@ -338,4 +463,133 @@ body, html {
   font-size: 0.7rem;
   line-height: 1.3;
   word-break: break-word;
+}
+.state-preview {
+  max-width: 100%;
+  max-height: 120px;
+  margin-top: 12px;
+  padding: 8px;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.18);
+  color: var(--text-muted);
+  font-size: 11px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* Light-theme contrast overrides. Keep text and controls readable on white. */
+.light-theme {
+  --text: #111827;
+  --text-muted: #374151;
+  --border: #6b7280;
+  --canvas-bg: #ffffff;
+  --vt-orange: #b45309;
+}
+
+.light-theme .btn-secondary {
+  background: #ffffff;
+  color: #111827;
+  border-color: #4b5563;
+}
+
+.light-theme .btn-secondary:hover,
+.light-theme .btn-secondary:focus-visible {
+  background: #e5e7eb;
+  color: #111827;
+}
+
+.light-theme .control-group select,
+.light-theme .event-counter,
+.light-theme .ibm-status {
+  background: #ffffff;
+  color: #111827;
+  border-color: #4b5563;
+}
+
+.light-theme .control-group select:focus-visible,
+.light-theme button:focus-visible,
+.light-theme input:focus-visible,
+.light-theme select:focus-visible {
+  outline: 3px solid #1d4ed8;
+  outline-offset: 2px;
+}
+
+.light-theme .graph-tools__heading,
+.light-theme .graph-tools__hint,
+.light-theme .opt-controls__title,
+.light-theme .opt-slider__label,
+.light-theme .opt-slider__track-labels,
+.light-theme .opt-slider__hint,
+.light-theme .network-canvas__hint,
+.light-theme .state-preview,
+.light-theme .ibm-status__detail {
+  color: #374151;
+}
+
+.light-theme .opt-slider__input {
+  background: linear-gradient(
+    to right,
+    var(--thumb-color) 0%,
+    var(--thumb-color) calc(var(--val, 50) * 1%),
+    #9ca3af calc(var(--val, 50) * 1%),
+    #9ca3af 100%
+  );
+}
+
+.light-theme .opt-slider__input::-webkit-slider-thumb {
+  border-color: #ffffff;
+}
+
+.light-theme .opt-slider__input::-moz-range-thumb {
+  border-color: #ffffff;
+}
+
+.light-theme .log-entry,
+.light-theme .log-entry.default {
+  color: #075985;
+}
+
+.light-theme .log-entry.info {
+  color: #3730a3;
+}
+
+.light-theme .log-entry.success,
+.light-theme .status-indicator.online,
+.light-theme .ibm-status__row.online {
+  color: #166534;
+}
+
+.light-theme .log-entry.warn,
+.light-theme .status-indicator.connecting,
+.light-theme .ibm-status__row.connecting {
+  color: #92400e;
+}
+
+.light-theme .log-entry.error,
+.light-theme .status-indicator.offline,
+.light-theme .ibm-status__row.offline,
+.light-theme .ibm-status__error {
+  color: #b91c1c;
+}
+
+.light-theme .sse-badge.online {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.light-theme .sse-badge.connecting {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.light-theme .sse-badge.offline {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.light-theme .state-preview {
+  background: #f3f4f6;
+  color: #111827;
 }

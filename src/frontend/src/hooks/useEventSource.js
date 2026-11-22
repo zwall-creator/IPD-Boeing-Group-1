@@ -2,6 +2,23 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 
 const BACKEND_URL = 'http://127.0.0.1:8000';
 
+async function requestJson(path, options) {
+  try {
+    const res = await fetch(`${BACKEND_URL}${path}`, options);
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      return {
+        ok: false,
+        status: res.status,
+        error: body.error || `Request failed with status ${res.status}`,
+      };
+    }
+    return { ok: true, status: res.status, ...body };
+  } catch {
+    return { ok: false, status: 0, error: 'The computation service could not be reached.' };
+  }
+}
+
 /**
  * useEventSource
  *
@@ -13,7 +30,8 @@ const BACKEND_URL = 'http://127.0.0.1:8000';
  *   status      — 'connecting' | 'connected' | 'disconnected' | 'error'
  *   clearEvents — empties the events array
  *   emitEvent   — POST { type, data } to /events/emit  (fire-and-forget)
- *   runSim      — POST { solver } to /simulation/run
+ *   runSim      — POST { solver, topology } to /simulation/run
+ *   prepareNetwork — POST a topology to /simulation/prepare
  *   backendOk   — boolean; true when /health responded 200
  */
 export function useEventSource() {
@@ -118,17 +136,20 @@ export function useEventSource() {
     }
   }, []);
 
-  const runSim = useCallback(async (solver = 'classical', optParams = {}) => {
-    try {
-      const res = await fetch(`${BACKEND_URL}/simulation/run`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ solver, ...optParams }),
-      });
-      return res.ok;
-    } catch {
-      return false;
-    }
+  const runSim = useCallback(async (solver = 'classical', optParams = {}, topology = { nodes: [], edges: [] }) => {
+    return requestJson('/simulation/run', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ solver, ...optParams, topology }),
+    });
+  }, []);
+
+  const prepareNetwork = useCallback(async (topology) => {
+    return requestJson('/simulation/prepare', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ topology }),
+    });
   }, []);
 
   const clearEvents = useCallback(() => setEvents([]), []);
@@ -143,5 +164,5 @@ export function useEventSource() {
     }
   }, []);
 
-  return { events, status, backendOk, clearEvents, emitEvent, runSim, checkQuantumStatus };
+  return { events, status, backendOk, clearEvents, emitEvent, runSim, prepareNetwork, checkQuantumStatus };
 }

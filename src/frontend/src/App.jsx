@@ -5,6 +5,9 @@ import NetworkCanvas from './components/NetworkCanvas';
 import OptimizationControls from './components/OptimizationControls';
 import GraphToolsPanel from './components/GraphToolsPanel';
 import ConfirmDialog from './components/ConfirmDialog';
+import { LAYOUT_PRESETS } from './graph/layoutPresets';
+import { Sun, Moon } from 'lucide-react';
+import AccessibilityNotice from './components/AccessibilityNotice';
 
 // Map SSE event types to a log-entry CSS variant for colour coding
 function eventToLogVariant(type) {
@@ -43,6 +46,9 @@ export default function App() {
     riskThreshold:   30,
   });
   const [quantumStatus, setQuantumStatus] = useState(null);
+  const [preparedState, setPreparedState] = useState('');
+  const [theme, setTheme] = useState(() => localStorage.getItem('ipd-theme') || 'dark');
+  const [apiFeedback, setApiFeedback] = useState(null);
 
   // Local UI logs (seed entries shown before the SSE connection is ready)
   const [localLogs, setLocalLogs] = useState([
@@ -50,7 +56,12 @@ export default function App() {
     { text: '[Backend] Computation API mapped at :8000.', variant: 'info' },
   ]);
 
-  const { events, status, backendOk, clearEvents, runSim, checkQuantumStatus } = useEventSource();
+  const { events, status, backendOk, clearEvents, runSim, prepareNetwork, checkQuantumStatus } = useEventSource();
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    localStorage.setItem('ipd-theme', theme);
+  }, [theme]);
 
   // When user switches to quantum solver, fetch IBM status from backend
   useEffect(() => {
@@ -91,16 +102,37 @@ export default function App() {
   // Handlers
   // ------------------------------------------------------------------
   const handleRunSimulation = async () => {
+    setApiFeedback(null);
     setLocalLogs(prev => [
       ...prev,
       { text: `[Run] Triggering ${solverType} solver… (sec:${optParams.securityWeight} cost:${optParams.costWeight} bw:${optParams.bandwidthWeight} risk:${optParams.riskThreshold})`, variant: 'info' },
     ]);
-    const ok = await runSim(solverType, optParams);
-    if (!ok) {
+    const result = await runSim(solverType, optParams, canvasRef.current?.getTopology());
+    if (!result?.ok) {
+      const errorMessage = result?.error || 'Could not reach the computation service.';
+      setApiFeedback({ type: 'error', message: errorMessage });
       setLocalLogs(prev => [
         ...prev,
         { text: '[Error] Could not reach backend — is Flask running on :8000?', variant: 'error' },
       ]);
+    }
+    if (result?.ok && result.state_string) {
+      setApiFeedback({ type: 'success', message: 'Network accepted by the simulation API.' });
+      setPreparedState(result.state_string);
+    }
+  };
+
+  const handlePrepareNetwork = async () => {
+    setApiFeedback(null);
+    const result = await prepareNetwork(canvasRef.current?.getTopology());
+    if (result?.ok && result.state_string) {
+      setPreparedState(result.state_string);
+      setApiFeedback({ type: 'success', message: 'Network validated and translated for simulation.' });
+      setLocalLogs((prev) => [...prev, { text: '[API] Network translated for simulation.', variant: 'success' }]);
+    } else {
+      const errorMessage = result?.error || 'Could not translate network.';
+      setApiFeedback({ type: 'error', message: errorMessage });
+      setLocalLogs((prev) => [...prev, { text: `[API] ${errorMessage}`, variant: 'error' }]);
     }
   };
 
@@ -144,6 +176,19 @@ export default function App() {
     canvasRef.current?.deleteSelected();
   };
 
+  // Layout Preset Options: replace current canvas with preset network
+  // A non-empty canvas confirms
+  const handleLoadPreset = (presetId) => {
+    if (canvasRef.current?.isEmpty() ?? true) {
+      canvasRef.current?.loadPreset(presetId);
+      return;
+    }
+    setConfirmRequest({
+      message: `Loading ${LAYOUT_PRESETS[presetId].label} will replace everything in the current network`,
+      onConfirm: () => canvasRef.current?.loadPreset(presetId),
+    });
+  };
+
   // ------------------------------------------------------------------
   // Status badge
   // ------------------------------------------------------------------
@@ -162,7 +207,7 @@ export default function App() {
   // Render
   // ------------------------------------------------------------------
   return (
-    <div className="app-container">
+    <div className={`app-container ${theme}-theme`}>
       {/* Top Application Bar */}
       <header className="app-header">
         <div className="header-brand">
@@ -171,6 +216,17 @@ export default function App() {
         </div>
         <div className="header-actions">
           <span className={`status-indicator ${statusVariant}`}>{statusLabel}</span>
+          <button
+            type="button"
+            className="theme-toggle"
+            aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+            aria-pressed={theme === 'light'}
+            title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+            onClick={() => setTheme((current) => current === 'dark' ? 'light' : 'dark')}
+          >
+            {theme === 'dark' ? <Sun size={16} aria-hidden="true" /> : <Moon size={16} aria-hidden="true" />}
+            <span>{theme === 'dark' ? 'Light mode' : 'Dark mode'}</span>
+          </button>
           <button
             type="button"
             className="btn-primary"
@@ -194,6 +250,7 @@ export default function App() {
           </nav>
 
           <h3>Controls &amp; Solvers</h3>
+          <AccessibilityNotice />
 
           <div className="control-group">
             <label htmlFor="solver-select">Solver Mode</label>
@@ -238,6 +295,7 @@ export default function App() {
               onModeChange={setGraphMode}
               onDeleteSelected={handleDeleteSelected}
               onReset={handleReset}
+              onLoadPreset={handleLoadPreset}
             />
           </div>
 
@@ -259,17 +317,33 @@ export default function App() {
           </div>
 
           <div className="canvas-viewport">
-            {activeView === 'topology' ? (
+            <div
+              className={`network-canvas-layer ${activeView === 'topology' ? '' : 'network-canvas-layer--hidden'}`}
+              aria-hidden={activeView !== 'topology'}
+            >
               <NetworkCanvas
                 ref={canvasRef}
                 mode={graphMode}
                 onSelectionChange={setSelectedCount}
               />
-            ) : (
+            </div>
+            {activeView !== 'topology' && (
               <div className="utility-view">
                 <p>{utilityViews[activeView][0]}</p>
                 <small>{utilityViews[activeView][1]}</small>
-                {activeView === 'simulation' && <button type="button" className="btn-primary utility-action" onClick={handleRunSimulation}>Run current scenario</button>}
+                {activeView === 'simulation' && (
+                  <>
+                    {apiFeedback && (
+                      <div className={`api-feedback api-feedback--${apiFeedback.type}`} role={apiFeedback.type === 'error' ? 'alert' : 'status'} aria-live="polite">
+                        <strong>{apiFeedback.type === 'error' ? 'Network validation failed' : 'API request successful'}</strong>
+                        <span>{apiFeedback.message}</span>
+                      </div>
+                    )}
+                    <button type="button" className="btn-secondary utility-action" onClick={handlePrepareNetwork}>Prepare network API payload</button>
+                    <button type="button" className="btn-primary utility-action" onClick={handleRunSimulation}>Run current scenario</button>
+                    {preparedState && <pre className="state-preview" aria-label="Prepared simulation state">{preparedState}</pre>}
+                  </>
+                )}
               </div>
             )}
           </div>
