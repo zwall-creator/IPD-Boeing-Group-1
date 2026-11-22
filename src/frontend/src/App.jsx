@@ -6,6 +6,8 @@ import OptimizationControls from './components/OptimizationControls';
 import GraphToolsPanel from './components/GraphToolsPanel';
 import ConfirmDialog from './components/ConfirmDialog';
 import { LAYOUT_PRESETS } from './graph/layoutPresets';
+import { Sun, Moon } from 'lucide-react';
+import AccessibilityNotice from './components/AccessibilityNotice';
 
 // Map SSE event types to a log-entry CSS variant for colour coding
 function eventToLogVariant(type) {
@@ -45,6 +47,8 @@ export default function App() {
   });
   const [quantumStatus, setQuantumStatus] = useState(null);
   const [preparedState, setPreparedState] = useState('');
+  const [theme, setTheme] = useState(() => localStorage.getItem('ipd-theme') || 'dark');
+  const [apiFeedback, setApiFeedback] = useState(null);
 
   // Local UI logs (seed entries shown before the SSE connection is ready)
   const [localLogs, setLocalLogs] = useState([
@@ -53,6 +57,11 @@ export default function App() {
   ]);
 
   const { events, status, backendOk, clearEvents, runSim, prepareNetwork, checkQuantumStatus } = useEventSource();
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    localStorage.setItem('ipd-theme', theme);
+  }, [theme]);
 
   // When user switches to quantum solver, fetch IBM status from backend
   useEffect(() => {
@@ -93,27 +102,37 @@ export default function App() {
   // Handlers
   // ------------------------------------------------------------------
   const handleRunSimulation = async () => {
+    setApiFeedback(null);
     setLocalLogs(prev => [
       ...prev,
       { text: `[Run] Triggering ${solverType} solver… (sec:${optParams.securityWeight} cost:${optParams.costWeight} bw:${optParams.bandwidthWeight} risk:${optParams.riskThreshold})`, variant: 'info' },
     ]);
     const result = await runSim(solverType, optParams, canvasRef.current?.getTopology());
-    if (!result) {
+    if (!result?.ok) {
+      const errorMessage = result?.error || 'Could not reach the computation service.';
+      setApiFeedback({ type: 'error', message: errorMessage });
       setLocalLogs(prev => [
         ...prev,
         { text: '[Error] Could not reach backend — is Flask running on :8000?', variant: 'error' },
       ]);
     }
-    if (result?.state_string) setPreparedState(result.state_string);
+    if (result?.ok && result.state_string) {
+      setApiFeedback({ type: 'success', message: 'Network accepted by the simulation API.' });
+      setPreparedState(result.state_string);
+    }
   };
 
   const handlePrepareNetwork = async () => {
+    setApiFeedback(null);
     const result = await prepareNetwork(canvasRef.current?.getTopology());
-    if (result?.state_string) {
+    if (result?.ok && result.state_string) {
       setPreparedState(result.state_string);
+      setApiFeedback({ type: 'success', message: 'Network validated and translated for simulation.' });
       setLocalLogs((prev) => [...prev, { text: '[API] Network translated for simulation.', variant: 'success' }]);
     } else {
-      setLocalLogs((prev) => [...prev, { text: '[API] Could not translate network.', variant: 'error' }]);
+      const errorMessage = result?.error || 'Could not translate network.';
+      setApiFeedback({ type: 'error', message: errorMessage });
+      setLocalLogs((prev) => [...prev, { text: `[API] ${errorMessage}`, variant: 'error' }]);
     }
   };
 
@@ -188,7 +207,7 @@ export default function App() {
   // Render
   // ------------------------------------------------------------------
   return (
-    <div className="app-container">
+    <div className={`app-container ${theme}-theme`}>
       {/* Top Application Bar */}
       <header className="app-header">
         <div className="header-brand">
@@ -197,6 +216,17 @@ export default function App() {
         </div>
         <div className="header-actions">
           <span className={`status-indicator ${statusVariant}`}>{statusLabel}</span>
+          <button
+            type="button"
+            className="theme-toggle"
+            aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+            aria-pressed={theme === 'light'}
+            title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+            onClick={() => setTheme((current) => current === 'dark' ? 'light' : 'dark')}
+          >
+            {theme === 'dark' ? <Sun size={16} aria-hidden="true" /> : <Moon size={16} aria-hidden="true" />}
+            <span>{theme === 'dark' ? 'Light mode' : 'Dark mode'}</span>
+          </button>
           <button
             type="button"
             className="btn-primary"
@@ -220,6 +250,7 @@ export default function App() {
           </nav>
 
           <h3>Controls &amp; Solvers</h3>
+          <AccessibilityNotice />
 
           <div className="control-group">
             <label htmlFor="solver-select">Solver Mode</label>
@@ -302,6 +333,12 @@ export default function App() {
                 <small>{utilityViews[activeView][1]}</small>
                 {activeView === 'simulation' && (
                   <>
+                    {apiFeedback && (
+                      <div className={`api-feedback api-feedback--${apiFeedback.type}`} role={apiFeedback.type === 'error' ? 'alert' : 'status'} aria-live="polite">
+                        <strong>{apiFeedback.type === 'error' ? 'Network validation failed' : 'API request successful'}</strong>
+                        <span>{apiFeedback.message}</span>
+                      </div>
+                    )}
                     <button type="button" className="btn-secondary utility-action" onClick={handlePrepareNetwork}>Prepare network API payload</button>
                     <button type="button" className="btn-primary utility-action" onClick={handleRunSimulation}>Run current scenario</button>
                     {preparedState && <pre className="state-preview" aria-label="Prepared simulation state">{preparedState}</pre>}
