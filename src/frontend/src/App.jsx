@@ -8,6 +8,7 @@ import ConfirmDialog from './components/ConfirmDialog';
 import { LAYOUT_PRESETS } from './graph/layoutPresets';
 import { Sun, Moon } from 'lucide-react';
 import AccessibilityNotice from './components/AccessibilityNotice';
+import ReportsView from './components/ReportsView';
 
 // Map SSE event types to a log-entry CSS variant for colour coding
 function eventToLogVariant(type) {
@@ -97,7 +98,7 @@ export default function App() {
 
   const utilityViews = {
     simulation: ['Simulation Runs', 'Configure a solver, run the current scenario, and monitor progress in the execution log below.'],
-    reports: ['Reports', 'Completed simulation reports will appear here for review and export.'],
+    reports: ['Reports', 'Solver performance comparison reports with PDF export.'],
     solutions: ['Solutions', 'Saved solver solutions and recommended network changes will appear here.'],
   };
 
@@ -335,7 +336,8 @@ export default function App() {
                 onSelectionChange={setSelectedCount}
               />
             </div>
-            {activeView !== 'topology' && (
+            {activeView === 'reports' && <ReportsView />}
+            {activeView !== 'topology' && activeView !== 'reports' && (
               <div className="utility-view">
                 <p>{utilityViews[activeView][0]}</p>
                 <small>{utilityViews[activeView][1]}</small>

@@ -14,6 +14,7 @@ from network_adapter import prepare_network, build_simulation
 from classical.classical_backend import run_classical 
 from src.simulation.Simulation_Service import Simulation_Service
 from classical.sample_network import sample_devices
+from reports.routes import reports_bp
 import traceback
 
 
@@ -21,6 +22,7 @@ import traceback
 
 app = Flask(__name__)
 CORS(app)
+app.register_blueprint(reports_bp)  # /reports endpoints (report generation service)
 
 # ---------------------------------------------------------------------------
 # Event bus — a simple thread-safe broadcast queue.
