@@ -4,6 +4,7 @@ import { STYLE } from "../graph/canvasStyle";
 import { topologyToElements } from "../graph/networkSerializer";
 import "./SimulationFrame.css";
 
+// Editor style and frame-only rules
 const FRAME_STYLE = [
   ...STYLE,
   {
@@ -56,7 +57,7 @@ export default function SimulationFrame({ run }) {
     fitToFrame(cy);
   }, [snapshot]);
 
-    // Start time
+  // Start time
   const startTime = run ? new Date(run.startedAt).toLocaleTimeString() : "";
 
   return (

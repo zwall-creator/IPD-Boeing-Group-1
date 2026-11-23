@@ -1,4 +1,4 @@
-/* App-wide styles. NetworkCanvas.jsx repeats the colors Cytoscape needs, so keep them in sync. */
+/* App-wide styles. */
 :root {
   --vt-maroon: #861f41;
   --vt-maroon-dark: #6e1935; /* filled for hover over maroon buttons */

@@ -20,7 +20,7 @@ export function serializeNetwork(cy) {
       id: data.id,
       label: data.label || data.id,
       device_type: data.device_type || 'PC',
-      custom_image: data.custom_image ?? null,
+      custom_image: data.custom_image ?? null, // simulation frame can show uploaded images
       device_ip: toIpString(data.device_ip, index),
       base_sec_level: numberOrDefault(data.base_sec_level),
       risk_level: numberOrDefault(data.risk_level),
