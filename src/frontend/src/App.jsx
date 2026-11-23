@@ -5,6 +5,7 @@ import NetworkCanvas from './components/NetworkCanvas';
 import OptimizationControls from './components/OptimizationControls';
 import GraphToolsPanel from './components/GraphToolsPanel';
 import ConfirmDialog from './components/ConfirmDialog';
+import SimulationFrame from './components/SimulationFrame';
 import { LAYOUT_PRESETS } from './graph/layoutPresets';
 import { Sun, Moon } from 'lucide-react';
 import AccessibilityNotice from './components/AccessibilityNotice';
@@ -36,6 +37,36 @@ function formatEvent(event) {
   }
 }
 
+// Figure out run's live status from SSE events
+function getRunStatus(run, events) {
+  if (!run) return null;
+  if (run.status === 'checked') return run;
+  let { status, message } = run;
+  for (const { type, data } of events.slice(run.eventIndex)) {
+    switch (type) {
+      case 'simulation.started':
+        status = 'running';
+        message = 'Started';
+        break;
+      case 'simulation.progress':
+        status = 'running';
+        message = `Step ${data.step}/${data.total}: ${data.message}`;
+        break;
+      case 'simulation.done':
+        status = data.status === 'error' ? 'failed' : 'complete';
+        message = data.error || `Complete · status: ${data.status}`;
+        break;
+      case 'error':
+        status = 'failed';
+        message = data.message || 'The backend reported an error.';
+        break;
+      default:
+        break;
+    }
+  }
+  return { ...run, status, message };
+}
+
 export default function App() {
   const [activeView, setActiveView] = useState('topology');
   const [solverType, setSolverType] = useState('classical');
@@ -49,6 +80,7 @@ export default function App() {
   const [preparedState, setPreparedState] = useState('');
   const [theme, setTheme] = useState(() => localStorage.getItem('ipd-theme') || 'dark');
   const [apiFeedback, setApiFeedback] = useState(null);
+  const [currentRun, setCurrentRun] = useState(null);
 
   // Local UI logs (seed entries shown before the SSE connection is ready)
   const [localLogs, setLocalLogs] = useState([
@@ -92,6 +124,9 @@ export default function App() {
   }));
   const allLogs = [...localLogs, ...liveEntries];
 
+  // Latest run with its live status
+  const liveRun = getRunStatus(currentRun, events);
+
   const utilityViews = {
     simulation: ['Simulation Runs', 'Configure a solver, run the current scenario, and monitor progress in the execution log below.'],
     reports: ['Reports', 'Completed simulation reports will appear here for review and export.'],
@@ -107,10 +142,20 @@ export default function App() {
       ...prev,
       { text: `[Run] Triggering ${solverType} solver… (sec:${optParams.securityWeight} cost:${optParams.costWeight} bw:${optParams.bandwidthWeight} risk:${optParams.riskThreshold})`, variant: 'info' },
     ]);
-    const result = await runSim(solverType, optParams, canvasRef.current?.getTopology());
+    const topology = canvasRef.current?.getTopology();
+    setCurrentRun({
+      snapshot: topology,
+      solver: solverType,
+      startedAt: Date.now(),
+      eventIndex: events.length,
+      status: 'starting',
+      message: 'Sending network to the backend…',
+    });
+    const result = await runSim(solverType, optParams, topology);
     if (!result?.ok) {
       const errorMessage = result?.error || 'Could not reach the computation service.';
       setApiFeedback({ type: 'error', message: errorMessage });
+      setCurrentRun(prev => ({ ...prev, status: 'failed', message: errorMessage }));
       setLocalLogs(prev => [
         ...prev,
         { text: '[Error] Could not reach backend — is Flask running on :8000?', variant: 'error' },
@@ -124,8 +169,17 @@ export default function App() {
 
   const handlePrepareNetwork = async () => {
     setApiFeedback(null);
-    const result = await prepareNetwork(canvasRef.current?.getTopology());
+    const topology = canvasRef.current?.getTopology();
+    const result = await prepareNetwork(topology);
     if (result?.ok && result.state_string) {
+      setCurrentRun({
+        snapshot: topology,
+        solver: null,
+        startedAt: Date.now(),
+        eventIndex: events.length,
+        status: 'checked',
+        message: '',
+      });
       setPreparedState(result.state_string);
       setApiFeedback({ type: 'success', message: 'Network validated and translated for simulation.' });
       setLocalLogs((prev) => [...prev, { text: '[API] Network translated for simulation.', variant: 'success' }]);
@@ -138,6 +192,10 @@ export default function App() {
 
   // Clears system logs (originally handleReset)
   const clearLogs = () => {
+    setCurrentRun(prev => {
+      if (!prev) return null;
+      return { ...getRunStatus(prev, events), eventIndex: 0 };
+    });
     clearEvents();
     setLocalLogs([
       { text: '[System] Canvas reset.', variant: 'warn' },
@@ -332,17 +390,20 @@ export default function App() {
                 <p>{utilityViews[activeView][0]}</p>
                 <small>{utilityViews[activeView][1]}</small>
                 {activeView === 'simulation' && (
-                  <>
-                    {apiFeedback && (
-                      <div className={`api-feedback api-feedback--${apiFeedback.type}`} role={apiFeedback.type === 'error' ? 'alert' : 'status'} aria-live="polite">
-                        <strong>{apiFeedback.type === 'error' ? 'Network validation failed' : 'API request successful'}</strong>
-                        <span>{apiFeedback.message}</span>
-                      </div>
-                    )}
-                    <button type="button" className="btn-secondary utility-action" onClick={handlePrepareNetwork}>Prepare network API payload</button>
-                    <button type="button" className="btn-primary utility-action" onClick={handleRunSimulation}>Run current scenario</button>
-                    {preparedState && <pre className="state-preview" aria-label="Prepared simulation state">{preparedState}</pre>}
-                  </>
+                  <div className="simulation-runs">
+                    <div className="simulation-runs__controls">
+                      {apiFeedback && (
+                        <div className={`api-feedback api-feedback--${apiFeedback.type}`} role={apiFeedback.type === 'error' ? 'alert' : 'status'} aria-live="polite">
+                          <strong>{apiFeedback.type === 'error' ? 'Network validation failed' : 'API request successful'}</strong>
+                          <span>{apiFeedback.message}</span>
+                        </div>
+                      )}
+                      <button type="button" className="btn-secondary utility-action" onClick={handlePrepareNetwork}>Check network</button>
+                      <button type="button" className="btn-primary utility-action" onClick={handleRunSimulation}>Run current scenario</button>
+                      {preparedState && <pre className="state-preview" aria-label="Prepared simulation state">{preparedState}</pre>}
+                    </div>
+                    <SimulationFrame run={liveRun} />
+                  </div>
                 )}
               </div>
             )}

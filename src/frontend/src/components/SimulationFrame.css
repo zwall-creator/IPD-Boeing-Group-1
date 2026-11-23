@@ -1,0 +1,53 @@
+/* Read-only view of the last simulation run */
+
+.simulation-frame {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  background-color: var(--canvas-bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text);
+  text-align: left;
+}
+
+.simulation-frame__status {
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.simulation-frame__status--failed {
+  color: var(--error);
+}
+
+.simulation-frame__solver {
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.simulation-frame__canvas {
+  position: relative;
+  flex: 1;
+}
+
+.simulation-frame__graph {
+  position: absolute;
+  inset: 0;
+}
+
+.simulation-frame__empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  color: var(--text-muted);
+  font-size: 14px;
+  text-align: center;
+  pointer-events: none;
+}
