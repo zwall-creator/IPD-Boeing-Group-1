@@ -10,10 +10,19 @@ from qaoa_solver import solve_qaoa
 from classical_solver import solve_exhaustive, solve_greedy, compare_results
 from result_validator import validate_placement, format_validation_report
 import db
-from network_adapter import prepare_network
+from network_adapter import prepare_network, build_simulation
+from classical.classical_backend import run_classical 
+from src.simulation.Simulation_Service import Simulation_Service
+from classical.sample_network import sample_devices
+from reports.routes import reports_bp
+import traceback
+
+
+
 
 app = Flask(__name__)
 CORS(app)
+app.register_blueprint(reports_bp)  # /reports endpoints (report generation service)
 
 # ---------------------------------------------------------------------------
 # Event bus — a simple thread-safe broadcast queue.
@@ -177,85 +186,56 @@ def run_simulation():
     # Capture topology from request body (may be empty — solvers fall back to toy network)
     req_nodes = body.get("nodes", [])
     req_edges = body.get("edges", [])
+    sim = None
+
+    if solver == "classical":
+        if not network_payload["topology"]["nodes"]:
+            return jsonify(ok=False, error="topology has no nodes"), 400
+        try:
+            sim = build_simulation(network_payload["topology"])
+        except Exception as exc:
+            return jsonify(ok=False, error=f"could not load network: {exc}"), 500
 
     def _run_classical():
-        run_id = db.insert_run("classical", opt_params)
-        _broadcast("simulation.started", {"solver": "classical", "params": opt_params, "run_id": run_id})
-
-        # Step 1 — build the problem
-        msg = "Building network optimisation problem…"
-        _broadcast("simulation.progress", {"step": 1, "total": 7, "message": msg})
-        db.insert_log(run_id, 1, 7, msg)
-        time.sleep(0.3)
-
-        nodes = req_nodes
-        edges = req_edges
-        if not nodes:
-            problem = build_toy_problem(opt_params)
-            msg = f"No topology provided — using toy network ({problem.n} nodes, {len(problem.edges)} edges)"
-        else:
-            problem = build_problem_from_dicts(nodes, edges, opt_params)
-            msg = f"Topology loaded: {problem.n} nodes, {len(problem.edges)} edges"
-        _broadcast("simulation.progress", {"step": 2, "total": 7, "message": msg})
-        db.insert_log(run_id, 2, 7, msg)
-        time.sleep(0.3)
-
-        # Step 3 — build QUBO
-        msg = (f"QUBO matrix built ({problem.n}×{problem.n}) — "
-               f"sec:{opt_params['securityWeight']} cost:{opt_params['costWeight']} "
-               f"bw:{opt_params['bandwidthWeight']} risk:{opt_params['riskThreshold']}")
-        _broadcast("simulation.progress", {"step": 3, "total": 7, "message": msg})
-        db.insert_log(run_id, 3, 7, msg)
-        time.sleep(0.3)
-
-        # Step 4 — run classical solver
-        msg = "Running exhaustive classical solver…"
-        _broadcast("simulation.progress", {"step": 4, "total": 7, "message": msg})
-        db.insert_log(run_id, 4, 7, msg)
-        classical_result = solve_exhaustive(problem)
-        time.sleep(0.3)
-
-        placement_str = ''.join(str(x) for x in classical_result["placement"])
-        msg = (f"Classical solver done — placement: {placement_str} | "
-               f"QUBO cost: {classical_result['qubo_cost']:.4f} | "
-               f"strategy: {classical_result['strategy']}")
-        _broadcast("simulation.progress", {"step": 5, "total": 7, "message": msg})
-        db.insert_log(run_id, 5, 7, msg)
-        time.sleep(0.3)
-
-        # Step 6 — validate
-        validation = validate_placement(problem, classical_result["placement"])
-        report = format_validation_report(validation, classical_result["placement"])
-        for line in report.split("\n"):
-            _broadcast("simulation.progress", {"step": 6, "total": 7, "message": line})
-            db.insert_log(run_id, 6, 7, line)
-        time.sleep(0.3)
-
-        # Step 7 — done
-        status = "success" if validation["valid"] else "invalid"
-        msg = f"Classical simulation complete — result: {status.upper()}"
-        _broadcast("simulation.progress", {"step": 7, "total": 7, "message": msg})
-        db.insert_log(run_id, 7, 7, msg)
-
-        db.insert_result(run_id, {
-            "backend":      "classical_exhaustive",
-            "used_ibm":     False,
-            "shots":        None,
-            "counts":       {"placement": placement_str},
-            "execution_ms": None,
+        #This doesn't work rn so commented out
+        #run_id = db.insert_run("classical", opt_params)
+        run_id = 1
+        _broadcast("simulation.started", {
+            "solver": "classical", "params": opt_params, "run_id": run_id,
+            "topology": network_payload["topology"],
+            "state_string": network_payload["state_string"],
         })
-        db.update_run_status(run_id, status)
-        _broadcast("simulation.done", {
-            "solver":     "classical",
-            "status":     status,
-            "placement":  classical_result["placement"],
-            "qubo_cost":  classical_result["qubo_cost"],
-            "valid":      validation["valid"],
-            "violations": validation["violations"],
-            "warnings":   validation["warnings"],
-            "params":     opt_params,
-            "run_id":     run_id,
-        })
+
+        total = 5
+
+        def step(i, msg):
+            _broadcast("simulation.progress", {"step": i, "total": total, "message": msg})
+            #db.insert_log(run_id, i, total, msg)
+
+        try:
+            step(1, "Initialising problem graph…")
+            sec_devices = sample_devices()  # TODO: take available devices from the request
+            step(2, f"Applying weights — sec:{opt_params['securityWeight']} cost:{opt_params['costWeight']} bw:{opt_params['bandwidthWeight']} risk:{opt_params['riskThreshold']}…")
+            #use temporary sample devices
+            step(3, "Executing CP-SAT classical solver…")
+
+            result = run_classical(sim, sample_devices())
+
+            step(4, "Collecting results…")
+            step(5, "Simulation complete.")
+        except Exception as exc:
+            app.logger.exception("classical run failed")   # full traceback in the container logs
+            _broadcast("error", {"source": "classical_run", "message": str(exc),
+                                 "detail": traceback.format_exc()})
+            db.update_run_status(run_id, "error", str(exc))
+            _broadcast("simulation.done", {"solver": "classical", "status": "error", "error": str(exc),
+                                           "params": opt_params, "run_id": run_id})
+            return
+        
+        #db.update_run_status(run_id, "success")
+        _broadcast("simulation.done", {"solver": "classical", "status": "success",
+                                       "params": opt_params, "run_id": run_id, **result})
+
 
     def _run_quantum():
         run_id = db.insert_run("quantum", opt_params)

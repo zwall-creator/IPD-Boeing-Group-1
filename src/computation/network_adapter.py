@@ -6,6 +6,8 @@ import ipaddress
 import re
 from typing import Any
 
+from src.simulation.NW_Structure import NW_Node
+from src.simulation.Simulation_Service import Simulation_Service
 
 VALID_DEVICE_TYPES = {"PC", "Laptop", "Cell Phone", "Mobile", "Router", "Switch", "Server"}
 DEVICE_TYPE_ALIASES = {"Cell Phone": "Mobile"}
@@ -43,6 +45,20 @@ def _safe_identifier(value: Any, fallback: str) -> str:
     return identifier
 
 
+def build_simulation(topology, sim_id=1):
+    """Build a Simulation_Service from a normalized topology."""
+    sim = Simulation_Service(sim_id)
+    ips = {n["id"]: [int(b) for b in n["device_ip"].split(".")] for n in topology["nodes"]}
+    nodes = {}
+    for n in topology["nodes"]:
+        nodes[n["id"]] = NW_Node(n["device_type"], list(ips[n["id"]]), float(n["base_sec_level"]),
+                                 float(n["risk_level"]), connections=[])
+        sim.create_node(nodes[n["id"]])
+    for e in topology["edges"]:
+        nodes[e["source"]].add_connection(list(ips[e["target"]]), e["cost"], e["bandwidth"],
+                                          e["connection_type"], e["source_port"])
+    return sim
+
 def normalize_topology(topology: dict[str, Any] | None) -> dict[str, list[dict[str, Any]]]:
     """Validate and normalize Cytoscape JSON into a simulation-ready graph."""
     if not isinstance(topology, dict):
@@ -74,7 +90,7 @@ def normalize_topology(topology: dict[str, Any] | None) -> dict[str, list[dict[s
             "base_sec_level": _number(data.get("base_sec_level"), "base_sec_level"),
             "risk_level": _number(data.get("risk_level"), "risk_level"),
         })
-
+    used_ports: dict[str, set[int]] = {}      # <-- the declaration goes here
     edges: list[dict[str, Any]] = []
     for index, raw in enumerate(raw_edges, start=1):
         data = raw.get("data", raw) if isinstance(raw, dict) else {}
@@ -86,8 +102,18 @@ def normalize_topology(topology: dict[str, Any] | None) -> dict[str, list[dict[s
         if connection_type not in VALID_CONNECTION_TYPES:
             raise ValueError(f"unsupported connection_type: {connection_type}")
         source_port = data.get("source_port")
-        if source_port in (None, ""):
+        ports = used_ports.setdefault(source, set())
+        if source_port in (None, "", 0, "0"): #the frontend sends 0 when it is not set
             source_port = 10000 + index
+            while source_port in ports:
+                source_port += 1
+        else:
+            source_port = int(_number(source_port, "source_port", integer=True))
+            if source_port in ports:
+                raise ValueError(
+                    f"edge {index} reuses source_port {source_port}, already used by another connection from {source}"
+                )
+        ports.add(source_port)
         edges.append({
             "id": _safe_identifier(data.get("id"), f"e{index}"),
             "source": source,
@@ -100,8 +126,10 @@ def normalize_topology(topology: dict[str, Any] | None) -> dict[str, list[dict[s
 
     return {"nodes": nodes, "edges": edges}
 
+def to_state_string(topology, sim_id=1):
+    return build_simulation(topology, sim_id).get_sim_state()
 
-def to_state_string(topology: dict[str, list[dict[str, Any]]], sim_id: str = "frontend") -> str:
+def to_state_string_old(topology: dict[str, list[dict[str, Any]]], sim_id: str = "frontend") -> str:
     """Create the state string consumed by ``Simulation_Service``/``NW_Node``."""
     by_id = {node["id"]: node for node in topology["nodes"]}
     connections_by_source: dict[str, list[dict[str, Any]]] = {node["id"]: [] for node in topology["nodes"]}

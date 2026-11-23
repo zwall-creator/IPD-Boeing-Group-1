@@ -8,6 +8,7 @@ import ConfirmDialog from './components/ConfirmDialog';
 import { LAYOUT_PRESETS } from './graph/layoutPresets';
 import { Sun, Moon } from 'lucide-react';
 import AccessibilityNotice from './components/AccessibilityNotice';
+import ReportsView from './components/ReportsView';
 
 // Map SSE event types to a log-entry CSS variant for colour coding
 function eventToLogVariant(type) {
@@ -91,10 +92,13 @@ export default function App() {
     variant: eventToLogVariant(ev.type),
   }));
   const allLogs = [...localLogs, ...liveEntries];
+  // Newest solver result state string (from the simulation.done event), if there is one
+  const resultState = [...events].reverse()
+    .find(ev => ev.type === 'simulation.done' && ev.data?.state)?.data.state;
 
   const utilityViews = {
     simulation: ['Simulation Runs', 'Configure a solver, run the current scenario, and monitor progress in the execution log below.'],
-    reports: ['Reports', 'Completed simulation reports will appear here for review and export.'],
+    reports: ['Reports', 'Solver performance comparison reports with PDF export.'],
     solutions: ['Solutions', 'Saved solver solutions and recommended network changes will appear here.'],
   };
 
@@ -332,7 +336,8 @@ export default function App() {
                 onSelectionChange={setSelectedCount}
               />
             </div>
-            {activeView !== 'topology' && (
+            {activeView === 'reports' && <ReportsView />}
+            {activeView !== 'topology' && activeView !== 'reports' && (
               <div className="utility-view">
                 <p>{utilityViews[activeView][0]}</p>
                 <small>{utilityViews[activeView][1]}</small>
@@ -346,7 +351,18 @@ export default function App() {
                     )}
                     <button type="button" className="btn-secondary utility-action" onClick={handlePrepareNetwork}>Prepare network API payload</button>
                     <button type="button" className="btn-primary utility-action" onClick={handleRunSimulation}>Run current scenario</button>
-                    {preparedState && <pre className="state-preview" aria-label="Prepared simulation state">{preparedState}</pre>}
+                    {preparedState && (
+                      <>
+                        <small>Input network</small>
+                        <pre className="state-preview" aria-label="Input simulation state">{preparedState}</pre>
+                      </>
+                    )}
+                    {resultState && (
+                      <>
+                        <small>Solver result (security devices placed)</small>
+                        <pre className="state-preview" aria-label="Result simulation state">{resultState}</pre>
+                      </>
+                    )}
                   </>
                 )}
               </div>
