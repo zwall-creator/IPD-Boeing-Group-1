@@ -190,11 +190,29 @@ def run_circuit(
         }
 
 
+def build_qaoa_circuit_for_problem(problem, gamma: float = 0.4, beta: float = 0.3, p: int = 1) -> QuantumCircuit:
+    """
+    Build a real QAOA circuit for a NetworkProblem.
+    Delegates to qaoa_solver.build_qaoa_circuit — this is the production
+    entry point replacing the old Bell-state placeholder.
+
+    Parameters
+    ----------
+    problem : NetworkProblem  (with Q matrix already built)
+    gamma, beta, p : QAOA hyperparameters
+
+    Returns
+    -------
+    QuantumCircuit ready to submit to run_circuit()
+    """
+    from qaoa_solver import build_qaoa_circuit
+    return build_qaoa_circuit(problem, gamma=gamma, beta=beta, p=p)
+
+
 def build_sample_circuit(n_qubits: int = 2) -> QuantumCircuit:
     """
-    Build a simple Bell-state circuit for smoke-testing the backend.
-    In a real integration this would be replaced by the QAOA/VQE circuit
-    generated from the network topology.
+    Bell-state smoke-test circuit — kept for health-check purposes only.
+    Use build_qaoa_circuit_for_problem() for real optimization runs.
     """
     qc = QuantumCircuit(n_qubits, n_qubits)
     qc.h(0)

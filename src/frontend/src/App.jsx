@@ -301,10 +301,10 @@ export default function App() {
         <aside className="workspace-sidebar">
           <h3>Workspace</h3>
           <nav className="workspace-nav" aria-label="Workspace views">
-            <button className={activeView === 'topology' ? 'active' : ''} onClick={() => setActiveView('topology')} type="button">Network Topology</button>
-            <button className={activeView === 'simulation' ? 'active' : ''} onClick={() => setActiveView('simulation')} type="button">Simulation Runs</button>
-            <button className={activeView === 'reports' ? 'active' : ''} onClick={() => setActiveView('reports')} type="button">Reports</button>
-            <button className={activeView === 'solutions' ? 'active' : ''} onClick={() => setActiveView('solutions')} type="button">Solutions</button>
+            <button className={activeView === 'topology' ? 'active' : ''} aria-current={activeView === 'topology' ? 'page' : undefined} onClick={() => setActiveView('topology')} type="button">Network Topology</button>
+            <button className={activeView === 'simulation' ? 'active' : ''} aria-current={activeView === 'simulation' ? 'page' : undefined} onClick={() => setActiveView('simulation')} type="button">Simulation Runs</button>
+            <button className={activeView === 'reports' ? 'active' : ''} aria-current={activeView === 'reports' ? 'page' : undefined} onClick={() => setActiveView('reports')} type="button">Reports</button>
+            <button className={activeView === 'solutions' ? 'active' : ''} aria-current={activeView === 'solutions' ? 'page' : undefined} onClick={() => setActiveView('solutions')} type="button">Solutions</button>
           </nav>
 
           <h3>Controls &amp; Solvers</h3>
@@ -324,7 +324,12 @@ export default function App() {
 
           {/* IBM Quantum status — shown only when quantum solver is selected */}
           {solverType === 'quantum' && (
-            <div className="ibm-status">
+            <div
+              className="ibm-status"
+              aria-live="polite"
+              aria-atomic="true"
+              aria-label="IBM Quantum connection status"
+            >
               {quantumStatus === null ? (
                 <span className="ibm-status__row connecting">Checking IBM Quantum…</span>
               ) : quantumStatus.connected ? (
@@ -415,9 +420,21 @@ export default function App() {
       <footer className="app-footer">
         <div className="footer-title">
           Output &amp; Execution Logs
-          <span className={`sse-badge ${statusVariant}`}>{statusLabel}</span>
+          <span
+            className={`sse-badge ${statusVariant}`}
+            aria-live="polite"
+            aria-atomic="true"
+          >
+            {statusLabel}
+          </span>
         </div>
-        <div className="log-console">
+        <div
+          className="log-console"
+          role="log"
+          aria-label="Execution log"
+          aria-live="polite"
+          aria-relevant="additions"
+        >
           {allLogs.map((entry, idx) => (
             <div key={idx} className={`log-entry ${entry.variant}`}>
               {entry.text}
