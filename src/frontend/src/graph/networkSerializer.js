@@ -20,6 +20,7 @@ export function serializeNetwork(cy) {
       id: data.id,
       label: data.label || data.id,
       device_type: data.device_type || 'PC',
+      custom_image: data.custom_image ?? null, // simulation frame can show uploaded images
       device_ip: toIpString(data.device_ip, index),
       base_sec_level: numberOrDefault(data.base_sec_level),
       risk_level: numberOrDefault(data.risk_level),
@@ -42,6 +43,27 @@ export function serializeNetwork(cy) {
   });
 
   return { nodes, edges };
+}
+
+/** Convert a saved topology back into cytoscape elements */
+export function topologyToElements(topology) {
+  if (!topology) return [];
+  const nodes = topology.nodes.map((node) => ({
+    group: 'nodes',
+    data: {
+      id: node.id,
+      label: node.label,
+      device_type: node.device_type,
+      custom_image: node.custom_image,
+      device_ip: node.device_ip,
+    },
+    position: { ...node.position },
+  }));
+  const edges = topology.edges.map((edge) => ({
+    group: 'edges',
+    data: { id: edge.id, source: edge.source, target: edge.target },
+  }));
+  return [...nodes, ...edges];
 }
 
 export function serializeNode(node) {

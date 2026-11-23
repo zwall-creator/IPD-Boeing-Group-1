@@ -26,4 +26,4 @@ The response contains `topology` in normalized form and `state_string`, which ca
 
 `POST http://localhost:8000/simulation/run` accepts the same `topology` object alongside `solver` and the optimization weights. The response includes the normalized topology and state string, and the SSE `simulation.started` event includes both values for logging and downstream consumers.
 
-The frontend's **Prepare network API payload** button exercises `/simulation/prepare`; **Run current scenario** sends the same topology to `/simulation/run`.
+The frontend's **Check network** button exercises `/simulation/prepare`; **Run current scenario** sends the same topology to `/simulation/run`.
