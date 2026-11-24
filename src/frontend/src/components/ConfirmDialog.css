@@ -1,0 +1,35 @@
+.confirm-dialog {
+  margin: auto;
+  max-width: 360px;
+  padding: 1.25rem;
+  background: #1e293b;
+  color: #e2e8f0;
+  border: 1px solid #475569;
+  border-radius: 6px;
+}
+
+/* Dims rest of page */
+.confirm-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.6); /* 60% opacity */
+}
+
+.confirm-dialog-title {
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+}
+
+.confirm-dialog-message {
+  font-size: 0.9rem;
+  color: #cbd5e1;
+  margin-bottom: 1.25rem;
+}
+
+.confirm-dialog-buttons {
+  display: flex; /* side by side */
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.confirm-dialog-buttons .btn-secondary {
+  min-width: 4.5rem;
+}

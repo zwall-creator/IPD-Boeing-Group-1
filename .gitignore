@@ -1,4 +1,8 @@
 # created by virtualenv automatically
+__pycache__/
+.env
+node_modules/
+".DS_Store"
 .venv/bin
 .venv/
 .idea/inspectionProfiles/profiles_settings.xml

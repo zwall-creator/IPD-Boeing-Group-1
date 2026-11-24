@@ -1,0 +1,455 @@
+import React, { useState, useEffect, useRef } from 'react';
+import './App.css';
+import { useEventSource } from './hooks/useEventSource';
+import NetworkCanvas from './components/NetworkCanvas';
+import OptimizationControls from './components/OptimizationControls';
+import GraphToolsPanel from './components/GraphToolsPanel';
+import ConfirmDialog from './components/ConfirmDialog';
+import SimulationFrame from './components/SimulationFrame';
+import { LAYOUT_PRESETS } from './graph/layoutPresets';
+import { Sun, Moon } from 'lucide-react';
+import AccessibilityNotice from './components/AccessibilityNotice';
+
+// Map SSE event types to a log-entry CSS variant for colour coding
+function eventToLogVariant(type) {
+  if (type === 'connected')              return 'info';
+  if (type === 'simulation.started')     return 'info';
+  if (type === 'simulation.progress')    return 'default';
+  if (type === 'simulation.done')        return 'success';
+  if (type === 'error')                  return 'error';
+  if (type === 'warn')                   return 'warn';
+  return 'default';
+}
+
+function formatEvent(event) {
+  const { type, data } = event;
+  switch (type) {
+    case 'connected':
+      return '[SSE] Connection established.';
+    case 'simulation.started':
+      return `[Sim] Started — solver: ${data.solver}`;
+    case 'simulation.progress':
+      return `[Sim] Step ${data.step}/${data.total}: ${data.message}`;
+    case 'simulation.done':
+      return `[Sim] Complete — solver: ${data.solver} · status: ${data.status}`;
+    default:
+      return `[${type}] ${JSON.stringify(data)}`;
+  }
+}
+
+// Figure out run's live status from SSE events
+function getRunStatus(run, events) {
+  if (!run) return null;
+  if (run.status === 'checked') return run;
+  let { status, message } = run;
+  for (const { type, data } of events.slice(run.eventIndex)) {
+    switch (type) {
+      case 'simulation.started':
+        status = 'running';
+        message = 'Started';
+        break;
+      case 'simulation.progress':
+        status = 'running';
+        message = `Step ${data.step}/${data.total}: ${data.message}`;
+        break;
+      case 'simulation.done':
+        status = data.status === 'error' ? 'failed' : 'complete';
+        message = data.error || `Complete · status: ${data.status}`;
+        break;
+      case 'error':
+        status = 'failed';
+        message = data.message || 'The backend reported an error.';
+        break;
+      default:
+        break;
+    }
+  }
+  return { ...run, status, message };
+}
+
+export default function App() {
+  const [activeView, setActiveView] = useState('topology');
+  const [solverType, setSolverType] = useState('classical');
+  const [optParams, setOptParams]   = useState({
+    securityWeight:  50,
+    costWeight:      50,
+    bandwidthWeight: 50,
+    riskThreshold:   30,
+  });
+  const [quantumStatus, setQuantumStatus] = useState(null);
+  const [preparedState, setPreparedState] = useState('');
+  const [theme, setTheme] = useState(() => localStorage.getItem('ipd-theme') || 'dark');
+  const [apiFeedback, setApiFeedback] = useState(null);
+  const [currentRun, setCurrentRun] = useState(null);
+
+  // Local UI logs (seed entries shown before the SSE connection is ready)
+  const [localLogs, setLocalLogs] = useState([
+    { text: '[System] Initialised simulation environment.', variant: 'info' },
+    { text: '[Backend] Computation API mapped at :8000.', variant: 'info' },
+  ]);
+
+  const { events, status, backendOk, clearEvents, runSim, prepareNetwork, checkQuantumStatus } = useEventSource();
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    localStorage.setItem('ipd-theme', theme);
+  }, [theme]);
+
+  // When user switches to quantum solver, fetch IBM status from backend
+  useEffect(() => {
+    if (solverType === 'quantum') {
+      setQuantumStatus(null); // show loading state
+      checkQuantumStatus().then(s => setQuantumStatus(s));
+    } else {
+      setQuantumStatus(null);
+    }
+  }, [solverType, checkQuantumStatus]);
+
+  // Graph editor state, shared by the sidebar tools and the canvas
+  const canvasRef = useRef(null);
+  const [graphMode, setGraphMode] = useState('select');
+  const [selectedCount, setSelectedCount] = useState(0);
+  const [confirmRequest, setConfirmRequest] = useState(null); // Pending confirmation popup: null = close, {message, onConfirm} = show
+
+  // Scroll the log console to the bottom whenever new entries arrive
+  const logEndRef = useRef(null);
+  useEffect(() => {
+    logEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [events, localLogs]);
+
+  // Derive combined log list: local seed entries + live SSE events
+  const liveEntries = events.map(ev => ({
+    text: formatEvent(ev),
+    variant: eventToLogVariant(ev.type),
+  }));
+  const allLogs = [...localLogs, ...liveEntries];
+
+  // Latest run with its live status
+  const liveRun = getRunStatus(currentRun, events);
+
+  const utilityViews = {
+    simulation: ['Simulation Runs', 'Configure a solver, run the current scenario, and monitor progress in the execution log below.'],
+    reports: ['Reports', 'Completed simulation reports will appear here for review and export.'],
+    solutions: ['Solutions', 'Saved solver solutions and recommended network changes will appear here.'],
+  };
+
+  // ------------------------------------------------------------------
+  // Handlers
+  // ------------------------------------------------------------------
+  const handleRunSimulation = async () => {
+    setApiFeedback(null);
+    setLocalLogs(prev => [
+      ...prev,
+      { text: `[Run] Triggering ${solverType} solver… (sec:${optParams.securityWeight} cost:${optParams.costWeight} bw:${optParams.bandwidthWeight} risk:${optParams.riskThreshold})`, variant: 'info' },
+    ]);
+    const topology = canvasRef.current?.getTopology();
+    setCurrentRun({
+      snapshot: topology,
+      solver: solverType,
+      startedAt: Date.now(),
+      eventIndex: events.length,
+      status: 'starting',
+      message: 'Sending network to the backend…',
+    });
+    const result = await runSim(solverType, optParams, topology);
+    if (!result?.ok) {
+      const errorMessage = result?.error || 'Could not reach the computation service.';
+      setApiFeedback({ type: 'error', message: errorMessage });
+      setCurrentRun(prev => ({ ...prev, status: 'failed', message: errorMessage }));
+      setLocalLogs(prev => [
+        ...prev,
+        { text: '[Error] Could not reach backend — is Flask running on :8000?', variant: 'error' },
+      ]);
+    }
+    if (result?.ok && result.state_string) {
+      setApiFeedback({ type: 'success', message: 'Network accepted by the simulation API.' });
+      setPreparedState(result.state_string);
+    }
+  };
+
+  const handlePrepareNetwork = async () => {
+    setApiFeedback(null);
+    const topology = canvasRef.current?.getTopology();
+    const result = await prepareNetwork(topology);
+    if (result?.ok && result.state_string) {
+      setCurrentRun({
+        snapshot: topology,
+        solver: null,
+        startedAt: Date.now(),
+        eventIndex: events.length,
+        status: 'checked',
+        message: '',
+      });
+      setPreparedState(result.state_string);
+      setApiFeedback({ type: 'success', message: 'Network validated and translated for simulation.' });
+      setLocalLogs((prev) => [...prev, { text: '[API] Network translated for simulation.', variant: 'success' }]);
+    } else {
+      const errorMessage = result?.error || 'Could not translate network.';
+      setApiFeedback({ type: 'error', message: errorMessage });
+      setLocalLogs((prev) => [...prev, { text: `[API] ${errorMessage}`, variant: 'error' }]);
+    }
+  };
+
+  // Clears system logs (originally handleReset)
+  const clearLogs = () => {
+    setCurrentRun(prev => {
+      if (!prev) return null;
+      return { ...getRunStatus(prev, events), eventIndex: 0 };
+    });
+    clearEvents();
+    setLocalLogs([
+      { text: '[System] Canvas reset.', variant: 'warn' },
+    ]);
+  };
+
+  // Reset canvas
+  const handleReset = () => {
+    // Empty canvas skips popup
+    if (canvasRef.current?.isEmpty() ?? true) {
+      clearLogs();
+      return;
+    }
+    setConfirmRequest({
+      message: 'This will delete everything in the current network and clear the logs',
+      onConfirm: () => {
+        canvasRef.current?.clear();
+        setGraphMode('select');
+        clearLogs();
+      },
+    });
+  };
+
+  // confirm from popup
+  const handleConfirm = () => {
+    setConfirmRequest(null); // close popup, re-render
+    confirmRequest.onConfirm(); // call the action that was requested
+  };
+
+  // cancel from popup
+  const handleCancel = () => {
+    setConfirmRequest(null); // close popup
+  };
+
+  const handleDeleteSelected = () => {
+    canvasRef.current?.deleteSelected();
+  };
+
+  // Layout Preset Options: replace current canvas with preset network
+  // A non-empty canvas confirms
+  const handleLoadPreset = (presetId) => {
+    if (canvasRef.current?.isEmpty() ?? true) {
+      canvasRef.current?.loadPreset(presetId);
+      return;
+    }
+    setConfirmRequest({
+      message: `Loading ${LAYOUT_PRESETS[presetId].label} will replace everything in the current network`,
+      onConfirm: () => canvasRef.current?.loadPreset(presetId),
+    });
+  };
+
+  // ------------------------------------------------------------------
+  // Status badge
+  // ------------------------------------------------------------------
+  const statusLabel =
+    status === 'connected'    ? 'Backend: Connected'    :
+    status === 'connecting'   ? 'Backend: Connecting…'  :
+    status === 'error'        ? 'Backend: Reconnecting…' :
+                                'Backend: Disconnected';
+
+  const statusVariant =
+    status === 'connected' && backendOk ? 'online' :
+    status === 'connecting'             ? 'connecting' :
+                                          'offline';
+
+  // ------------------------------------------------------------------
+  // Render
+  // ------------------------------------------------------------------
+  return (
+    <div className={`app-container ${theme}-theme`}>
+      {/* Top Application Bar */}
+      <header className="app-header">
+        <div className="header-brand">
+          <h2>IPD Simulation &amp; Computation Engine</h2>
+          <span className="badge-env">Local Dev</span>
+        </div>
+        <div className="header-actions">
+          <span className={`status-indicator ${statusVariant}`}>{statusLabel}</span>
+          <button
+            type="button"
+            className="theme-toggle"
+            aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+            aria-pressed={theme === 'light'}
+            title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+            onClick={() => setTheme((current) => current === 'dark' ? 'light' : 'dark')}
+          >
+            {theme === 'dark' ? <Sun size={16} aria-hidden="true" /> : <Moon size={16} aria-hidden="true" />}
+            <span>{theme === 'dark' ? 'Light mode' : 'Dark mode'}</span>
+          </button>
+          <button
+            type="button"
+            className="btn-primary"
+            onClick={handleRunSimulation}
+          >
+            Run Simulation
+          </button>
+        </div>
+      </header>
+
+      {/* Main Workspace Body */}
+      <div className="workspace-body">
+        {/* Left Toolbar / Configuration Panel */}
+        <aside className="workspace-sidebar">
+          <h3>Workspace</h3>
+          <nav className="workspace-nav" aria-label="Workspace views">
+            <button className={activeView === 'topology' ? 'active' : ''} aria-current={activeView === 'topology' ? 'page' : undefined} onClick={() => setActiveView('topology')} type="button">Network Topology</button>
+            <button className={activeView === 'simulation' ? 'active' : ''} aria-current={activeView === 'simulation' ? 'page' : undefined} onClick={() => setActiveView('simulation')} type="button">Simulation Runs</button>
+            <button className={activeView === 'reports' ? 'active' : ''} aria-current={activeView === 'reports' ? 'page' : undefined} onClick={() => setActiveView('reports')} type="button">Reports</button>
+            <button className={activeView === 'solutions' ? 'active' : ''} aria-current={activeView === 'solutions' ? 'page' : undefined} onClick={() => setActiveView('solutions')} type="button">Solutions</button>
+          </nav>
+
+          <h3>Controls &amp; Solvers</h3>
+          <AccessibilityNotice />
+
+          <div className="control-group">
+            <label htmlFor="solver-select">Solver Mode</label>
+            <select
+              id="solver-select"
+              value={solverType}
+              onChange={(e) => setSolverType(e.target.value)}
+            >
+              <option value="classical">Classical RCPSP (CP-SAT)</option>
+              <option value="quantum">Quantum Qiskit (QAOA/VQE)</option>
+            </select>
+          </div>
+
+          {/* IBM Quantum status — shown only when quantum solver is selected */}
+          {solverType === 'quantum' && (
+            <div
+              className="ibm-status"
+              aria-live="polite"
+              aria-atomic="true"
+              aria-label="IBM Quantum connection status"
+            >
+              {quantumStatus === null ? (
+                <span className="ibm-status__row connecting">Checking IBM Quantum…</span>
+              ) : quantumStatus.connected ? (
+                <>
+                  <span className="ibm-status__row online">IBM Quantum: Connected</span>
+                  <span className="ibm-status__detail">Backend: {quantumStatus.backend}</span>
+                  <span className="ibm-status__detail">{quantumStatus.qubits} qubits available</span>
+                </>
+              ) : (
+                <>
+                  <span className="ibm-status__row offline">IBM Quantum: Unavailable</span>
+                  <span className="ibm-status__detail">Using local Aer simulator</span>
+                  {quantumStatus.error && (
+                    <span className="ibm-status__error">{quantumStatus.error}</span>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+
+          <div className="control-group">
+            <label>Graph Tools</label>
+            <GraphToolsPanel
+              mode={graphMode}
+              selectedCount={selectedCount}
+              onModeChange={setGraphMode}
+              onDeleteSelected={handleDeleteSelected}
+              onReset={handleReset}
+              onLoadPreset={handleLoadPreset}
+            />
+          </div>
+
+          {/* Live event counter */}
+          <div className="control-group">
+            <label>SSE Events Received</label>
+            <span className="event-counter">{events.length}</span>
+          </div>
+
+          {/* Optimization priority sliders */}
+          <OptimizationControls params={optParams} onChange={setOptParams} />
+        </aside>
+
+        {/* Central Display / Visual Canvas Container */}
+        <main className="workspace-canvas">
+          <div className="canvas-header">
+            <span className="canvas-title">{activeView === 'topology' ? 'Network Topology' : utilityViews[activeView][0]}</span>
+            <span className="canvas-meta">IPD Workspace</span>
+          </div>
+
+          <div className="canvas-viewport">
+            <div
+              className={`network-canvas-layer ${activeView === 'topology' ? '' : 'network-canvas-layer--hidden'}`}
+              aria-hidden={activeView !== 'topology'}
+            >
+              <NetworkCanvas
+                ref={canvasRef}
+                mode={graphMode}
+                onSelectionChange={setSelectedCount}
+              />
+            </div>
+            {activeView !== 'topology' && (
+              <div className="utility-view">
+                <p>{utilityViews[activeView][0]}</p>
+                <small>{utilityViews[activeView][1]}</small>
+                {activeView === 'simulation' && (
+                  <div className="simulation-runs">
+                    <div className="simulation-runs__controls">
+                      {apiFeedback && (
+                        <div className={`api-feedback api-feedback--${apiFeedback.type}`} role={apiFeedback.type === 'error' ? 'alert' : 'status'} aria-live="polite">
+                          <strong>{apiFeedback.type === 'error' ? 'Network validation failed' : 'API request successful'}</strong>
+                          <span>{apiFeedback.message}</span>
+                        </div>
+                      )}
+                      <button type="button" className="btn-secondary utility-action" onClick={handlePrepareNetwork}>Check network</button>
+                      <button type="button" className="btn-primary utility-action" onClick={handleRunSimulation}>Run current scenario</button>
+                      {preparedState && <pre className="state-preview" aria-label="Prepared simulation state">{preparedState}</pre>}
+                    </div>
+                    <SimulationFrame run={liveRun} />
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </main>
+      </div>
+
+      {/* Bottom Logs Panel */}
+      <footer className="app-footer">
+        <div className="footer-title">
+          Output &amp; Execution Logs
+          <span
+            className={`sse-badge ${statusVariant}`}
+            aria-live="polite"
+            aria-atomic="true"
+          >
+            {statusLabel}
+          </span>
+        </div>
+        <div
+          className="log-console"
+          role="log"
+          aria-label="Execution log"
+          aria-live="polite"
+          aria-relevant="additions"
+        >
+          {allLogs.map((entry, idx) => (
+            <div key={idx} className={`log-entry ${entry.variant}`}>
+              {entry.text}
+            </div>
+          ))}
+          <div ref={logEndRef} />
+        </div>
+      </footer>
+      {/* Confirmation popup */}
+      <ConfirmDialog
+        open={confirmRequest !== null}
+        message={confirmRequest?.message}
+        onConfirm={handleConfirm}
+        onCancel={handleCancel}
+      />
+    </div>
+  );
+}

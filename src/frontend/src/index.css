@@ -1,0 +1,36 @@
+/* App-wide styles. */
+:root {
+  --vt-maroon: #861f41;
+  --vt-maroon-dark: #6e1935; /* filled for hover over maroon buttons */
+  --vt-maroon-tint: #f3e8ec; /* background for hover over maroon buttons */
+  --vt-orange: #e5751f;
+  --hokie-stone: #75787b;
+  --text: #1f2933;
+  --text-muted: #4b5563;
+  --error: #b42318;
+  --border: #c9c9cf;
+  --canvas-bg: #f8fafc;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font: 14px/1.4 system-ui, 'Segoe UI', Roboto, sans-serif;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
