@@ -276,6 +276,7 @@ class Simulation_Service:
         if type(node_list) is not list:
             raise TypeError('extracted node_list was not of type list')
 
+        ret_node_list = []
         # Begin secondary layer of data extraction
         for node_data in node_list:
             node_type = node_data["node_type"]
@@ -311,15 +312,50 @@ class Simulation_Service:
             if type(connections) is not list:
                 raise TypeError('extracted connections was not of type list')
 
+            ret_connections_list = []
             # begin third layer of extraction
             for connection_data in connections:
-                continue
+                destination_ip = connection_data["destination_ip"]
+                cost = connection_data["cost"]
+                bandwidth = connection_data["bandwidth"]
+                connection_type = connection_data["connection_type"]
+                source_port = connection_data["source_port"]
 
+                # type check
+                if type(destination_ip) is not list:
+                    raise TypeError('destination_ip was not of type list')
+                for octet in destination_ip:
+                    if type(octet) is not int:
+                        raise TypeError('destination_ip was not of list of type int elements')
+                if type(cost) is not int:
+                    raise TypeError('cost was not of type int')
+                if type(bandwidth) is not int:
+                    raise TypeError('bandwidth was not of type int')
+                if type(connection_type) is not str:
+                    raise TypeError('connection_type was not of type str')
+                if type(source_port) is not int:
+                    raise TypeError('source_port was not of type int')
+                #TODO: Implement Method for Verifying Source Ports are Not Reused
+                ret_connections_list.append((destination_ip,cost,bandwidth,connection_type,source_port))
+
+            ret_covered_devices_list = []
             if covered_devices is not None:
                 for covered_device_data in covered_devices:
-                    continue
+                    if type(covered_device_data) is not list:
+                        raise TypeError('entries in covered_devices was not of type list')
+                    for octet in covered_device_data:
+                        if type(octet) is not int:
+                            raise TypeError('entries in covered_devices was not list of type int elements')
+                ret_covered_devices_list = covered_devices
 
+            if node_type is NW_Node and node_type is not NW_Sec_Device:
+                ret_node_list.append(node_type(device_type, device_ip, base_sec_level, risk_level, ret_connections_list, security_level))
+            if node_type is NW_Sec_Device:
+                ret_node_list.append(node_type(device_type, device_ip, base_sec_level, risk_level, sec_modifier, ret_covered_devices_list, ret_connections_list, security_level))
 
+        self.sim_id = sim_id
+        self.sim_config = config
+        self.node_list = ret_node_list
 
 
 
