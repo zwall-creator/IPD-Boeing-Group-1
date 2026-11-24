@@ -573,11 +573,11 @@ class Simulation_Service:
             cov_list.append({"covered_ip" : covered_device})
         return cov_list
 
-    @staticmethod
-    def JSON_to_state_str(data: dict):
+    def JSON_to_state_str(self, data: dict):
         """
         Function to convert a JSON-serializable dict to a state string
         :param data: a JSON-serializable dict
         :return: str representing the state string
         """
-        return NotImplemented
+        self.extract_from_JSON_dict(data)
+        return self.get_sim_state()
