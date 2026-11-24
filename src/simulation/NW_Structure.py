@@ -241,7 +241,7 @@ class NW_Sec_Device(NW_Node):
         :type base_sec_level: float
         :type risk_level: float
         :type sec_modifier: float
-        :type covered_devices: list< tuple<NW_Node, ip:list<int>> >
+        :type covered_devices: list< tuple<ip:list<int>> >
         :type connections: list< tuple< ip:list<int>, cost:int, bandwidth:int, connection_type:str > >
 
         :param device_type: str that states what type of network-connected device is represented by this node
